@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import prisma from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { format } from "date-fns"
 import { Plus } from "lucide-react"
