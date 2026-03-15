@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { ArrowRight, Dumbbell, HeartPulse, Activity, Utensils, TrendingUp, Zap } from "lucide-react"
+import { ArrowRight, Dumbbell, HeartPulse, Activity, Utensils, TrendingUp, Zap, BookOpen } from "lucide-react"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -251,6 +251,30 @@ export default async function DashboardPage() {
         </Link>
 
       </div>
+
+      {/* Guida banner */}
+      <Link
+        href="/guida"
+        className="flex items-center justify-between p-4 rounded-2xl group transition-all duration-200"
+        style={{
+          background: "var(--accent-dim)",
+          border: "1px solid var(--accent)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--accent)" }}>
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="font-bold" style={{ color: "var(--accent)" }}>Guida alle funzionalità</p>
+            <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+              Come usare Training, Nutrition, Recovery, Coach, Body e Plan
+            </p>
+          </div>
+        </div>
+        <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1 shrink-0" style={{ color: "var(--accent)" }} />
+      </Link>
+
     </div>
   )
 }
