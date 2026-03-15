@@ -12,11 +12,19 @@ export default async function DashboardPage() {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
-  const [recovery, nutrition, workout, biometric] = await Promise.all([
+  const [recovery, nutrition, workout, biometric, plannedToday] = await Promise.all([
     prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: "desc" } }),
     prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
     prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: "asc" } }),
     prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: "desc" } }),
+    prisma.plannedSession.findFirst({
+      where: { userId, scheduledDate: today },
+      include: {
+        planDay: {
+          include: { planExercises: { orderBy: { orderIndex: 'asc' }, take: 4 } },
+        },
+      },
+    }),
   ])
 
   let recoveryLabel = "Nessun dato"
@@ -176,20 +184,72 @@ export default async function DashboardPage() {
           </div>
         </Link>
 
-        {/* Training Card */}
-        <Link
-          href="/training"
-          className="col-span-12 md:col-span-7 rounded-2xl p-6 group transition-all duration-200"
+        {/* Training Card — sessione pianificata */}
+        <div
+          className="col-span-12 md:col-span-7 rounded-2xl p-6"
           style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
         >
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Dumbbell className="w-5 h-5" style={{ color: "var(--accent)" }} />
               <span className="font-bold" style={{ color: "var(--fg-primary)" }}>Sessione di Oggi</span>
             </div>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" style={{ color: "var(--fg-subtle)" }} />
+            <Link href="/training" className="text-xs font-bold" style={{ color: "var(--accent)" }}>
+              Training →
+            </Link>
           </div>
-          {workout ? (
+
+          {plannedToday ? (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-base text-white shrink-0"
+                  style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))" }}
+                >
+                  {plannedToday.planDay?.dayLabel}
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold" style={{ color: "var(--fg-primary)" }}>
+                    Sessione {plannedToday.planDay?.dayLabel}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--fg-muted)" }}>
+                    {plannedToday.planDay?.focus}
+                  </p>
+                </div>
+                {plannedToday.status === 'COMPLETED' && (
+                  <span className="text-xs font-black px-2 py-1 rounded-lg" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
+                    Completata
+                  </span>
+                )}
+              </div>
+              {plannedToday.planDay?.planExercises && plannedToday.planDay.planExercises.length > 0 && (
+                <div className="space-y-1.5 mb-4">
+                  {plannedToday.planDay.planExercises.map((ex, i) => (
+                    <div key={ex.id} className="flex items-center gap-2">
+                      <span className="text-xs w-4 text-right" style={{ color: "var(--fg-subtle)" }}>{i + 1}</span>
+                      <span className="text-xs font-medium" style={{ color: "var(--fg-muted)" }}>{ex.name}</span>
+                      <span className="text-xs ml-auto" style={{ color: "var(--fg-subtle)" }}>
+                        {ex.sets}×{ex.repsMin === ex.repsMax ? ex.repsMin : `${ex.repsMin}-${ex.repsMax}`}
+                      </span>
+                    </div>
+                  ))}
+                  {(plannedToday.planDay.planExercises.length < (plannedToday.planDay as any)._count?.planExercises) && (
+                    <p className="text-xs" style={{ color: "var(--fg-subtle)" }}>+ altri esercizi…</p>
+                  )}
+                </div>
+              )}
+              {plannedToday.status !== 'COMPLETED' && (
+                <Link
+                  href="/training"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-black text-sm transition-all"
+                  style={{ background: "var(--accent)", color: "var(--accent-on, white)" }}
+                >
+                  <Dumbbell className="w-4 h-4" />
+                  Inizia Allenamento
+                </Link>
+              )}
+            </div>
+          ) : workout ? (
             <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)" }}>
               <div
                 className="w-12 h-12 flex items-center justify-center rounded-xl font-black text-lg text-white shrink-0"
@@ -210,10 +270,13 @@ export default async function DashboardPage() {
               style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-default)" }}
             >
               <TrendingUp className="w-6 h-6 mb-2" style={{ color: "var(--fg-subtle)" }} />
-              <p className="text-sm" style={{ color: "var(--fg-subtle)" }}>Nessuna sessione registrata oggi</p>
+              <p className="text-sm" style={{ color: "var(--fg-subtle)" }}>Nessuna sessione pianificata oggi</p>
+              <Link href="/plan" className="text-xs font-bold mt-1" style={{ color: "var(--accent)" }}>
+                Importa il tuo piano →
+              </Link>
             </div>
           )}
-        </Link>
+        </div>
 
         {/* Body Card */}
         <Link

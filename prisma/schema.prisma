@@ -17,12 +17,10 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  // Profile
   weightKg      Float?
   heightCm      Int?
   birthDate     DateTime?
 
-  // Relations
   mesocycles       Mesocycle[]
   workoutSessions  WorkoutSession[]
   nutritionDays    NutritionDay[]
@@ -31,6 +29,9 @@ model User {
   devices          UserDevice[]
   injuries         Injury[]
   aiReports        AIReport[]
+  workoutPlans     WorkoutPlan[]
+  plannedSessions  PlannedSession[]
+  activeSession    ActiveSession?
 }
 
 // ─── TRAINING ────────────────────────────────────────────────────────────────
@@ -43,11 +44,12 @@ model Mesocycle {
   startDate   DateTime
   endDate     DateTime?
   objectives  String?
-  kpi         Json?    // { staccoKg: 130, corsa25minZ2: true, ... }
+  kpi         Json?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  sessions    WorkoutSession[]
+  sessions     WorkoutSession[]
+  workoutPlans WorkoutPlan[]
 }
 
 model WorkoutSession {
@@ -57,31 +59,35 @@ model WorkoutSession {
   mesocycleId   String?
   mesocycle     Mesocycle?      @relation(fields: [mesocycleId], references: [id])
   date          DateTime
-  type          SessionType     // A, B, C, D, V1, V2
+  type          SessionType
   durationMin   Int?
-  trainingLoad  Float?          // Calcolato: durata x RPE o da Suunto
-  rpe           Int?            // 1-10
+  trainingLoad  Float?
+  rpe           Int?
   notes         String?
   voiceNoteUrl  String?
-  suuntoId      String?         // ID sessione su Suunto per dedup
+  suuntoId      String?
   createdAt     DateTime        @default(now())
 
   exercises       Exercise[]
   districtStress  DistrictStress[]
+  plannedSession  PlannedSession?
+  activeSession   ActiveSession?
 }
 
 model Exercise {
-  id            String         @id @default(cuid())
-  sessionId     String
-  session       WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  name          String
-  orderIndex    Int            @default(0)
-  sets          Int?
-  reps          String?        // "8-10" o "8" - stringa per flessibilità
-  loadKg        Float?
-  rir           Int?           // Reps In Reserve 0-4
+  id             String         @id @default(cuid())
+  sessionId      String
+  session        WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name           String
+  orderIndex     Int            @default(0)
+  sets           Int?
+  reps           String?
+  loadKg         Float?
+  rir            Int?
   technicalNotes String?
-  createdAt     DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+
+  setLogs        SetLog[]
 }
 
 model DistrictStress {
@@ -89,7 +95,126 @@ model DistrictStress {
   sessionId  String
   session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   district   District
-  intensity  Int            // 0-3
+  intensity  Int
+}
+
+// ─── WORKOUT PLANS (SCHEDE) ──────────────────────────────────────────────────
+
+model WorkoutPlan {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mesocycleId   String?
+  mesocycle     Mesocycle?   @relation(fields: [mesocycleId], references: [id])
+  name          String
+  description   String?      @db.Text
+  goal          String?
+  weeksTotal    Int          @default(4)
+  daysPerWeek   Int          @default(3)
+  trainingDays  Int[]        // [1,3,5] = Mon/Wed/Fri (0=Dom, 1=Lun, ...)
+  isActive      Boolean      @default(true)
+  source        PlanSource   @default(MANUAL)
+  createdAt     DateTime     @default(now())
+
+  planDays        PlanDay[]
+  plannedSessions PlannedSession[]
+}
+
+model PlanDay {
+  id          String      @id @default(cuid())
+  planId      String
+  plan        WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  dayLabel    SessionType
+  focus       String?     // "Upper - Petto/Spalle/Tricipiti"
+  orderIndex  Int         @default(0)
+  notes       String?
+
+  planExercises   PlanExercise[]
+  plannedSessions PlannedSession[]
+}
+
+model PlanExercise {
+  id             String              @id @default(cuid())
+  planDayId      String
+  planDay        PlanDay             @relation(fields: [planDayId], references: [id], onDelete: Cascade)
+  exerciseDefId  String?
+  exerciseDef    ExerciseDefinition? @relation(fields: [exerciseDefId], references: [id])
+  name           String
+  orderIndex     Int                 @default(0)
+  sets           Int                 @default(3)
+  repsMin        Int                 @default(8)
+  repsMax        Int                 @default(12)
+  targetRir      Int                 @default(2)
+  restSec        Int                 @default(120)
+  notes          String?
+}
+
+// ─── PLANNED SESSIONS (CALENDARIO) ───────────────────────────────────────────
+
+model PlannedSession {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId           String
+  plan             WorkoutPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planDayId        String
+  planDay          PlanDay       @relation(fields: [planDayId], references: [id])
+  scheduledDate    DateTime      @db.Date
+  status           PlannedStatus @default(PENDING)
+  workoutSessionId String?       @unique
+  workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
+
+  @@unique([userId, scheduledDate])
+}
+
+// ─── ACTIVE SESSION (real-time tracker state) ─────────────────────────────────
+
+model ActiveSession {
+  id                 String         @id @default(cuid())
+  userId             String         @unique
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutSessionId   String         @unique
+  workoutSession     WorkoutSession @relation(fields: [workoutSessionId], references: [id])
+  currentExerciseIdx Int            @default(0)
+  currentSetIdx      Int            @default(0)
+  startedAt          DateTime       @default(now())
+  lastActivityAt     DateTime       @updatedAt
+
+  setLogs            SetLog[]
+}
+
+model SetLog {
+  id              String        @id @default(cuid())
+  activeSessionId String
+  activeSession   ActiveSession @relation(fields: [activeSessionId], references: [id], onDelete: Cascade)
+  exerciseId      String
+  exercise        Exercise      @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  setNumber       Int
+  weightKg        Float?
+  repsActual      Int?
+  rirActual       Int?
+  isWarmup        Boolean       @default(false)
+  completedAt     DateTime      @default(now())
+
+  @@unique([activeSessionId, exerciseId, setNumber])
+}
+
+// ─── EXERCISE LIBRARY ─────────────────────────────────────────────────────────
+
+model ExerciseDefinition {
+  id               String      @id @default(cuid())
+  name             String      @unique
+  nameAlt          String?
+  primaryMuscles   District[]
+  secondaryMuscles District[]
+  equipment        Equipment
+  difficulty       Difficulty  @default(INTERMEDIATE)
+  isCompound       Boolean     @default(true)
+  description      String?     @db.Text
+  tips             String?     @db.Text
+  createdAt        DateTime    @default(now())
+
+  planExercises    PlanExercise[]
 }
 
 // ─── NUTRITION ───────────────────────────────────────────────────────────────
@@ -135,7 +260,7 @@ model FoodItem {
   proteinG   Float?
   carbsG     Float?
   fatG       Float?
-  source     FoodSource @default(MANUAL) // MANUAL, BARCODE, AI_VISION, TEMPLATE
+  source     FoodSource @default(MANUAL)
 }
 
 // ─── BIOMETRIA ───────────────────────────────────────────────────────────────
@@ -161,23 +286,17 @@ model BiometricLog {
   @@unique([userId, date])
 }
 
-// ─── DEVICE / ECOSISTEMA UTENTE ──────────────────────────────────────────────
-// L'utente carica screenshot dalle sue app — niente API dirette
-// Il sistema memorizza quale device/app usa per sapere come interpretare i dati
-
 model UserDevice {
   id            String      @id @default(cuid())
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ecosystem     Ecosystem   // SUUNTO, GARMIN, SAMSUNG, APPLE, POLAR, WHOOP, OTHER
-  deviceModel   String?     // es. "Suunto Race", "Garmin Forerunner 965"
-  appName       String?     // es. "Suunto App", "Garmin Connect"
+  ecosystem     Ecosystem
+  deviceModel   String?
+  appName       String?
   isPrimary     Boolean     @default(false)
-  notes         String?     // differenze note: accuratezza HRV, calcolo TL, ecc.
+  notes         String?
   createdAt     DateTime    @default(now())
 }
-
-// ─── RECOVERY DATA (da screenshot) ───────────────────────────────────────────
 
 model RecoveryLog {
   id            String      @id @default(cuid())
@@ -185,18 +304,12 @@ model RecoveryLog {
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   date          DateTime    @db.Date
   enteredAt     DateTime    @default(now())
-
-  // Fonte dati
-  source        DataSource  @default(MANUAL) // MANUAL (digitato da screenshot), AI_PARSED (futuro OCR)
-  screenshotUrl String?     // screenshot originale caricato dall'utente
-
-  // Fitness metrics (copiati dallo screenshot)
+  source        DataSource  @default(MANUAL)
+  screenshotUrl String?
   ctl           Float?
   atl           Float?
   tsb           Float?
   acwr          Float?
-
-  // Recovery (copiati dallo screenshot)
   hrv           Float?
   rhr           Int?
   sleepMin      Int?
@@ -205,8 +318,6 @@ model RecoveryLog {
 
   @@unique([userId, date])
 }
-
-// ─── INFORTUNI ───────────────────────────────────────────────────────────────
 
 model Injury {
   id          String        @id @default(cuid())
@@ -221,13 +332,11 @@ model Injury {
   createdAt   DateTime      @default(now())
 }
 
-// ─── AI REPORTS ──────────────────────────────────────────────────────────────
-
 model AIReport {
   id           String     @id @default(cuid())
   userId       String
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type         ReportType // POST_SESSION, DAILY, WEEKLY
+  type         ReportType
   date         DateTime
   content      String     @db.Text
   dataInputJson Json?
@@ -260,6 +369,35 @@ enum District {
   TRICEP
   CALF
   CORE
+}
+
+enum Equipment {
+  BARBELL
+  DUMBBELL
+  CABLE
+  MACHINE
+  BODYWEIGHT
+  KETTLEBELL
+  RESISTANCE_BAND
+  SMITH_MACHINE
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum PlanSource {
+  MANUAL
+  AI_GENERATED
+  IMPORTED
+}
+
+enum PlannedStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
 }
 
 enum MealType {
