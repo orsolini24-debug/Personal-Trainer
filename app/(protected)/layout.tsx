@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Dumbbell, Utensils, HeartPulse,
   MessageCircle, Activity, Calendar, LogOut,
-  HelpCircle, Menu, X,
+  HelpCircle, Menu, X, BookOpen,
 } from 'lucide-react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
@@ -13,13 +13,14 @@ import HelpPanel from '@/components/HelpPanel'
 import ThemeToggle from '@/components/ThemeToggle'
 
 const navItems = [
-  { name: 'Dashboard',  href: '/dashboard',  icon: LayoutDashboard },
-  { name: 'Training',   href: '/training',   icon: Dumbbell },
-  { name: 'Nutrition',  href: '/nutrition',  icon: Utensils },
-  { name: 'Recovery',   href: '/recovery',   icon: HeartPulse },
-  { name: 'Coach',      href: '/coach',      icon: MessageCircle },
-  { name: 'Body',       href: '/body',       icon: Activity },
-  { name: 'Plan',       href: '/plan',       icon: Calendar },
+  { name: 'Dashboard',  href: '/dashboard',         icon: LayoutDashboard, exact: false },
+  { name: 'Training',   href: '/training',          icon: Dumbbell,        exact: true  },
+  { name: 'Libreria',   href: '/training/library',  icon: BookOpen,        exact: false },
+  { name: 'Nutrition',  href: '/nutrition',         icon: Utensils,        exact: false },
+  { name: 'Recovery',   href: '/recovery',          icon: HeartPulse,      exact: false },
+  { name: 'Coach',      href: '/coach',             icon: MessageCircle,   exact: false },
+  { name: 'Body',       href: '/body',              icon: Activity,        exact: false },
+  { name: 'Plan',       href: '/plan',              icon: Calendar,        exact: false },
 ]
 
 function NavLink({ item, active, onClick }: { item: typeof navItems[0]; active: boolean; onClick?: () => void }) {
@@ -90,7 +91,9 @@ function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHel
       {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
         {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/')
+          const active = item.exact
+            ? pathname === item.href || pathname.startsWith(item.href + '/active')
+            : pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <NavLink key={item.href} item={item} active={active} onClick={onClose} />
           )
@@ -228,7 +231,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         />
         <div className="flex items-center justify-around px-2 pt-2 pb-2">
           {navItems.slice(0, 5).map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + '/')
+            const active = item.exact
+              ? pathname === item.href || pathname.startsWith(item.href + '/active')
+              : pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <Link
                 key={item.href}

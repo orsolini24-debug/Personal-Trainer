@@ -3,169 +3,223 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { format } from "date-fns"
 import { it } from "date-fns/locale"
-import { Plus, Activity, Flame, CalendarDays, Dumbbell } from "lucide-react"
+import { Activity, Flame, CalendarDays, Dumbbell, Play, BookOpen, ChevronRight } from "lucide-react"
 import { redirect } from "next/navigation"
 import NewSessionModal from "./new-session-modal"
+
+const SESSION_COLORS: Record<string, string> = {
+  A: '#10b981', B: '#3b82f6', C: '#8b5cf6', D: '#f59e0b', V1: '#ef4444', V2: '#64748b',
+}
+
+const SESSION_FOCUS: Record<string, string> = {
+  A: 'Lower Posteriore', B: 'Upper Push', C: 'Upper Pull', D: 'Lower Anteriore',
+  V1: 'Cardio & Atletica', V2: 'Core & Mobilità',
+}
 
 export default async function TrainingPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
+  const userId = session.user.id
 
-  const sessions = await prisma.workoutSession.findMany({
-    where: { userId: session.user.id },
-    orderBy: { date: 'desc' },
-    include: {
-      _count: {
-        select: { exercises: true }
-      }
-    }
-  })
+  // Today's planned session
+  const todayUTC = new Date()
+  todayUTC.setUTCHours(0, 0, 0, 0)
 
-  // Calculate stats
+  const [plannedToday, sessions] = await Promise.all([
+    prisma.plannedSession.findFirst({
+      where: { userId, scheduledDate: todayUTC, status: 'PENDING' },
+      include: {
+        planDay: { include: { planExercises: { orderBy: { orderIndex: 'asc' }, take: 4 } } },
+      },
+    }),
+    prisma.workoutSession.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+      include: { _count: { select: { exercises: true } } },
+    }),
+  ])
+
+  // Stats
   const totalSessions = sessions.length
-  
   const tlSessions = sessions.filter(s => s.trainingLoad != null)
-  const avgTL = tlSessions.length > 0 
+  const avgTL = tlSessions.length > 0
     ? Math.round(tlSessions.reduce((acc, s) => acc + (s.trainingLoad || 0), 0) / tlSessions.length)
     : 0
 
-  // Simple streak calculation (consecutive days)
   let streak = 0
   const today = new Date()
-  today.setHours(0,0,0,0)
-  
+  today.setHours(0, 0, 0, 0)
   const sortedDates = Array.from(new Set(sessions.map(s => {
-    const d = new Date(s.date)
-    d.setHours(0,0,0,0)
-    return d.getTime()
+    const d = new Date(s.date); d.setHours(0, 0, 0, 0); return d.getTime()
   }))).sort((a, b) => b - a)
-
   if (sortedDates.length > 0) {
-    let currentCheck = today.getTime()
-    if (sortedDates[0] === currentCheck || sortedDates[0] === currentCheck - 86400000) {
-      streak = 1
-      currentCheck = sortedDates[0]
+    let cur = today.getTime()
+    if (sortedDates[0] === cur || sortedDates[0] === cur - 86400000) {
+      streak = 1; cur = sortedDates[0]
       for (let i = 1; i < sortedDates.length; i++) {
-        if (sortedDates[i] === currentCheck - 86400000) {
-          streak++
-          currentCheck -= 86400000
-        } else {
-          break
-        }
+        if (sortedDates[i] === cur - 86400000) { streak++; cur -= 86400000 } else break
       }
     }
   }
 
-  const getTypeColors = (type: string) => {
-    switch (type) {
-      case 'A': return 'border-l-[#3b82f6] hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:border-[#3b82f6]'
-      case 'B': return 'border-l-[#10b981] hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:border-[#10b981]'
-      case 'C': return 'border-l-[#8b5cf6] hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] hover:border-[#8b5cf6]'
-      case 'D': return 'border-l-[#f59e0b] hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:border-[#f59e0b]'
-      default: return 'border-l-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:border-white/30'
-    }
-  }
-
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'A': return 'bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20'
-      case 'B': return 'bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20'
-      case 'C': return 'bg-[#8b5cf6]/10 text-[#8b5cf6] border-[#8b5cf6]/20'
-      case 'D': return 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20'
-      default: return 'bg-white/5 text-zinc-300 border-white/10'
-    }
-  }
+  const sessionColor = plannedToday ? (SESSION_COLORS[plannedToday.planDay?.dayLabel ?? ''] ?? '#64748b') : '#64748b'
 
   return (
-    <div className="space-y-8 pb-20">
-      
-      {/* Header & Stats */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-6 max-w-5xl mx-auto">
+
+      {/* Header */}
+      <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#f1f5f9]">Training Log</h1>
-          <p className="text-[#64748b] mt-1">Il tuo storico di allenamento</p>
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--accent)' }}>Allenamento</p>
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--fg-primary)' }}>Training Log</h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--fg-muted)' }}>Il tuo storico di allenamento</p>
         </div>
-        <NewSessionModal />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/training/library"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--fg-muted)',
+            }}
+          >
+            <BookOpen className="w-4 h-4" />
+            Libreria
+          </Link>
+          <NewSessionModal />
+        </div>
       </div>
 
+      {/* Today's planned session banner */}
+      {plannedToday && plannedToday.planDay && (
+        <div
+          className="rounded-2xl p-4 flex items-center gap-4"
+          style={{
+            background: `${sessionColor}12`,
+            border: `1px solid ${sessionColor}30`,
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shrink-0"
+            style={{ background: `${sessionColor}20`, color: sessionColor }}
+          >
+            {plannedToday.planDay.dayLabel}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-sm" style={{ color: 'var(--fg-primary)' }}>
+              Sessione di oggi — {SESSION_FOCUS[plannedToday.planDay.dayLabel] ?? plannedToday.planDay.dayLabel}
+            </p>
+            <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
+              {plannedToday.planDay.planExercises.slice(0, 4).map(pe => (
+                <span key={pe.id} className="text-xs" style={{ color: 'var(--fg-muted)' }}>
+                  {pe.name} {pe.sets}×{pe.repsMin === pe.repsMax ? pe.repsMin : `${pe.repsMin}-${pe.repsMax}`}
+                </span>
+              ))}
+              {plannedToday.planDay.planExercises.length > 4 && (
+                <span className="text-xs" style={{ color: 'var(--fg-subtle)' }}>
+                  +{plannedToday.planDay.planExercises.length - 4} altri
+                </span>
+              )}
+            </div>
+          </div>
+          <Link
+            href={`/training/active?planDayId=${plannedToday.planDay.id}&plannedSessionId=${plannedToday.id}`}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-black text-sm shrink-0"
+            style={{ background: sessionColor, color: '#fff' }}
+          >
+            <Play className="w-4 h-4 fill-white" />
+            Inizia
+          </Link>
+        </div>
+      )}
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[#111118] p-4 rounded-2xl border border-white/5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
-            <CalendarDays className="w-5 h-5" />
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { icon: CalendarDays, label: 'Sessioni', value: totalSessions, color: '#3b82f6' },
+          { icon: Activity, label: 'TL Medio', value: avgTL, color: '#6366f1' },
+          { icon: Flame, label: 'Streak', value: `${streak}g`, color: '#f97316' },
+        ].map(({ icon: Icon, label, value, color }) => (
+          <div
+            key={label}
+            className="p-4 rounded-2xl flex items-center gap-3"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+          >
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: `${color}18`, color }}
+            >
+              <Icon className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-black tracking-wider" style={{ color: 'var(--fg-subtle)' }}>{label}</p>
+              <p className="text-lg font-black" style={{ color: 'var(--fg-primary)' }}>{value}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-[#64748b] uppercase tracking-wider font-semibold">Sessioni</p>
-            <p className="text-xl font-bold text-[#f1f5f9]">{totalSessions}</p>
-          </div>
-        </div>
-        <div className="bg-[#111118] p-4 rounded-2xl border border-white/5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
-            <Activity className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs text-[#64748b] uppercase tracking-wider font-semibold">TL Medio</p>
-            <p className="text-xl font-bold text-[#f1f5f9]">{avgTL}</p>
-          </div>
-        </div>
-        <div className="bg-[#111118] p-4 rounded-2xl border border-white/5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
-            <Flame className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs text-[#64748b] uppercase tracking-wider font-semibold">Streak</p>
-            <p className="text-xl font-bold text-[#f1f5f9]">{streak} <span className="text-sm font-normal text-[#64748b]">giorni</span></p>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Sessions List */}
-      <div className="grid gap-4">
+      <div className="space-y-2">
         {sessions.length === 0 ? (
-          <div className="text-center py-16 bg-[#111118] rounded-2xl border border-white/5 border-dashed">
-            <p className="text-[#64748b]">Nessuna sessione trovata. Creane una nuova!</p>
+          <div
+            className="text-center py-16 rounded-2xl"
+            style={{ background: 'var(--bg-surface)', border: '1px dashed var(--border-default)' }}
+          >
+            <Dumbbell className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--fg-subtle)' }} />
+            <p style={{ color: 'var(--fg-muted)' }}>Nessuna sessione. Creane una nuova!</p>
           </div>
         ) : (
-          sessions.map((s) => (
-            <Link key={s.id} href={`/training/${s.id}`}>
-              <div className={`p-5 rounded-xl border border-y-white/5 border-r-white/5 border-l-4 bg-[#111118] transition-all duration-300 ${getTypeColors(s.type)}`}>
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold border ${getTypeBadge(s.type)}`}>
-                        Tipo {s.type}
-                      </span>
-                      <span className="text-sm font-medium text-[#f1f5f9] bg-white/5 px-2 py-0.5 rounded">
-                        {format(new Date(s.date), "dd MMM yyyy", { locale: it })}
-                      </span>
+          sessions.map(s => {
+            const color = SESSION_COLORS[s.type] ?? '#64748b'
+            return (
+              <Link key={s.id} href={`/training/${s.id}`}>
+                <div
+                  className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition"
+                  style={{
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-default)',
+                    borderLeftColor: color,
+                    borderLeftWidth: 3,
+                  }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
+                    style={{ background: `${color}18`, color }}
+                  >
+                    {s.type}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-sm" style={{ color: 'var(--fg-primary)' }}>
+                        {SESSION_FOCUS[s.type] ?? `Tipo ${s.type}`}
+                      </p>
                     </div>
+                    <p className="text-xs" style={{ color: 'var(--fg-muted)' }}>
+                      {format(new Date(s.date), "dd MMM yyyy", { locale: it })}
+                      {s.durationMin ? ` · ${s.durationMin} min` : ''}
+                      {s.trainingLoad ? ` · TL ${s.trainingLoad}` : ''}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#64748b] bg-[#0a0a0f] px-3 py-1 rounded-lg border border-white/5">
-                      <Dumbbell className="w-4 h-4" /> {s._count.exercises}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs" style={{ color: 'var(--fg-subtle)' }}>
+                      <Dumbbell className="w-3.5 h-3.5 inline mr-1" />{s._count.exercises}
                     </span>
+                    {s.rpe && (
+                      <span
+                        className="text-xs font-bold px-2 py-0.5 rounded-lg"
+                        style={{ background: 'var(--bg-elevated)', color: 'var(--fg-muted)' }}
+                      >
+                        RPE {s.rpe}
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4" style={{ color: 'var(--fg-subtle)' }} />
                   </div>
                 </div>
-                
-                <div className="flex flex-wrap gap-4 text-sm mt-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[#64748b] uppercase tracking-wider font-bold mb-0.5">RPE</span>
-                    <span className="font-semibold text-[#f1f5f9]">{s.rpe || '-'}</span>
-                  </div>
-                  <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[#64748b] uppercase tracking-wider font-bold mb-0.5">Training Load</span>
-                    <span className="font-semibold text-[#f1f5f9]">{s.trainingLoad || '-'}</span>
-                  </div>
-                  <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[#64748b] uppercase tracking-wider font-bold mb-0.5">Durata</span>
-                    <span className="font-semibold text-[#f1f5f9]">{s.durationMin ? `${s.durationMin} min` : '-'}</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))
+              </Link>
+            )
+          })
         )}
       </div>
     </div>
