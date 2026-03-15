@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { ArrowRight, Dumbbell, HeartPulse, Activity, Utensils } from "lucide-react"
 
