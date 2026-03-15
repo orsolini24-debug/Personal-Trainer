@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: "Errore del server" }, { status: 500 })
+  } catch (err: any) {
+    console.error("REGISTER ERROR:", err)
+    return NextResponse.json({ error: err?.message ?? "Errore del server" }, { status: 500 })
   }
 }
