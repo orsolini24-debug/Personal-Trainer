@@ -1,101 +1,222 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
-import { LayoutDashboard, Dumbbell, Utensils, HeartPulse, MessageCircle, Activity, Calendar, BookOpen } from "lucide-react"
+"use client"
+
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import {
+  LayoutDashboard, Dumbbell, Utensils, HeartPulse,
+  MessageCircle, Activity, Calendar, BookOpen, LogOut
+} from "lucide-react"
 import Link from "next/link"
+import { signOut } from "next-auth/react"
 
-export default async function ProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const session = await auth()
+const navItems = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Training", href: "/training", icon: Dumbbell },
+  { name: "Nutrition", href: "/nutrition", icon: Utensils },
+  { name: "Recovery", href: "/recovery", icon: HeartPulse },
+  { name: "Coach", href: "/coach", icon: MessageCircle },
+  { name: "Body", href: "/body", icon: Activity },
+  { name: "Plan", href: "/plan", icon: Calendar },
+  { name: "Guida", href: "/guida", icon: BookOpen },
+]
 
-  if (!session?.user) {
-    redirect("/login")
+const themes = [
+  { id: "cobalt", color: "#3B82F6" },
+  { id: "obsidian", color: "#FFFFFF" },
+  { id: "sapphire", color: "#38BDF8" },
+  { id: "forest", color: "#7BA05B" },
+  { id: "sunset", color: "#F97316" },
+  { id: "cyberpunk", color: "#00F2FF" },
+  { id: "ocean", color: "#00BCD4" },
+  { id: "rosegold", color: "#E879A0" },
+  { id: "mono", color: "#888888" },
+]
+
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const [expanded, setExpanded] = useState(false)
+  const [theme, setTheme] = useState("cobalt")
+  const [showPicker, setShowPicker] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("pe-theme") || "cobalt"
+    setTheme(saved)
+    document.documentElement.setAttribute("data-theme", saved)
+  }, [])
+
+  const applyTheme = (id: string) => {
+    setTheme(id)
+    localStorage.setItem("pe-theme", id)
+    document.documentElement.setAttribute("data-theme", id)
+    setShowPicker(false)
   }
 
-  const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Training", href: "/training", icon: Dumbbell },
-    { name: "Nutrition", href: "/nutrition", icon: Utensils },
-    { name: "Recovery", href: "/recovery", icon: HeartPulse },
-    { name: "Coach", href: "/coach", icon: MessageCircle },
-    { name: "Body", href: "/body", icon: Activity },
-    { name: "Plan", href: "/plan", icon: Calendar },
-    { name: "Guida", href: "/guida", icon: BookOpen },
-  ]
-
-  const userName = session.user.name || session.user.email || 'User'
-  const initials = userName.substring(0, 2).toUpperCase()
-
   return (
-    <div className="flex h-screen bg-[#0a0a0f] text-[#f1f5f9] overflow-hidden">
-      {/* Desktop Sidebar (Expandable on hover) */}
-      <aside className="hidden md:flex flex-col bg-[#0d0d14] border-r border-white/5 w-[64px] hover:w-[220px] transition-all duration-300 z-40 group relative">
-        <div className="h-16 flex items-center justify-center group-hover:justify-start px-4 border-b border-white/5">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-[#3b82f6] to-[#6366f1] flex items-center justify-center font-bold text-white shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ background: "var(--bg-base)", color: "var(--fg-primary)" }}
+    >
+      {/* Desktop Sidebar */}
+      <aside
+        className="hidden md:flex flex-col z-40 relative transition-[width] duration-300 ease-in-out overflow-hidden shrink-0"
+        style={{
+          width: expanded ? "220px" : "64px",
+          background: "var(--bg-sidebar)",
+          borderRight: "1px solid var(--border-default)",
+        }}
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => { setExpanded(false); setShowPicker(false) }}
+      >
+        {/* Logo */}
+        <div
+          className="h-16 flex items-center px-4 shrink-0 gap-3"
+          style={{ borderBottom: "1px solid var(--border-default)" }}
+        >
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shrink-0 text-white"
+            style={{
+              background: "linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))",
+              boxShadow: "0 0 16px var(--glow-accent)",
+            }}
+          >
             PE
           </div>
-          <span className="ml-3 font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-[#3b82f6] to-[#6366f1]">
+          <span
+            className="font-black text-sm whitespace-nowrap transition-all duration-200"
+            style={{
+              opacity: expanded ? 1 : 0,
+              transform: expanded ? "translateX(0)" : "translateX(-8px)",
+              background: "linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
             Ecosystem
           </span>
         </div>
 
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-6">
-          <ul className="space-y-2 px-2">
-            {navItems.map((item) => (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className="flex items-center rounded-xl p-2 text-[#64748b] hover:bg-white/5 hover:text-[#f1f5f9] transition-all group/link relative"
-                  title={item.name}
-                >
-                  <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                    <item.icon className="w-5 h-5 group-hover/link:text-[#3b82f6] transition-colors" />
-                  </div>
-                  <span className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">
-                    {item.name}
-                  </span>
-                </Link>
-              </li>
-            ))}
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <ul className="space-y-1 px-2">
+            {navItems.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/")
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    title={item.name}
+                    className="flex items-center rounded-xl transition-all duration-150"
+                    style={{
+                      padding: "8px",
+                      color: active ? "var(--accent)" : "var(--fg-subtle)",
+                      background: active ? "var(--accent-dim)" : "transparent",
+                      borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
+                    }}
+                  >
+                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <span
+                      className="ml-2 text-sm font-medium whitespace-nowrap transition-all duration-200"
+                      style={{ opacity: expanded ? 1 : 0 }}
+                    >
+                      {item.name}
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         </nav>
 
-        {/* User Profile Bottom */}
-        <div className="p-3 border-t border-white/5 flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-full bg-[#111118] border border-white/10 flex items-center justify-center shrink-0 text-sm font-medium">
-            {initials}
-          </div>
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 min-w-0">
-            <p className="text-sm font-medium truncate text-[#f1f5f9]">{userName}</p>
-            <p className="text-xs text-[#64748b] truncate">Atleta</p>
-          </div>
+        {/* Theme picker + logout */}
+        <div className="p-2 shrink-0" style={{ borderTop: "1px solid var(--border-default)" }}>
+          {/* Theme dots */}
+          {showPicker && (
+            <div className="mb-2 px-1">
+              <div className="flex flex-wrap gap-2 justify-center">
+                {themes.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => applyTheme(t.id)}
+                    className="w-6 h-6 rounded-full transition-transform hover:scale-125"
+                    style={{
+                      backgroundColor: t.color,
+                      boxShadow: theme === t.id ? `0 0 0 2px var(--bg-sidebar), 0 0 0 4px ${t.color}` : "none",
+                    }}
+                    title={t.id}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setShowPicker(v => !v)}
+            className="w-full flex items-center rounded-xl p-2 gap-2 transition-colors"
+            style={{ color: "var(--fg-subtle)" }}
+            title="Tema"
+          >
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: themes.find(t => t.id === theme)?.color }}
+              />
+            </div>
+            <span className="text-xs font-medium whitespace-nowrap transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
+              Tema: {theme}
+            </span>
+          </button>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex items-center rounded-xl p-2 gap-2 mt-1 transition-colors"
+            style={{ color: "var(--fg-subtle)" }}
+            title="Esci"
+          >
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <LogOut className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-medium whitespace-nowrap transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
+              Esci
+            </span>
+          </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full relative z-0">
+      {/* Main */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
           {children}
         </div>
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0a0f]/80 backdrop-blur-xl border-t border-white/10 z-50">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#3b82f6]/50 to-transparent"></div>
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl"
+        style={{
+          background: "color-mix(in srgb, var(--bg-base) 80%, transparent)",
+          borderTop: "1px solid var(--border-default)",
+        }}
+      >
+        <div
+          className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: "linear-gradient(90deg, transparent, var(--accent), transparent)" }}
+        />
         <ul className="flex items-center justify-around h-16 px-2">
-          {navItems.map((item) => (
-            <li key={item.name}>
-              <Link
-                href={item.href}
-                className="flex flex-col items-center justify-center w-full h-full min-w-[44px] text-[#64748b] hover:text-[#3b82f6] transition-colors"
-              >
-                <item.icon className="h-5 w-5 mb-1" />
-                <span className="text-[10px] font-medium">{item.name}</span>
-              </Link>
-            </li>
-          ))}
+          {navItems.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/")
+            return (
+              <li key={item.name}>
+                <Link
+                  href={item.href}
+                  className="flex flex-col items-center justify-center min-w-[44px] py-1 transition-colors"
+                  style={{ color: active ? "var(--accent)" : "var(--fg-subtle)" }}
+                >
+                  <item.icon className="h-5 w-5 mb-1" />
+                  <span className="text-[10px] font-medium">{item.name}</span>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       </nav>
     </div>
