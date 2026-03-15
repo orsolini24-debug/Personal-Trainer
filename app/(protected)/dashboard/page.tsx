@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { ArrowRight, Dumbbell, HeartPulse, Activity, Utensils } from "lucide-react"
+import { ArrowRight, Dumbbell, HeartPulse, Activity, Utensils, TrendingUp, Zap } from "lucide-react"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -12,146 +12,241 @@ export default async function DashboardPage() {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
-  // Fetch data in parallel
   const [recovery, nutrition, workout, biometric] = await Promise.all([
-    prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
+    prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: "desc" } }),
     prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
-    prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: 'asc' } }),
-    prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } })
+    prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: "asc" } }),
+    prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: "desc" } }),
   ])
 
-  // Semaforo Recupero
-  let recoveryStatus = "Nessun dato"
-  let recoveryColor = "bg-[#64748b]"
-  let recoveryGlow = "shadow-none"
-  if (recovery?.recoveryScore && recovery?.tsb) {
+  let recoveryLabel = "Nessun dato"
+  let recoveryColor = "#64748b"
+  let recoveryBg = "rgba(100,116,139,0.12)"
+  if (recovery?.recoveryScore) {
     const s = recovery.recoveryScore
-    const t = recovery.tsb
-    if (s >= 70 && t > -10) { recoveryStatus = "Ottimo"; recoveryColor = "bg-[#10b981]"; recoveryGlow = "shadow-[0_0_20px_rgba(16,185,129,0.4)]" }
-    else if (s < 40 || t < -30) { recoveryStatus = "Critico"; recoveryColor = "bg-[#ef4444]"; recoveryGlow = "shadow-[0_0_20px_rgba(239,68,68,0.4)]" }
-    else { recoveryStatus = "Medio"; recoveryColor = "bg-[#f59e0b]"; recoveryGlow = "shadow-[0_0_20px_rgba(245,158,11,0.4)]" }
+    const t = recovery.tsb ?? 0
+    if (s >= 70 && t > -10) { recoveryLabel = "Ottimo"; recoveryColor = "#10b981"; recoveryBg = "rgba(16,185,129,0.12)" }
+    else if (s < 40 || t < -30) { recoveryLabel = "Critico"; recoveryColor = "#ef4444"; recoveryBg = "rgba(239,68,68,0.12)" }
+    else { recoveryLabel = "Medio"; recoveryColor = "#f59e0b"; recoveryBg = "rgba(245,158,11,0.12)" }
   }
 
-  // Macro
   const kcalActual = nutrition?.kcalActual || 0
   const kcalTarget = nutrition?.kcalTarget || 2500
   const proActual = Math.round(nutrition?.proteinG || 0)
-  const proTarget = 150 // dummy
   const carbActual = Math.round(nutrition?.carbsG || 0)
-  const carbTarget = 300 // dummy
   const fatActual = Math.round(nutrition?.fatG || 0)
-  const fatTarget = 80 // dummy
 
-  const getProgress = (actual: number, target: number) => {
-    return target > 0 ? Math.min(100, Math.round((actual / target) * 100)) : 0
-  }
+  const pct = (a: number, t: number) => Math.min(100, t > 0 ? Math.round((a / t) * 100) : 0)
 
-  const CircleRing = ({ pct, color, label, val }: { pct: number, color: string, label: string, val: number|string }) => {
-    const radius = 24;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (pct / 100) * circumference;
-    return (
-      <div className="flex flex-col items-center gap-1">
-        <div className="relative w-16 h-16 flex items-center justify-center">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
-            <circle cx="30" cy="30" r={radius} stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white/5" />
-            <circle cx="30" cy="30" r={radius} stroke={color} strokeWidth="4" fill="transparent" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-1000 ease-out" strokeLinecap="round" />
-          </svg>
-          <span className="absolute text-xs font-bold text-[#f1f5f9]">{val}</span>
-        </div>
-        <span className="text-[10px] uppercase tracking-widest text-[#64748b]">{label}</span>
-      </div>
-    )
-  }
-
-  const sessionColors: Record<string, string> = {
-    A: "bg-[#3b82f6] text-white",
-    B: "bg-[#10b981] text-white",
-    C: "bg-[#8b5cf6] text-white",
-    D: "bg-[#f59e0b] text-white",
-  }
+  const userName = session.user.name || session.user.email || "Atleta"
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 max-w-5xl mx-auto">
+
+      {/* Welcome */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-[#64748b] mt-1">Bentornato, ecco il tuo stato oggi.</p>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--accent)" }}>
+            Benvenuto
+          </p>
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: "var(--fg-primary)" }}>
+            {userName.split(" ")[0]}
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--fg-muted)" }}>
+            {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+        </div>
+        <div
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
+          style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid var(--accent)" }}
+        >
+          <Zap className="w-4 h-4" />
+          Performance Ecosystem
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        
-        {/* Recovery Card (Col 12 to md:6) */}
-        <Link href="/recovery" className="col-span-12 md:col-span-6 bg-[#111118] p-6 rounded-2xl border border-white/5 hover:border-[#10b981]/50 transition-colors group relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-            <HeartPulse className="w-24 h-24 text-[#10b981]" />
+      {/* Quick stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Recovery", value: recovery?.recoveryScore ? `${recovery.recoveryScore}%` : "—", sub: recoveryLabel, color: recoveryColor },
+          { label: "TSB", value: recovery?.tsb != null ? recovery.tsb : "—", sub: "Forma attuale", color: "var(--accent)" },
+          { label: "Peso", value: biometric?.weightKg ? `${biometric.weightKg} kg` : "—", sub: biometric?.fatPct ? `${biometric.fatPct}% BF` : "–", color: "var(--fg-primary)" },
+          { label: "Kcal oggi", value: kcalActual, sub: `target ${kcalTarget}`, color: "#f59e0b" },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="rounded-2xl p-4"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+          >
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: "var(--fg-subtle)" }}>
+              {s.label}
+            </p>
+            <p className="text-2xl font-black" style={{ color: s.color as string }}>
+              {s.value}
+            </p>
+            <p className="text-xs mt-1" style={{ color: "var(--fg-subtle)" }}>{s.sub}</p>
           </div>
-          <div className="flex justify-between items-start mb-6 relative z-10">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-[#f1f5f9]"><HeartPulse className="w-5 h-5 text-[#10b981]" /> Recupero</h2>
-            <ArrowRight className="w-5 h-5 text-[#64748b] group-hover:text-[#10b981] transition-transform group-hover:translate-x-1" />
-          </div>
-          <div className="flex flex-col items-center justify-center py-6 relative z-10">
-            <div className={`w-20 h-20 rounded-full flex shrink-0 ${recoveryColor} ${recoveryGlow} animate-pulse`}></div>
-            <p className="font-bold text-2xl mt-4 text-[#f1f5f9]">{recoveryStatus}</p>
-            <p className="text-sm text-[#64748b] mt-1">Score: {recovery?.recoveryScore || '-'} • TSB: {recovery?.tsb || '-'}</p>
+        ))}
+      </div>
+
+      {/* Main grid */}
+      <div className="grid grid-cols-12 gap-4">
+
+        {/* Recovery Card */}
+        <Link
+          href="/recovery"
+          className="col-span-12 md:col-span-6 rounded-2xl p-6 relative overflow-hidden group transition-all duration-200"
+          style={{
+            background: "var(--bg-surface)",
+            border: `1px solid var(--border-default)`,
+          }}
+        >
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: `radial-gradient(circle at top right, ${recoveryBg}, transparent 70%)` }} />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <HeartPulse className="w-5 h-5" style={{ color: recoveryColor }} />
+                <span className="font-bold" style={{ color: "var(--fg-primary)" }}>Recupero</span>
+              </div>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" style={{ color: "var(--fg-subtle)" }} />
+            </div>
+            <div className="flex items-center justify-center flex-col gap-3 py-4">
+              <div
+                className="w-16 h-16 rounded-full animate-pulse"
+                style={{ backgroundColor: recoveryColor, boxShadow: `0 0 30px ${recoveryColor}60` }}
+              />
+              <p className="text-2xl font-black" style={{ color: "var(--fg-primary)" }}>{recoveryLabel}</p>
+              <div className="flex gap-4 text-sm" style={{ color: "var(--fg-muted)" }}>
+                <span>HRV: {recovery?.hrv || "—"}</span>
+                <span>RHR: {recovery?.rhr || "—"}</span>
+                <span>Sonno: {recovery?.sleepHours || "—"}h</span>
+              </div>
+            </div>
           </div>
         </Link>
 
-        {/* Nutrition Card (Col 12 to md:6) */}
-        <Link href="/nutrition" className="col-span-12 md:col-span-6 bg-[#111118] p-6 rounded-2xl border border-white/5 hover:border-[#3b82f6]/50 transition-colors group">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-[#f1f5f9]"><Utensils className="w-5 h-5 text-[#3b82f6]" /> Nutrizione</h2>
-            <ArrowRight className="w-5 h-5 text-[#64748b] group-hover:text-[#3b82f6] transition-transform group-hover:translate-x-1" />
-          </div>
-          <div className="flex justify-around items-center pt-2">
-            <CircleRing pct={getProgress(kcalActual, kcalTarget)} color="#3b82f6" label="Kcal" val={kcalActual} />
-            <CircleRing pct={getProgress(proActual, proTarget)} color="#8b5cf6" label="Pro" val={`${proActual}g`} />
-            <CircleRing pct={getProgress(carbActual, carbTarget)} color="#f59e0b" label="Carb" val={`${carbActual}g`} />
-            <CircleRing pct={getProgress(fatActual, fatTarget)} color="#ef4444" label="Fat" val={`${fatActual}g`} />
+        {/* Nutrition Card */}
+        <Link
+          href="/nutrition"
+          className="col-span-12 md:col-span-6 rounded-2xl p-6 relative overflow-hidden group transition-all duration-200"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+        >
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ background: "radial-gradient(circle at top right, var(--accent-dim), transparent 70%)" }} />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Utensils className="w-5 h-5" style={{ color: "var(--accent)" }} />
+                <span className="font-bold" style={{ color: "var(--fg-primary)" }}>Nutrizione</span>
+              </div>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" style={{ color: "var(--fg-subtle)" }} />
+            </div>
+
+            {/* Kcal bar */}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm mb-1">
+                <span style={{ color: "var(--fg-muted)" }}>Calorie</span>
+                <span className="font-bold" style={{ color: "var(--fg-primary)" }}>
+                  {kcalActual} / {kcalTarget} kcal
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--border-subtle)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${pct(kcalActual, kcalTarget)}%`, background: "var(--accent)" }}
+                />
+              </div>
+            </div>
+
+            {/* Macro pills */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Proteine", val: proActual, unit: "g", color: "#8b5cf6" },
+                { label: "Carbo", val: carbActual, unit: "g", color: "#f59e0b" },
+                { label: "Grassi", val: fatActual, unit: "g", color: "#ef4444" },
+              ].map(m => (
+                <div key={m.label} className="rounded-xl p-3 text-center"
+                  style={{ background: `${m.color}12`, border: `1px solid ${m.color}30` }}>
+                  <p className="text-lg font-black" style={{ color: m.color }}>{m.val}<span className="text-xs font-normal ml-0.5">{m.unit}</span></p>
+                  <p className="text-[10px] mt-1" style={{ color: "var(--fg-subtle)" }}>{m.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </Link>
 
-        {/* Training Card (Col 12 to md:7) */}
-        <Link href="/training" className="col-span-12 md:col-span-7 bg-[#111118] p-6 rounded-2xl border border-white/5 hover:border-[#8b5cf6]/50 transition-colors group">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-[#f1f5f9]"><Dumbbell className="w-5 h-5 text-[#8b5cf6]" /> Sessione di Oggi</h2>
-            <ArrowRight className="w-5 h-5 text-[#64748b] group-hover:text-[#8b5cf6] transition-transform group-hover:translate-x-1" />
+        {/* Training Card */}
+        <Link
+          href="/training"
+          className="col-span-12 md:col-span-7 rounded-2xl p-6 group transition-all duration-200"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Dumbbell className="w-5 h-5" style={{ color: "var(--accent)" }} />
+              <span className="font-bold" style={{ color: "var(--fg-primary)" }}>Sessione di Oggi</span>
+            </div>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" style={{ color: "var(--fg-subtle)" }} />
           </div>
           {workout ? (
-            <div className="flex items-center gap-4 bg-[#0a0a0f] p-4 rounded-xl border border-white/5">
-              <div className={`w-12 h-12 flex items-center justify-center rounded-lg font-bold text-lg ${sessionColors[workout.type] || 'bg-white/10 text-white'}`}>
+            <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)" }}>
+              <div
+                className="w-12 h-12 flex items-center justify-center rounded-xl font-black text-lg text-white shrink-0"
+                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))" }}
+              >
                 {workout.type}
               </div>
               <div>
-                <p className="font-semibold text-[#f1f5f9]">Allenamento {workout.type}</p>
-                <p className="text-sm text-[#64748b]">Durata: {workout.durationMin || '-'} min • RPE: {workout.rpe || '-'}</p>
+                <p className="font-semibold" style={{ color: "var(--fg-primary)" }}>Allenamento {workout.type}</p>
+                <p className="text-sm mt-0.5" style={{ color: "var(--fg-muted)" }}>
+                  Durata: {workout.durationMin || "—"} min • RPE: {workout.rpe || "—"}
+                </p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-20 bg-[#0a0a0f] rounded-xl border border-white/5 border-dashed">
-              <p className="text-[#64748b] text-sm">Nessuna sessione registrata oggi.</p>
+            <div
+              className="flex flex-col items-center justify-center h-24 rounded-xl"
+              style={{ background: "var(--bg-elevated)", border: "1px dashed var(--border-default)" }}
+            >
+              <TrendingUp className="w-6 h-6 mb-2" style={{ color: "var(--fg-subtle)" }} />
+              <p className="text-sm" style={{ color: "var(--fg-subtle)" }}>Nessuna sessione registrata oggi</p>
             </div>
           )}
         </Link>
 
-        {/* Body Card (Col 12 to md:5) */}
-        <Link href="/body" className="col-span-12 md:col-span-5 bg-[#111118] p-6 rounded-2xl border border-white/5 hover:border-[#f59e0b]/50 transition-colors group">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-[#f1f5f9]"><Activity className="w-5 h-5 text-[#f59e0b]" /> Ultimo Peso</h2>
-            <ArrowRight className="w-5 h-5 text-[#64748b] group-hover:text-[#f59e0b] transition-transform group-hover:translate-x-1" />
+        {/* Body Card */}
+        <Link
+          href="/body"
+          className="col-span-12 md:col-span-5 rounded-2xl p-6 group transition-all duration-200"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5" style={{ color: "#f59e0b" }} />
+              <span className="font-bold" style={{ color: "var(--fg-primary)" }}>Body</span>
+            </div>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" style={{ color: "var(--fg-subtle)" }} />
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-end justify-between">
             <div>
-              <p className="font-bold text-4xl text-[#f1f5f9]">{biometric?.weightKg ? `${biometric.weightKg}` : '-'}</p>
-              <p className="text-sm text-[#64748b] mt-1">kg • BF: {biometric?.fatPct ? `${biometric.fatPct}%` : '-'}</p>
+              <p className="text-5xl font-black" style={{ color: "var(--fg-primary)" }}>
+                {biometric?.weightKg ?? "—"}
+              </p>
+              <p className="text-sm mt-1" style={{ color: "var(--fg-muted)" }}>
+                kg • BF: {biometric?.fatPct ? `${biometric.fatPct}%` : "—"}
+              </p>
             </div>
-            <div className="w-24 h-12">
-              {/* Dummy sparkline */}
-              <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-full">
-                <polyline fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points="0,30 20,25 40,28 60,15 80,20 100,10" />
-              </svg>
-            </div>
+            <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-24 h-12 shrink-0">
+              <polyline
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points="0,30 20,25 40,28 60,15 80,20 100,10"
+              />
+            </svg>
           </div>
         </Link>
 

@@ -14,7 +14,8 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/recovery") ||
         nextUrl.pathname.startsWith("/coach") ||
         nextUrl.pathname.startsWith("/body") ||
-        nextUrl.pathname.startsWith("/plan")
+        nextUrl.pathname.startsWith("/plan") ||
+        nextUrl.pathname.startsWith("/guida")
 
       if (isProtected) {
         if (isLoggedIn) return true
