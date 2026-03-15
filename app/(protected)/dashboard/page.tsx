@@ -120,7 +120,7 @@ export default async function DashboardPage() {
               <div className="flex gap-4 text-sm" style={{ color: "var(--fg-muted)" }}>
                 <span>HRV: {recovery?.hrv || "—"}</span>
                 <span>RHR: {recovery?.rhr || "—"}</span>
-                <span>Sonno: {recovery?.sleepHours || "—"}h</span>
+                <span>Sonno: {recovery?.sleepMin ? `${Math.round(recovery.sleepMin / 60)}h` : "—"}</span>
               </div>
             </div>
           </div>
