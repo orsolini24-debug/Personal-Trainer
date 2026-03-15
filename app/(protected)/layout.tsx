@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import { LayoutDashboard, Dumbbell, Utensils, HeartPulse, MessageCircle, Activity, Calendar, User as UserIcon } from "lucide-react"
+import { LayoutDashboard, Dumbbell, Utensils, HeartPulse, MessageCircle, Activity, Calendar, BookOpen } from "lucide-react"
 import Link from "next/link"
 
 export default async function ProtectedLayout({
@@ -22,6 +22,7 @@ export default async function ProtectedLayout({
     { name: "Coach", href: "/coach", icon: MessageCircle },
     { name: "Body", href: "/body", icon: Activity },
     { name: "Plan", href: "/plan", icon: Calendar },
+    { name: "Guida", href: "/guida", icon: BookOpen },
   ]
 
   const userName = session.user.name || session.user.email || 'User'
