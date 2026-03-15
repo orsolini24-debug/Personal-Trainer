@@ -21,6 +21,7 @@ model User {
   heightCm      Int?
   birthDate     DateTime?
 
+  profile          UserProfile?
   mesocycles       Mesocycle[]
   workoutSessions  WorkoutSession[]
   nutritionDays    NutritionDay[]
@@ -32,6 +33,45 @@ model User {
   workoutPlans     WorkoutPlan[]
   plannedSessions  PlannedSession[]
   activeSession    ActiveSession?
+}
+
+model UserProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Step 1 – Anagrafica
+  biologicalSex    String?  // "MALE", "FEMALE"
+  ageYears         Int?
+  weightKg         Float?
+  heightCm         Int?
+
+  // Step 2 – Esperienza e forza
+  experienceLevel  String?  // "BEGINNER", "INTERMEDIATE", "ADVANCED"
+  trainingYears    Int?
+  strengthRefs     Json?    // { squat1RM, bench1RM, deadlift1RM, ohp1RM }
+
+  // Step 3 – Obiettivi e sport
+  primaryGoal      String?  // "HYPERTROPHY","STRENGTH","WEIGHT_LOSS","RECOMP","PERFORMANCE","RETURN_FROM_INJURY"
+  secondarySports  String[] // ["RUNNING","HYROX","CLIMBING","CROSSFIT","CYCLING"]
+  mainSports       SportType[]
+  sportLevels      Json?    // { SOCCER: "AMATEUR", PADEL: "INTERMEDIATE" }
+  targetEvent      String?  // es. "Hyrox Milano Giugno 2026"
+
+  // Step 4 – Logistica
+  availableDays    Int?     // Days per week
+  sessionDuration  Int?     // Minutes
+  equipmentLevel   String?  // "FULL_GYM","HOME_GYM","BODYWEIGHT_ONLY"
+  preferredSplit   String?  // "UPPER_LOWER","PUSH_PULL_LEGS","FULL_BODY","CUSTOM"
+
+  // Step 5 – Salute e alimentazione
+  injuriesList         String[]
+  dietaryRestrictions  String[]
+  supplementsUsed      String[]
+
+  // Meta
+  onboardingCompleted  Boolean  @default(false)
+  updatedAt            DateTime @updatedAt
 }
 
 // ─── TRAINING ────────────────────────────────────────────────────────────────
@@ -60,6 +100,8 @@ model WorkoutSession {
   mesocycle     Mesocycle?      @relation(fields: [mesocycleId], references: [id])
   date          DateTime
   type          SessionType
+  sportType     SportType?      // Se è un'attività sportiva specifica
+  sportData     Json?           // Dati tecnici specifici (gol, set, passi, bpm)
   durationMin   Int?
   trainingLoad  Float?
   rpe           Int?
@@ -204,14 +246,19 @@ model SetLog {
 model ExerciseDefinition {
   id               String      @id @default(cuid())
   name             String      @unique
+  nameIt           String?     // Nome tradotto in italiano
   nameAlt          String?
   primaryMuscles   District[]
   secondaryMuscles District[]
   equipment        Equipment
   difficulty       Difficulty  @default(INTERMEDIATE)
   isCompound       Boolean     @default(true)
+  movementType     MovementType @default(OTHER)
   description      String?     @db.Text
+  descriptionIt    String?     @db.Text // Spiegazione dettagliata in italiano
   tips             String?     @db.Text
+  tipsIt           String?     @db.Text
+  mediaUrl         String?     // Link a immagine o animazione (gif/video)
   createdAt        DateTime    @default(now())
 
   planExercises    PlanExercise[]
@@ -353,6 +400,34 @@ enum SessionType {
   V1
   V2
   OUTDOOR
+  OTHER
+}
+
+enum SportType {
+  SOCCER
+  PADEL
+  TENNIS
+  SWIMMING
+  CYCLING
+  COMBAT
+  BASKETBALL
+  RUNNING
+  VOLLEYBALL
+  GYMNASTICS
+  CROSSFIT
+  HYROX
+  OTHER
+}
+
+enum MovementType {
+  PUSH
+  PULL
+  SQUAT
+  HINGE
+  LUNGE
+  CARRY
+  ISOLATION
+  CORE
   OTHER
 }
 

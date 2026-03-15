@@ -29,15 +29,52 @@ export async function getOrCreateNutritionDay(date: Date) {
     })
     const isTrainingDay = !!session
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true }
+    })
+
     let day = await prisma.nutritionDay.findUnique({
       where: { userId_date: { userId, date: d } },
       include: { meals: { include: { foodItems: true } } }
     })
 
-    const baseKcal = 2200;
-    const baseCarbs = 200;
-    const baseProtein = 150;
-    const baseFat = 70;
+    // Base default values
+    let baseKcal = 2200;
+    let baseCarbs = 200;
+    let baseProtein = 150;
+    let baseFat = 70;
+
+    // Optional dynamic calculation based on user info
+    if (user?.weightKg) {
+      // Very basic Mifflin-St Jeor estimate (assuming moderate activity)
+      // Men: 10 x weight (kg) + 6.25 x height (cm) - 5 x age (y) + 5
+      // Women: 10 x weight (kg) + 6.25 x height (cm) - 5 x age (y) - 161
+      let bmr = 10 * user.weightKg;
+      if (user.heightCm) bmr += 6.25 * user.heightCm;
+      if (user.birthDate) {
+        const age = new Date().getFullYear() - user.birthDate.getFullYear();
+        bmr -= 5 * age;
+      }
+      
+      if (user.profile?.biologicalSex === "FEMALE") {
+        bmr -= 161;
+      } else {
+        bmr += 5;
+      }
+
+      // Multiply by activity factor (assume 1.55 for moderate)
+      const tdee = Math.round(bmr * 1.55);
+      
+      // Adjust based on goal
+      if (user.profile?.primaryGoal === "WEIGHT_LOSS") baseKcal = tdee - 500;
+      else if (user.profile?.primaryGoal === "HYPERTROPHY") baseKcal = tdee + 300;
+      else baseKcal = tdee;
+
+      baseProtein = Math.round(user.weightKg * 2.0); // 2g/kg
+      baseFat = Math.round(user.weightKg * 0.8); // 0.8g/kg
+      baseCarbs = Math.round((baseKcal - (baseProtein * 4) - (baseFat * 9)) / 4);
+    }
 
     const targetKcal = isTrainingDay ? baseKcal + 400 : baseKcal;
     const targetCarbs = isTrainingDay ? baseCarbs + 100 : baseCarbs;
@@ -68,7 +105,7 @@ export async function getOrCreateNutritionDay(date: Date) {
         where: { id: day.id },
         include: { meals: { include: { foodItems: true } } }
       })
-    } else if (day.isTrainingDay !== isTrainingDay) {
+    } else if (day.isTrainingDay !== isTrainingDay || day.kcalTarget !== targetKcal) {
       // Update targets if training day status changed
       day = await prisma.nutritionDay.update({
         where: { id: day.id },

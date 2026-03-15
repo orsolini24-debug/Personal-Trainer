@@ -16,9 +16,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     include: { profile: true }
   })
 
-  // Se non ha profilo o non ha completato l'onboarding → wizard
-  if (!user?.profile || !user.profile.onboardingCompleted) {
-    return <OnboardingWizard userName={user?.name ?? undefined} />
+  // If the user doesn't have a profile yet, force them into the Onboarding Wizard
+  if (!user?.profile) {
+    return <OnboardingWizard />
   }
 
   // Otherwise, render the normal app layout

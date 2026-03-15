@@ -10,7 +10,7 @@ const SUGGESTED = [
   "Analizza le mie ultime sessioni e dimmi cosa migliorare",
   "Cosa mangio oggi per ottimizzare l'allenamento stasera?",
   "Qual è il rischio infortuni attuale e come lo gestisco?",
-  "Progredisco come previsto nel Mesociclo 1?",
+  "Progredisco come previsto nel mio piano?",
   "Suggerisci integratori per il mio profilo attuale",
 ]
 

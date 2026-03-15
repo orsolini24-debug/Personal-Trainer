@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function getUserContext(userId: string) {
   const [
+    userProfile,
     recentSessions,
     recentNutrition,
     latestSync,
@@ -11,6 +12,10 @@ export async function getUserContext(userId: string) {
     plannedToday,
     districtStressWeek,
   ] = await Promise.all([
+    // Profilo utente
+    prisma.userProfile.findUnique({
+      where: { userId }
+    }),
     // Ultime 10 sessioni con esercizi e set
     prisma.workoutSession.findMany({
       where: { userId },
@@ -87,6 +92,7 @@ export async function getUserContext(userId: string) {
   }
 
   return {
+    userProfile,
     recentSessions,
     recentNutrition,
     latestSync,
@@ -98,3 +104,4 @@ export async function getUserContext(userId: string) {
     today: new Date().toISOString(),
   }
 }
+
