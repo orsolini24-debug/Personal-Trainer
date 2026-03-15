@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── AUTH ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Profile
+  weightKg      Float?
+  heightCm      Int?
+  birthDate     DateTime?
+
+  // Relations
+  mesocycles       Mesocycle[]
+  workoutSessions  WorkoutSession[]
+  nutritionDays    NutritionDay[]
+  biometricLogs    BiometricLog[]
+  recoveryLogs     RecoveryLog[]
+  devices          UserDevice[]
+  injuries         Injury[]
+  aiReports        AIReport[]
+}
+
+// ─── TRAINING ────────────────────────────────────────────────────────────────
+
+model Mesocycle {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  startDate   DateTime
+  endDate     DateTime?
+  objectives  String?
+  kpi         Json?    // { staccoKg: 130, corsa25minZ2: true, ... }
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  sessions    WorkoutSession[]
+}
+
+model WorkoutSession {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mesocycleId   String?
+  mesocycle     Mesocycle?      @relation(fields: [mesocycleId], references: [id])
+  date          DateTime
+  type          SessionType     // A, B, C, D, V1, V2
+  durationMin   Int?
+  trainingLoad  Float?          // Calcolato: durata x RPE o da Suunto
+  rpe           Int?            // 1-10
+  notes         String?
+  voiceNoteUrl  String?
+  suuntoId      String?         // ID sessione su Suunto per dedup
+  createdAt     DateTime        @default(now())
+
+  exercises       Exercise[]
+  districtStress  DistrictStress[]
+}
+
+model Exercise {
+  id            String         @id @default(cuid())
+  sessionId     String
+  session       WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name          String
+  orderIndex    Int            @default(0)
+  sets          Int?
+  reps          String?        // "8-10" o "8" - stringa per flessibilità
+  loadKg        Float?
+  rir           Int?           // Reps In Reserve 0-4
+  technicalNotes String?
+  createdAt     DateTime       @default(now())
+}
+
+model DistrictStress {
+  id         String         @id @default(cuid())
+  sessionId  String
+  session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  district   District
+  intensity  Int            // 0-3
+}
+
+// ─── NUTRITION ───────────────────────────────────────────────────────────────
+
+model NutritionDay {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @db.Date
+  kcalTarget   Int?
+  kcalActual   Int?
+  proteinG     Float?
+  carbsG       Float?
+  fatG         Float?
+  isTrainingDay Boolean @default(false)
+  createdAt    DateTime @default(now())
+
+  meals  Meal[]
+
+  @@unique([userId, date])
+}
+
+model Meal {
+  id              String       @id @default(cuid())
+  nutritionDayId  String
+  nutritionDay    NutritionDay @relation(fields: [nutritionDayId], references: [id], onDelete: Cascade)
+  type            MealType
+  time            DateTime?
+  kcal            Int?
+  photoUrl        String?
+  createdAt       DateTime     @default(now())
+
+  foodItems  FoodItem[]
+}
+
+model FoodItem {
+  id         String     @id @default(cuid())
+  mealId     String
+  meal       Meal       @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  name       String
+  quantityG  Float?
+  kcal       Float?
+  proteinG   Float?
+  carbsG     Float?
+  fatG       Float?
+  source     FoodSource @default(MANUAL) // MANUAL, BARCODE, AI_VISION, TEMPLATE
+}
+
+// ─── BIOMETRIA ───────────────────────────────────────────────────────────────
+
+model BiometricLog {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime      @db.Date
+  weightKg     Float?
+  fatPct       Float?
+  muscleMassKg Float?
+  waterPct     Float?
+  waistCm      Float?
+  hipsCm       Float?
+  chestCm      Float?
+  armCm        Float?
+  thighCm      Float?
+  photoUrl     String?
+  source       MetricSource  @default(MANUAL)
+  createdAt    DateTime      @default(now())
+
+  @@unique([userId, date])
+}
+
+// ─── DEVICE / ECOSISTEMA UTENTE ──────────────────────────────────────────────
+// L'utente carica screenshot dalle sue app — niente API dirette
+// Il sistema memorizza quale device/app usa per sapere come interpretare i dati
+
+model UserDevice {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ecosystem     Ecosystem   // SUUNTO, GARMIN, SAMSUNG, APPLE, POLAR, WHOOP, OTHER
+  deviceModel   String?     // es. "Suunto Race", "Garmin Forerunner 965"
+  appName       String?     // es. "Suunto App", "Garmin Connect"
+  isPrimary     Boolean     @default(false)
+  notes         String?     // differenze note: accuratezza HRV, calcolo TL, ecc.
+  createdAt     DateTime    @default(now())
+}
+
+// ─── RECOVERY DATA (da screenshot) ───────────────────────────────────────────
+
+model RecoveryLog {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime    @db.Date
+  enteredAt     DateTime    @default(now())
+
+  // Fonte dati
+  source        DataSource  @default(MANUAL) // MANUAL (digitato da screenshot), AI_PARSED (futuro OCR)
+  screenshotUrl String?     // screenshot originale caricato dall'utente
+
+  // Fitness metrics (copiati dallo screenshot)
+  ctl           Float?
+  atl           Float?
+  tsb           Float?
+  acwr          Float?
+
+  // Recovery (copiati dallo screenshot)
+  hrv           Float?
+  rhr           Int?
+  sleepMin      Int?
+  sleepScore    Int?
+  recoveryScore Int?
+
+  @@unique([userId, date])
+}
+
+// ─── INFORTUNI ───────────────────────────────────────────────────────────────
+
+model Injury {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  district    District
+  description String
+  startDate   DateTime
+  endDate     DateTime?
+  status      InjuryStatus  @default(ACTIVE)
+  notes       String?
+  createdAt   DateTime      @default(now())
+}
+
+// ─── AI REPORTS ──────────────────────────────────────────────────────────────
+
+model AIReport {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         ReportType // POST_SESSION, DAILY, WEEKLY
+  date         DateTime
+  content      String     @db.Text
+  dataInputJson Json?
+  createdAt    DateTime   @default(now())
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum SessionType {
+  A
+  B
+  C
+  D
+  V1
+  V2
+  OUTDOOR
+  OTHER
+}
+
+enum District {
+  QUAD
+  HAMSTRING
+  GLUTE
+  KNEE
+  LOWER_BACK
+  UPPER_BACK
+  SHOULDER
+  CHEST
+  BICEP
+  TRICEP
+  CALF
+  CORE
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  PRE_WORKOUT
+  POST_WORKOUT
+  DINNER
+  SNACK
+}
+
+enum FoodSource {
+  MANUAL
+  BARCODE
+  AI_VISION
+  TEMPLATE
+}
+
+enum MetricSource {
+  MANUAL
+  SCALE_SYNC
+}
+
+enum InjuryStatus {
+  ACTIVE
+  RECOVERING
+  RESOLVED
+}
+
+enum ReportType {
+  POST_SESSION
+  DAILY
+  WEEKLY
+}
+
+enum Ecosystem {
+  SUUNTO
+  GARMIN
+  SAMSUNG_HEALTH
+  APPLE_HEALTH
+  POLAR
+  WHOOP
+  FITBIT
+  OTHER
+}
+
+enum DataSource {
+  MANUAL
+  AI_PARSED
+}
