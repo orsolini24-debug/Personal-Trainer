@@ -19,8 +19,8 @@ export async function getUserContext(userId: string) {
         take: 3,
         include: { meals: { include: { foodItems: true } } },
       }),
-      // Ultimo sync Suunto
-      prisma.suuntoSync.findFirst({
+      // Ultimo log recupero
+      prisma.recoveryLog.findFirst({
         where: { userId },
         orderBy: { date: "desc" },
       }),
