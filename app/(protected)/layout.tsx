@@ -188,11 +188,16 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <header
-          className="h-14 md:h-16 flex items-center justify-between pl-16 pr-4 md:px-6 shrink-0"
+          className="flex items-center justify-between pl-16 pr-4 md:px-6 shrink-0"
           style={{
+            height: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
+            paddingTop: 'env(safe-area-inset-top, 0px)',
             borderBottom: '1px solid var(--border-default)',
             backdropFilter: 'blur(32px)',
             background: 'color-mix(in srgb, var(--bg-base) 80%, transparent)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 20
           }}
         >
           <div />

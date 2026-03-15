@@ -4,6 +4,7 @@ import { getBiometricHistory } from "@/app/actions/body"
 import BodyForm from "./body-form"
 import BodyChart from "./body-chart"
 import BodyHistory from "./body-history"
+import PhotoUpload from "./photo-upload"
 import { Camera, Target, Activity } from "lucide-react"
 
 export default async function BodyPage() {
@@ -93,17 +94,8 @@ export default async function BodyPage() {
             <BodyForm initialData={todayLog} />
           </section>
 
-          {/* Progress Photos Upload (UI Placeholder) */}
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5 text-center border-dashed">
-            <div className="w-12 h-12 rounded-full bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] mx-auto mb-3">
-              <Camera className="w-6 h-6" />
-            </div>
-            <h3 className="font-medium text-[#f1f5f9] mb-1">Foto Progresso</h3>
-            <p className="text-xs text-[#64748b] mb-4">Carica la tua foto settimanale per confrontare i risultati visivi.</p>
-            <button className="px-4 py-2 bg-[#0a0a0f] hover:bg-white/5 border border-white/10 rounded-lg text-sm text-[#f1f5f9] transition-colors w-full">
-              Seleziona Immagine (Presto)
-            </button>
-          </section>
+          {/* Progress Photos Component */}
+          <PhotoUpload />
         </div>
       </div>
     </div>

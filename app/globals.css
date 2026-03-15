@@ -29,6 +29,25 @@
   color-scheme: dark;
 }
 
+[data-theme="cobalt-light"] {
+  --bg-base: #F8FAFC; --bg-surface: #FFFFFF; --bg-elevated: #F1F5F9; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #2563EB; --accent-dim: #2563EB1A; --accent-on: #FFFFFF;
+  --accent2: #4F46E5; --accent2-dim: #4F46E51A;
+  --positive: #059669; --positive-dim: #0596691A;
+  --negative: #DC2626; --negative-dim: #DC26261A;
+  --warning: #D97706; --warning-dim: #D977061A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #2563EB;
+  --glow-accent: #2563EB40; --glow-positive: #05966940; --glow-negative: #DC262640;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
+}
+
 /* ── T1: OBSIDIAN (Pure Minimalism) ── */
 [data-theme="obsidian"], [data-theme="obsidian-dark"] {
   --bg-base: #000000; --bg-surface: #0A0A0A; --bg-elevated: #141414; --bg-input: #0D0D0D; --bg-sidebar: #000000;
@@ -86,6 +105,25 @@
   color-scheme: dark;
 }
 
+[data-theme="sapphire-light"] {
+  --bg-base: #F0F9FF; --bg-surface: #FFFFFF; --bg-elevated: #E0F2FE; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #0284C7; --accent-dim: #0284C71A; --accent-on: #FFFFFF;
+  --accent2: #4338CA; --accent2-dim: #4338CA1A;
+  --positive: #059669; --positive-dim: #0596691A;
+  --negative: #DC2626; --negative-dim: #DC26261A;
+  --warning: #EA580C; --warning-dim: #EA580C1A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #0284C7;
+  --glow-accent: #0284C740; --glow-positive: #05966940; --glow-negative: #DC262640;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
+}
+
 /* ── T3: FOREST (Deep Green) ── */
 [data-theme="forest"], [data-theme="forest-dark"] {
   --bg-base: #050805; --bg-surface: #0D120D; --bg-elevated: #161D16; --bg-input: #050805; --bg-sidebar: #050805;
@@ -102,6 +140,25 @@
   --shadow-lg: 0 20px 40px rgba(5,8,5,0.7); --shadow-xl: 0 40px 80px rgba(5,8,5,0.8);
   --background: var(--bg-base); --foreground: var(--fg-primary);
   color-scheme: dark;
+}
+
+[data-theme="forest-light"] {
+  --bg-base: #F0FDF4; --bg-surface: #FFFFFF; --bg-elevated: #DCFCE7; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #16A34A; --accent-dim: #16A34A1A; --accent-on: #FFFFFF;
+  --accent2: #22C55E; --accent2-dim: #22C55E1A;
+  --positive: #16A34A; --positive-dim: #16A34A1A;
+  --negative: #DC2626; --negative-dim: #DC26261A;
+  --warning: #D97706; --warning-dim: #D977061A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #16A34A;
+  --glow-accent: #16A34A40; --glow-positive: #16A34A40; --glow-negative: #DC262640;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
 }
 
 /* ── T4: SUNSET (Midnight Orange) ── */
@@ -123,6 +180,25 @@
   color-scheme: dark;
 }
 
+[data-theme="sunset-light"] {
+  --bg-base: #FFF7ED; --bg-surface: #FFFFFF; --bg-elevated: #FFEDD5; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #EA580C; --accent-dim: #EA580C1A; --accent-on: #FFFFFF;
+  --accent2: #F97316; --accent2-dim: #F973161A;
+  --positive: #16A34A; --positive-dim: #16A34A1A;
+  --negative: #E11D48; --negative-dim: #E11D481A;
+  --warning: #D97706; --warning-dim: #D977061A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #EA580C;
+  --glow-accent: #EA580C40; --glow-positive: #16A34A40; --glow-negative: #E11D4840;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
+}
+
 /* ── T5: CYBERPUNK (Neon Contrast) ── */
 [data-theme="cyberpunk"], [data-theme="cyberpunk-dark"] {
   --bg-base: #000000; --bg-surface: #050505; --bg-elevated: #0E0E0E; --bg-input: #000000; --bg-sidebar: #000000;
@@ -140,6 +216,25 @@
   --shadow-xl: 0 0 80px rgba(0,242,255,0.25), 0 40px 80px rgba(0,0,0,0.9);
   --background: var(--bg-base); --foreground: var(--fg-primary);
   color-scheme: dark;
+}
+
+[data-theme="cyberpunk-light"] {
+  --bg-base: #FDF4FF; --bg-surface: #FFFFFF; --bg-elevated: #FAE8FF; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #D946EF; --accent-dim: #D946EF1A; --accent-on: #FFFFFF;
+  --accent2: #06B6D4; --accent2-dim: #06B6D41A;
+  --positive: #10B981; --positive-dim: #10B9811A;
+  --negative: #F43F5E; --negative-dim: #F43F5E1A;
+  --warning: #F59E0B; --warning-dim: #F59E0B1A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #D946EF;
+  --glow-accent: #D946EF40; --glow-positive: #10B98140; --glow-negative: #F43F5E40;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
 }
 
 /* ── T6: OCEAN (Deep Sea) ── */
@@ -161,6 +256,25 @@
   color-scheme: dark;
 }
 
+[data-theme="ocean-light"] {
+  --bg-base: #ECFEFF; --bg-surface: #FFFFFF; --bg-elevated: #CFFAFE; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #0891B2; --accent-dim: #0891B21A; --accent-on: #FFFFFF;
+  --accent2: #06B6D4; --accent2-dim: #06B6D41A;
+  --positive: #059669; --positive-dim: #0596691A;
+  --negative: #DC2626; --negative-dim: #DC26261A;
+  --warning: #D97706; --warning-dim: #D977061A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #0891B2;
+  --glow-accent: #0891B240; --glow-positive: #05966940; --glow-negative: #DC262640;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
+}
+
 /* ── T7: ROSE GOLD ── */
 [data-theme="rosegold"], [data-theme="rosegold-dark"] {
   --bg-base: #130A0D; --bg-surface: #1E1118; --bg-elevated: #281622; --bg-input: #130A0D; --bg-sidebar: #130A0D;
@@ -178,6 +292,25 @@
   --shadow-xl: 0 40px 80px rgba(19,10,13,0.85);
   --background: var(--bg-base); --foreground: var(--fg-primary);
   color-scheme: dark;
+}
+
+[data-theme="rosegold-light"] {
+  --bg-base: #FFF1F2; --bg-surface: #FFFFFF; --bg-elevated: #FFE4E6; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #E11D48; --accent-dim: #E11D481A; --accent-on: #FFFFFF;
+  --accent2: #F43F5E; --accent2-dim: #F43F5E1A;
+  --positive: #059669; --positive-dim: #0596691A;
+  --negative: #DC2626; --negative-dim: #DC26261A;
+  --warning: #D97706; --warning-dim: #D977061A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #E11D48;
+  --glow-accent: #E11D4840; --glow-positive: #05966940; --glow-negative: #DC262640;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
 }
 
 /* ── T8: MONO (Studio Graphite) ── */
@@ -198,10 +331,35 @@
   color-scheme: dark;
 }
 
+[data-theme="mono-light"] {
+  --bg-base: #F8FAFC; --bg-surface: #FFFFFF; --bg-elevated: #F1F5F9; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
+  --accent: #0F172A; --accent-dim: #0F172A1A; --accent-on: #FFFFFF;
+  --accent2: #334155; --accent2-dim: #3341551A;
+  --positive: #059669; --positive-dim: #0596691A;
+  --negative: #DC2626; --negative-dim: #DC26261A;
+  --warning: #D97706; --warning-dim: #D977061A;
+  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
+  --sidebar-active-border: #0F172A;
+  --glow-accent: #0F172A40; --glow-positive: #05966940; --glow-negative: #DC262640;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: light;
+}
+
 /* ================================================================
    TYPOGRAPHY — Variable font · Tabular nums · Optical sizing
    ================================================================ */
 @layer base {
+  html, body {
+    overscroll-behavior-y: none; /* Previene il pull-to-refresh fastidioso su mobile */
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu su tap Android/iOS */
+    touch-action: manipulation; /* Migliora reattività del touch */
+  }
+  
   body {
     font-family: 'Inter', system-ui, sans-serif;
     background-color: var(--bg-base, #05050F);
