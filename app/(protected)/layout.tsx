@@ -1,223 +1,247 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Dumbbell, Utensils, HeartPulse,
-  MessageCircle, Activity, Calendar, BookOpen, LogOut
-} from "lucide-react"
-import Link from "next/link"
-import { signOut } from "next-auth/react"
+  MessageCircle, Activity, Calendar, LogOut,
+  HelpCircle, Menu, X,
+} from 'lucide-react'
+import Link from 'next/link'
+import { signOut } from 'next-auth/react'
+import HelpPanel from '@/components/HelpPanel'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Training", href: "/training", icon: Dumbbell },
-  { name: "Nutrition", href: "/nutrition", icon: Utensils },
-  { name: "Recovery", href: "/recovery", icon: HeartPulse },
-  { name: "Coach", href: "/coach", icon: MessageCircle },
-  { name: "Body", href: "/body", icon: Activity },
-  { name: "Plan", href: "/plan", icon: Calendar },
-  { name: "Guida", href: "/guida", icon: BookOpen },
+  { name: 'Dashboard',  href: '/dashboard',  icon: LayoutDashboard },
+  { name: 'Training',   href: '/training',   icon: Dumbbell },
+  { name: 'Nutrition',  href: '/nutrition',  icon: Utensils },
+  { name: 'Recovery',   href: '/recovery',   icon: HeartPulse },
+  { name: 'Coach',      href: '/coach',      icon: MessageCircle },
+  { name: 'Body',       href: '/body',       icon: Activity },
+  { name: 'Plan',       href: '/plan',       icon: Calendar },
 ]
 
-const themes = [
-  { id: "cobalt", color: "#3B82F6" },
-  { id: "obsidian", color: "#FFFFFF" },
-  { id: "sapphire", color: "#38BDF8" },
-  { id: "forest", color: "#7BA05B" },
-  { id: "sunset", color: "#F97316" },
-  { id: "cyberpunk", color: "#00F2FF" },
-  { id: "ocean", color: "#00BCD4" },
-  { id: "rosegold", color: "#E879A0" },
-  { id: "mono", color: "#888888" },
-]
-
-export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-  const [expanded, setExpanded] = useState(false)
-  const [theme, setTheme] = useState("cobalt")
-  const [showPicker, setShowPicker] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem("pe-theme") || "cobalt"
-    setTheme(saved)
-    document.documentElement.setAttribute("data-theme", saved)
-  }, [])
-
-  const applyTheme = (id: string) => {
-    setTheme(id)
-    localStorage.setItem("pe-theme", id)
-    document.documentElement.setAttribute("data-theme", id)
-    setShowPicker(false)
-  }
-
+function NavLink({ item, active, onClick }: { item: typeof navItems[0]; active: boolean; onClick?: () => void }) {
   return (
-    <div
-      className="flex h-screen overflow-hidden"
-      style={{ background: "var(--bg-base)", color: "var(--fg-primary)" }}
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className="flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all duration-200 w-full"
+      style={{
+        background: active ? 'var(--bg-elevated)' : 'transparent',
+        border: `1px solid ${active ? 'var(--accent)' : 'transparent'}`,
+        color: active ? 'var(--fg-primary)' : 'var(--fg-muted)',
+        boxShadow: active ? '0 4px 12px var(--accent-dim)' : 'none',
+      }}
     >
-      {/* Desktop Sidebar */}
-      <aside
-        className="hidden md:flex flex-col z-40 relative transition-[width] duration-300 ease-in-out overflow-hidden shrink-0"
+      <div
+        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200"
         style={{
-          width: expanded ? "220px" : "64px",
-          background: "var(--bg-sidebar)",
-          borderRight: "1px solid var(--border-default)",
+          background: active ? 'var(--accent)' : 'var(--bg-input)',
+          border: `1px solid ${active ? 'var(--accent)' : 'var(--border-default)'}`,
+          color: active ? 'var(--accent-on)' : 'var(--fg-muted)',
         }}
-        onMouseEnter={() => setExpanded(true)}
-        onMouseLeave={() => { setExpanded(false); setShowPicker(false) }}
       >
-        {/* Logo */}
+        <item.icon size={16} strokeWidth={active ? 2.5 : 2} />
+      </div>
+      <span className="text-sm font-bold tracking-tight">{item.name}</span>
+      {active && (
         <div
-          className="h-16 flex items-center px-4 shrink-0 gap-3"
-          style={{ borderBottom: "1px solid var(--border-default)" }}
+          className="ml-auto w-1.5 h-1.5 rounded-full shrink-0"
+          style={{ background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }}
+        />
+      )}
+    </Link>
+  )
+}
+
+function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHelp: () => void; onClose?: () => void }) {
+  return (
+    <div className="flex flex-col h-full py-6 px-4">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-2 mb-8 shrink-0">
+        <div
+          className="w-10 h-10 rounded-[14px] flex items-center justify-center font-black text-sm text-white shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))',
+            boxShadow: '0 8px 20px -4px var(--glow-accent)',
+          }}
         >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shrink-0 text-white"
-            style={{
-              background: "linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))",
-              boxShadow: "0 0 16px var(--glow-accent)",
-            }}
-          >
-            PE
-          </div>
+          PE
+        </div>
+        <div>
           <span
-            className="font-black text-sm whitespace-nowrap transition-all duration-200"
+            className="font-black text-base tracking-tight block leading-none"
             style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-8px)",
-              background: "linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              background: 'linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
             }}
           >
+            Performance
+          </span>
+          <span className="text-[9px] font-black uppercase" style={{ color: 'var(--fg-muted)', letterSpacing: '0.2em' }}>
             Ecosystem
           </span>
         </div>
+      </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
-            {navItems.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(item.href + "/")
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    title={item.name}
-                    className="flex items-center rounded-xl transition-all duration-150"
-                    style={{
-                      padding: "8px",
-                      color: active ? "var(--accent)" : "var(--fg-subtle)",
-                      background: active ? "var(--accent-dim)" : "transparent",
-                      borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
-                    }}
-                  >
-                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                      <item.icon className="w-5 h-5" />
-                    </div>
-                    <span
-                      className="ml-2 text-sm font-medium whitespace-nowrap transition-all duration-200"
-                      style={{ opacity: expanded ? 1 : 0 }}
-                    >
-                      {item.name}
-                    </span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
+      {/* Nav */}
+      <nav className="flex-1 space-y-1 overflow-y-auto min-h-0">
+        {navItems.map((item) => {
+          const active = pathname === item.href || pathname.startsWith(item.href + '/')
+          return (
+            <NavLink key={item.href} item={item} active={active} onClick={onClose} />
+          )
+        })}
+      </nav>
 
-        {/* Theme picker + logout */}
-        <div className="p-2 shrink-0" style={{ borderTop: "1px solid var(--border-default)" }}>
-          {/* Theme dots */}
-          {showPicker && (
-            <div className="mb-2 px-1">
-              <div className="flex flex-wrap gap-2 justify-center">
-                {themes.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => applyTheme(t.id)}
-                    className="w-6 h-6 rounded-full transition-transform hover:scale-125"
-                    style={{
-                      backgroundColor: t.color,
-                      boxShadow: theme === t.id ? `0 0 0 2px var(--bg-sidebar), 0 0 0 4px ${t.color}` : "none",
-                    }}
-                    title={t.id}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <button
-            onClick={() => setShowPicker(v => !v)}
-            className="w-full flex items-center rounded-xl p-2 gap-2 transition-colors"
-            style={{ color: "var(--fg-subtle)" }}
-            title="Tema"
-          >
-            <div className="w-8 h-8 flex items-center justify-center shrink-0">
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: themes.find(t => t.id === theme)?.color }}
-              />
-            </div>
-            <span className="text-xs font-medium whitespace-nowrap transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
-              Tema: {theme}
-            </span>
-          </button>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="w-full flex items-center rounded-xl p-2 gap-2 mt-1 transition-colors"
-            style={{ color: "var(--fg-subtle)" }}
-            title="Esci"
-          >
-            <div className="w-8 h-8 flex items-center justify-center shrink-0">
-              <LogOut className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-medium whitespace-nowrap transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
-              Esci
-            </span>
-          </button>
-        </div>
-      </aside>
+      {/* Footer */}
+      <div className="shrink-0 pt-4 space-y-1" style={{ borderTop: '1px solid var(--border-default)' }}>
+        <button
+          onClick={onHelp}
+          className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group"
+          style={{ color: 'var(--fg-muted)' }}
+        >
+          <div className="w-8 h-8 flex items-center justify-center shrink-0">
+            <HelpCircle size={18} />
+          </div>
+          <span className="text-sm font-bold tracking-tight">Guida & Aiuto</span>
+        </button>
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group"
+          style={{ color: 'var(--fg-muted)' }}
+        >
+          <div className="w-8 h-8 flex items-center justify-center shrink-0">
+            <LogOut size={18} />
+          </div>
+          <span className="text-sm font-bold tracking-tight">Esci</span>
+        </button>
+      </div>
+    </div>
+  )
+}
 
-      {/* Main */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
-          {children}
-        </div>
-      </main>
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const [showHelp, setShowHelp]   = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  return (
+    <div className="flex h-[100dvh] overflow-hidden" style={{ background: 'var(--bg-base)', color: 'var(--fg-primary)' }}>
+
+      {/* Help Panel */}
+      <HelpPanel open={showHelp} onClose={() => setShowHelp(false)} />
+
+      {/* Desktop Sidebar */}
+      <div
+        className="hidden md:flex flex-col w-60 h-screen shrink-0"
+        style={{ background: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-default)' }}
+      >
+        <SidebarContent pathname={pathname} onHelp={() => setShowHelp(true)} />
+      </div>
+
+      {/* Mobile: hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl"
+        style={{
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-default)',
+          color: 'var(--fg-primary)',
+        }}
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* Mobile: overlay sidebar */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      <div
+        className="md:hidden fixed inset-y-0 left-0 z-50 flex flex-col"
+        style={{
+          width: 'min(288px, 85vw)',
+          background: 'var(--bg-sidebar)',
+          borderRight: '1px solid var(--border-default)',
+          transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)',
+        }}
+      >
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute top-4 right-4 p-2 rounded-xl"
+          style={{ color: 'var(--fg-muted)' }}
+        >
+          <X size={18} />
+        </button>
+        <SidebarContent pathname={pathname} onHelp={() => { setShowHelp(true); setMobileOpen(false) }} onClose={() => setMobileOpen(false)} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header */}
+        <header
+          className="h-14 md:h-16 flex items-center justify-between pl-16 pr-4 md:px-6 shrink-0"
+          style={{
+            borderBottom: '1px solid var(--border-default)',
+            backdropFilter: 'blur(32px)',
+            background: 'color-mix(in srgb, var(--bg-base) 80%, transparent)',
+          }}
+        >
+          <div />
+          <ThemeToggle />
+        </header>
+
+        {/* Page */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-5xl mx-auto w-full">
+            {children}
+          </div>
+        </main>
+      </div>
 
       {/* Mobile Bottom Nav */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30"
         style={{
-          background: "color-mix(in srgb, var(--bg-base) 80%, transparent)",
-          borderTop: "1px solid var(--border-default)",
+          background: 'color-mix(in srgb, var(--bg-sidebar) 92%, transparent)',
+          borderTop: '1px solid var(--border-default)',
+          backdropFilter: 'blur(40px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
         <div
           className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: "linear-gradient(90deg, transparent, var(--accent), transparent)" }}
+          style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }}
         />
-        <ul className="flex items-center justify-around h-16 px-2">
-          {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/")
+        <div className="flex items-center justify-around px-2 pt-2 pb-2">
+          {navItems.slice(0, 5).map((item) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className="flex flex-col items-center justify-center min-w-[44px] py-1 transition-colors"
-                  style={{ color: active ? "var(--accent)" : "var(--fg-subtle)" }}
-                >
-                  <item.icon className="h-5 w-5 mb-1" />
-                  <span className="text-[10px] font-medium">{item.name}</span>
-                </Link>
-              </li>
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-2xl min-w-[52px] transition-all"
+                style={{
+                  color: active ? 'var(--accent)' : 'var(--fg-subtle)',
+                  background: active ? 'var(--accent-dim)' : 'transparent',
+                }}
+              >
+                <item.icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+                <span className="text-[9px] font-black uppercase" style={{ letterSpacing: '0.05em' }}>
+                  {item.name}
+                </span>
+              </Link>
             )
           })}
-        </ul>
+        </div>
       </nav>
     </div>
   )
