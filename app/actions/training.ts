@@ -11,6 +11,30 @@ async function getUserId() {
   return session.user.id
 }
 
+const TEMPLATES: Record<string, any[]> = {
+  A: [
+    { name: "Squat", sets: 4, reps: "6-8" },
+    { name: "Panca Piana", sets: 4, reps: "6-8" },
+    { name: "Rematore Bilanciere", sets: 4, reps: "8-10" }
+  ],
+  B: [
+    { name: "Stacco da Terra", sets: 4, reps: "5-7" },
+    { name: "Military Press", sets: 4, reps: "6-8" },
+    { name: "Trazioni", sets: 4, reps: "8-10" }
+  ],
+  C: [
+    { name: "Affondi", sets: 3, reps: "10-12" },
+    { name: "Panca Inclinata Manubri", sets: 3, reps: "8-10" },
+    { name: "Pulley", sets: 3, reps: "10-12" }
+  ],
+  D: [
+    { name: "Leg Press", sets: 3, reps: "10-15" },
+    { name: "Alzate Laterali", sets: 3, reps: "12-15" },
+    { name: "Curl Bicipiti", sets: 3, reps: "10-12" },
+    { name: "Pushdown Tricipiti", sets: 3, reps: "10-12" }
+  ]
+}
+
 export async function createSession(data: { date: Date; type: SessionType; mesocycleId?: string }) {
   try {
     const userId = await getUserId()
@@ -22,6 +46,21 @@ export async function createSession(data: { date: Date; type: SessionType; mesoc
         mesocycleId: data.mesocycleId,
       },
     })
+
+    // Pre-populate if template exists
+    const template = TEMPLATES[data.type as string]
+    if (template) {
+      await prisma.exercise.createMany({
+        data: template.map((ex, idx) => ({
+          sessionId: session.id,
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          orderIndex: idx
+        }))
+      })
+    }
+
     revalidatePath("/training")
     return { success: true, data: session }
   } catch (error: any) {
@@ -115,15 +154,39 @@ export async function updateDistrictStress(sessionId: string, district: District
   }
 }
 
-export async function closeSession(sessionId: string, data: { rpe?: number; notes?: string; durationMin?: number }) {
+export async function getExerciseHistory(name: string) {
+  try {
+    const userId = await getUserId()
+    const exercises = await prisma.exercise.findMany({
+      where: { 
+        name: { equals: name, mode: 'insensitive' },
+        session: { userId }
+      },
+      include: {
+        session: { select: { date: true } }
+      },
+      orderBy: {
+        session: { date: 'asc' }
+      }
+    })
+    return { success: true, data: exercises }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function closeSession(sessionId: string, data: { rpe?: number; notes?: string; durationMin?: number; voiceNoteUrl?: string }) {
   try {
     await getUserId() // verify auth
+    const trainingLoad = (data.durationMin && data.rpe) ? data.durationMin * data.rpe : null;
     const session = await prisma.workoutSession.update({
       where: { id: sessionId },
       data: {
         rpe: data.rpe,
         notes: data.notes,
         durationMin: data.durationMin,
+        trainingLoad: trainingLoad,
+        voiceNoteUrl: data.voiceNoteUrl
       },
     })
     revalidatePath("/training")

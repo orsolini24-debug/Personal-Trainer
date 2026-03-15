@@ -27,12 +27,15 @@ export async function saveRecoveryLog(data: {
     const d = new Date(data.date)
     d.setUTCHours(0, 0, 0, 0)
 
+    const acwr = (data.atl != null && data.ctl != null && data.ctl > 0) ? data.atl / data.ctl : null
+
     const log = await prisma.recoveryLog.upsert({
       where: { userId_date: { userId, date: d } },
       update: {
         ctl: data.ctl,
         atl: data.atl,
         tsb: data.tsb,
+        acwr: acwr,
         hrv: data.hrv,
         rhr: data.rhr,
         sleepMin: data.sleepMin,
@@ -46,6 +49,7 @@ export async function saveRecoveryLog(data: {
         ctl: data.ctl,
         atl: data.atl,
         tsb: data.tsb,
+        acwr: acwr,
         hrv: data.hrv,
         rhr: data.rhr,
         sleepMin: data.sleepMin,

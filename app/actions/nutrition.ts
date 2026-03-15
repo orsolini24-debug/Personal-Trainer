@@ -17,17 +17,38 @@ export async function getOrCreateNutritionDay(date: Date) {
     const d = new Date(date)
     d.setUTCHours(0, 0, 0, 0)
 
+    // Check if it's a training day
+    const session = await prisma.workoutSession.findFirst({
+      where: {
+        userId,
+        date: {
+          gte: d,
+          lt: new Date(d.getTime() + 24 * 60 * 60 * 1000)
+        }
+      }
+    })
+    const isTrainingDay = !!session
+
     let day = await prisma.nutritionDay.findUnique({
       where: { userId_date: { userId, date: d } },
       include: { meals: { include: { foodItems: true } } }
     })
+
+    const baseKcal = 2200;
+    const baseCarbs = 200;
+    const baseProtein = 150;
+    const baseFat = 70;
+
+    const targetKcal = isTrainingDay ? baseKcal + 400 : baseKcal;
+    const targetCarbs = isTrainingDay ? baseCarbs + 100 : baseCarbs;
 
     if (!day) {
       day = await prisma.nutritionDay.create({
         data: {
           userId,
           date: d,
-          kcalTarget: 2500, // Default temporaneo
+          kcalTarget: targetKcal,
+          isTrainingDay,
         },
         include: { meals: { include: { foodItems: true } } }
       })
@@ -39,6 +60,7 @@ export async function getOrCreateNutritionDay(date: Date) {
           { nutritionDayId: day.id, type: MealType.LUNCH },
           { nutritionDayId: day.id, type: MealType.PRE_WORKOUT },
           { nutritionDayId: day.id, type: MealType.DINNER },
+          { nutritionDayId: day.id, type: MealType.SNACK },
         ]
       })
 
@@ -46,9 +68,19 @@ export async function getOrCreateNutritionDay(date: Date) {
         where: { id: day.id },
         include: { meals: { include: { foodItems: true } } }
       })
+    } else if (day.isTrainingDay !== isTrainingDay) {
+      // Update targets if training day status changed
+      day = await prisma.nutritionDay.update({
+        where: { id: day.id },
+        data: {
+          isTrainingDay,
+          kcalTarget: targetKcal,
+        },
+        include: { meals: { include: { foodItems: true } } }
+      })
     }
 
-    return { success: true, data: day }
+    return { success: true, data: { ...day, targetCarbs, targetProtein: baseProtein, targetFat: baseFat } }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
