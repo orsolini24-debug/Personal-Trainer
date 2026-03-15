@@ -47,7 +47,7 @@ export async function getUserContext(userId: string) {
     }),
     // Mesociclo attivo con piano completo
     prisma.mesocycle.findFirst({
-      where: { userId, status: 'ACTIVE' },
+      where: { userId, isActive: true },
       include: {
         workoutPlans: {
           include: {
