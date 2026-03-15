@@ -21,10 +21,7 @@ export async function POST(req: Request) {
       contextData = { error: "Impossibile caricare il contesto completo." }
     }
 
-    const systemPrompt = `Sei un Personal Trainer AI esperto. Hai accesso a tutti i dati dell'atleta.
-Rispondi in italiano, in modo diretto e pratico.
-Dati atleta disponibili: ${JSON.stringify(contextData)}
-Regole: risposte brevi e concrete, usa i dati reali, non inventare numeri.`
+    const systemPrompt = buildSystemPrompt(contextData)
 
     const completion = await groq.chat.completions.create({
       messages: [

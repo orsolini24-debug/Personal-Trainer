@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import RecoveryForm from "./recovery-form"
 import RecoveryHistory from "./recovery-history"
 import DeviceForm from "./device-form"
+import RecoveryOrb from "@/components/RecoveryOrb"
+import MuscleHeatmap from "@/components/MuscleHeatmap"
+import { District } from "@prisma/client"
 
 export default async function RecoveryPage() {
   const session = await auth()
@@ -39,7 +42,11 @@ export default async function RecoveryPage() {
   }
 
   // Heatmap aggregation
-  const districtTotals: Record<string, number> = {}
+  const districtTotals = Object.keys(District).reduce((acc, key) => {
+    acc[key as District] = 0;
+    return acc;
+  }, {} as Record<District, number>);
+
   recentSessions.forEach(s => {
     s.districtStress.forEach(ds => {
       districtTotals[ds.district] = (districtTotals[ds.district] || 0) + ds.intensity
@@ -50,6 +57,13 @@ export default async function RecoveryPage() {
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <h1 className="text-3xl font-bold tracking-tight text-[#f1f5f9]">Recovery Dashboard</h1>
       
+      {/* ── Whoop-style Recovery Orb ── */}
+      <section className="bg-[#111118] rounded-3xl p-6 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Sfondo decorativo sfumato per dare profondità */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none"></div>
+        <RecoveryOrb score={todayLog?.recoveryScore ?? 0} label={todayLog?.recoveryScore ? "Recovery" : "Nessun Dato"} />
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
@@ -87,21 +101,40 @@ export default async function RecoveryPage() {
             </div>
           </section>
 
+          {/* ── Muscle Heatmap ── */}
           <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-xl font-bold mb-4 text-[#f1f5f9]">Stress Distrettuale (7gg)</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(districtTotals).sort((a, b) => b[1] - a[1]).map(([district, total]) => (
-                <div key={district} className="flex justify-between items-center p-2 bg-[#0a0a0f] rounded border border-white/5">
-                  <span className="text-xs text-[#64748b] truncate mr-2" title={district}>{district}</span>
-                  <div className="flex gap-0.5">
-                    {[...Array(Math.min(5, Math.ceil(total / 3)))].map((_, i) => (
-                      <div key={i} className="w-1.5 h-3 bg-[#ef4444] rounded-sm opacity-80"></div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {Object.keys(districtTotals).length === 0 && (
-                <p className="text-xs text-[#64748b] col-span-2">Nessun dato recente.</p>
+            <h2 className="text-xl font-bold mb-6 text-[#f1f5f9]">Tensione Muscolare (7gg)</h2>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <MuscleHeatmap stress={districtTotals} side="front" />
+              <MuscleHeatmap stress={districtTotals} side="back" />
+            </div>
+
+            {/* Fatigue Cards */}
+            <div className="grid grid-cols-1 gap-2">
+              {Object.entries(districtTotals)
+                .filter(([_, total]) => total > 0)
+                .sort((a, b) => b[1] - a[1])
+                .map(([district, total]) => {
+                  // Normalize intensity per bar filling (max let's say 12 for visual logic)
+                  const visualPct = Math.min(100, (total / 12) * 100);
+                  const recoveryDays = Math.ceil(total / 0.8);
+                  
+                  return (
+                    <div key={district} className="flex flex-col justify-center p-3 bg-[#0a0a0f] rounded-xl border border-white/5 gap-2">
+                      <div className="flex justify-between items-center w-full">
+                        <span className="text-xs font-bold text-[#f1f5f9] truncate">{district}</span>
+                        <span className="text-[10px] text-[#ef4444] font-medium px-2 py-0.5 bg-[#ef4444]/10 rounded-md">
+                          Recupero stimato: {recoveryDays} gg
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-[#141424] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#ef4444] transition-all" style={{ width: `${visualPct}%` }}></div>
+                      </div>
+                    </div>
+                  )
+              })}
+              {Object.keys(districtTotals).filter(k => districtTotals[k as District] > 0).length === 0 && (
+                <p className="text-sm text-[#64748b] text-center w-full py-4">Nessun affaticamento registrato.</p>
               )}
             </div>
           </section>

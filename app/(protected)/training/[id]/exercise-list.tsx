@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { addExercise, deleteExercise, getExerciseHistory } from "@/app/actions/training"
 import { Exercise } from "@prisma/client"
 import { Trash2, Plus, Timer, Activity, X } from "lucide-react"
+import ExerciseAutocomplete from "@/components/ExerciseAutocomplete"
 
 function TimerComponent() {
   const [seconds, setSeconds] = useState(0)
@@ -148,7 +149,11 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
       <form onSubmit={handleAdd} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end bg-[#111118] p-5 rounded-xl border border-white/5">
         <div className="col-span-2">
           <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">Esercizio *</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full px-3 py-2 text-sm border border-white/10 rounded-lg bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. Squat" />
+          <ExerciseAutocomplete
+            value={name}
+            onChange={setName}
+            onSelect={(ex) => setName(ex.name)}
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">Serie</label>
@@ -167,7 +172,7 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
           <input type="number" value={rir} onChange={e => setRir(e.target.value)} className="w-full px-3 py-2 text-sm border border-white/10 rounded-lg bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 2" />
         </div>
         <div className="col-span-2 md:col-span-6 mt-2">
-          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+          <button type="submit" disabled={loading || !name} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)]">
             <Plus className="h-4 w-4" /> Aggiungi Esercizio
           </button>
         </div>
