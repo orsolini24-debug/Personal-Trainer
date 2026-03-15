@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0a0a0f] text-[#f1f5f9] antialiased;
+    /* Force dark theme styling on the whole body since dark mode is always on */
+    color-scheme: dark;
+  }
+}
