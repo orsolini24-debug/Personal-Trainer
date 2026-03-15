@@ -8,7 +8,7 @@ const modules = [
     path: "/training",
     desc: "Registra ogni sessione di allenamento.",
     steps: [
-      "Tap su "Nuova Sessione" e scegli il tipo (A/B/C/D/V1/V2)",
+      "Tap su 'Nuova Sessione' e scegli il tipo (A/B/C/D/V1/V2)",
       "La scheda si precompila con gli esercizi del tuo piano",
       "Inserisci kg e RIR per ogni serie mentre alleni",
       "A fine sessione: slider tensione per ogni distretto muscolare",
