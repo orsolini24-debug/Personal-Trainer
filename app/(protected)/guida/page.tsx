@@ -55,9 +55,9 @@ const modules = [
     steps: [
       "Scrivi qualsiasi domanda — risponde in pochi secondi",
       "Conosce già le tue ultime sessioni, i macro di oggi, il recovery",
-      "Chiedi: "Come sto recuperando questa settimana?"",
-      "Chiedi: "Cosa mangio dopo l'allenamento di oggi?"",
-      "Chiedi: "Dammi la sessione di oggi con i carichi"",
+      "Chiedi: 'Come sto recuperando questa settimana?'",
+      "Chiedi: 'Cosa mangio dopo l'allenamento di oggi?'",
+      "Chiedi: 'Dammi la sessione di oggi con i carichi'",
       "Ogni lunedì genera automaticamente il report settimanale",
     ],
   },
