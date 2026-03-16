@@ -54,13 +54,17 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
 
   const extractionPrompt = `Analizza la conversazione tra il PT e l'atleta ed estrai un oggetto JSON completo basato sull'interfaccia DeepOnboardingData.
 
+REGOLE CRITICHE PER GLI SPORT (SportType):
+Usa SOLO questi valori esatti. Se lo sport non è in lista, usa 'OTHER' o quello più vicino:
+PALESTRA, SOCCER, PADEL, TENNIS, BASKETBALL, VOLLEYBALL, GYMNASTICS, CROSSFIT, HYROX, HOCKEY, BASEBALL, AMERICAN_FOOTBALL, RUGBY, CRICKET, HANDBALL, LACROSS, RUNNING, TRAIL_RUNNING, SPRINTING, MARATHON, TRIATHLON, OBSTACLE_RACING, SKIING, SKI_TOURING, SNOWBOARDING, MOUNTAINEERING, CLIMBING, TREKKING, MTB, GRAVEL_BIKING, CYCLING, SWIMMING, OPEN_WATER_SWIMMING, WATER_POLO, ROWING, KAYAKING, SURFING, WINDSURFING, KITESURFING, SAILING, DIVING, SUP, COMBAT, BOXING, MUAY_THAI, KICKBOXING, MMA, BJJ, JUDO, KARATE, TAEKWONDO, WRESTLING, FENCING, YOGA, PILATES, GOLF, BADMINTON, SQUASH, SKATING, ARCHERY, EQUESTRIAN, DANCING, CALISTHENICS, OTHER.
+
 Interfaccia richiesta (JSON):
 {
   "biologicalSex": "MALE" | "FEMALE",
   "ageYears": number,
   "weightKg": number,
   "heightCm": number,
-  "primarySport": SportType (Enum Prisma),
+  "primarySport": SportType,
   "mainSports": SportType[],
   "experienceLevel": "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
   "primaryGoal": string,
@@ -78,7 +82,11 @@ Interfaccia richiesta (JSON):
 Conversazione:
 ${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
 
-IMPORTANTE: Se un dato manca, usa valori di default ragionevoli o null. Mappa bene gli sport sugli Enum Prisma (es. PALESTRA, RUNNING, SOCCER, etc.).
+IMPORTANTE: 
+- Assicurati che primarySport e mainSports contengano solo i valori Enum sopra elencati.
+- Se un dato numerico manca, usa 0.
+- Se una stringa manca, usa "".
+- Non usare null o undefined.
 `
 
   try {
@@ -88,9 +96,38 @@ IMPORTANTE: Se un dato manca, usa valori di default ragionevoli o null. Mappa be
       response_format: { type: "json_object" }
     })
 
-    const extractedData = JSON.parse(completion.choices[0].message.content || "{}") as DeepOnboardingData
+    const rawData = JSON.parse(completion.choices[0].message.content || "{}")
     
-    // Save to DB
+    // Sanitizzazione finale prima del DB
+    const extractedData: DeepOnboardingData = {
+      biologicalSex: rawData.biologicalSex || "MALE",
+      ageYears: Number(rawData.ageYears) || 25,
+      weightKg: Number(rawData.weightKg) || 70,
+      heightCm: Number(rawData.heightCm) || 170,
+      primarySport: rawData.primarySport || "PALESTRA",
+      mainSports: Array.isArray(rawData.mainSports) ? rawData.mainSports : ["PALESTRA"],
+      experienceLevel: rawData.experienceLevel || "BEGINNER",
+      primaryGoal: rawData.primaryGoal || "",
+      dietaryType: rawData.dietaryType || "OMNIVORE",
+      eatingRoutine: {
+        mealsPerDay: Number(rawData.eatingRoutine?.mealsPerDay) || 3,
+        snacks: !!rawData.eatingRoutine?.snacks,
+        intermittentFasting: !!rawData.eatingRoutine?.intermittentFasting
+      },
+      favoriteFoods: Array.isArray(rawData.favoriteFoods) ? rawData.favoriteFoods : [],
+      dislikedFoods: Array.isArray(rawData.dislikedFoods) ? rawData.dislikedFoods : [],
+      allergies: Array.isArray(rawData.allergies) ? rawData.allergies : [],
+      availableDays: Number(rawData.availableDays) || 3,
+      sessionDuration: Number(rawData.sessionDuration) || 60,
+      equipmentLevel: rawData.equipmentLevel || "FULL_GYM",
+      preferredSplit: "CUSTOM",
+      injuriesList: Array.isArray(rawData.injuriesList) ? rawData.injuriesList : [],
+      hasProfessionalData: false,
+      trainingYears: 1,
+      strengthRefs: {},
+      dailyRoutine: ""
+    }
+    
     const res = await completeDeepOnboarding(extractedData)
     return res
   } catch (e: any) {
