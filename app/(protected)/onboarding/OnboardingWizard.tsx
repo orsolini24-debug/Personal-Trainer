@@ -184,7 +184,7 @@ export default function OnboardingWizard({ userName, embedded = false }: { userN
                   { v: 'ADVANCED', l: 'Avanzato', d: 'Oltre 3 anni' }
                 ].map(opt => (
                   <button key={opt.v} type="button" onClick={() => set('experienceLevel', opt.v)} className={`w-full p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${data.experienceLevel === opt.v ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-zinc-200 text-zinc-900 hover:border-zinc-300'}`}>
-                    <div className="text-left"><h3 className="font-black text-lg uppercase">{opt.l}</h3><p className={`text-[10px] font-bold uppercase ${active ? 'text-blue-100' : 'text-zinc-500'}`}>{opt.d}</p></div>
+                    <div className="text-left"><h3 className="font-black text-lg uppercase">{opt.l}</h3><p className={`text-[10px] font-bold uppercase ${data.experienceLevel === opt.v ? 'text-blue-100' : 'text-zinc-500'}`}>{opt.d}</p></div>
                     {data.experienceLevel === opt.v && <Check className="w-6 h-6 text-white" strokeWidth={4} />}
                   </button>
                 ))}
