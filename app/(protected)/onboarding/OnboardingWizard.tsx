@@ -12,7 +12,7 @@ interface Message {
   content: string
 }
 
-export default function OnboardingWizard({ userName }: { userName?: string }) {
+export default function OnboardingWizard({ userName, embedded = false }: { userName?: string, embedded?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
