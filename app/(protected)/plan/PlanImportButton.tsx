@@ -1,14 +1,17 @@
 "use client"
 
-import { useState } from "react"
-import { FileText, X, Loader2, Check, UploadCloud } from "lucide-react"
+import { useState, useRef } from "react"
+import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileUp } from "lucide-react"
 import { analyzeAndImportPlan } from "@/app/actions/import-analysis"
+import { extractTextFromImage } from "@/app/actions/import-vision"
 import { useRouter } from "next/navigation"
 
 export default function PlanImportButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [text, setText] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isExtracting, setIsExtracting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   const handleImport = async () => {
@@ -27,6 +30,25 @@ export default function PlanImportButton() {
     }
   }
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsExtracting(true)
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string
+      const res = await extractTextFromImage(base64)
+      if (res.success && res.text) {
+        setText(prev => prev + (prev ? "\n\n" : "") + res.text)
+      } else {
+        alert("Errore durante l'estrazione del testo dall'immagine: " + res.error)
+      }
+      setIsExtracting(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <>
       <button 
@@ -39,48 +61,60 @@ export default function PlanImportButton() {
 
       {isOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="w-full max-w-xl bg-surface border border-default rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="w-full max-w-xl bg-white border border-zinc-200 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-[#3b82f6]/10 text-[#3b82f6]">
                   <FileText className="w-5 h-5" />
                 </div>
-                <h3 className="text-xl font-black text-primary">Importa Piano Esistente</h3>
+                <h3 className="text-xl font-black text-zinc-900">Importa Piano</h3>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-muted hover:text-primary">
+              <button onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-zinc-900">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <p className="text-sm text-muted mb-6 leading-relaxed">
-              Incolla il testo del tuo piano attuale (esercizi, serie, reps). L'AI lo analizzerà e lo trasformerà in un formato digitale per questo ecosistema.
-            </p>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isExtracting}
+                className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed border-zinc-200 hover:border-[#3b82f6] hover:bg-blue-50 transition-all group"
+              >
+                {isExtracting ? <Loader2 className="w-8 h-8 animate-spin text-[#3b82f6] mb-2" /> : <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-[#3b82f6] mb-2" />}
+                <span className="text-xs font-black text-zinc-500 group-hover:text-[#3b82f6] uppercase tracking-widest">Carica Foto</span>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+              </button>
+              
+              <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-zinc-50 border-2 border-zinc-100">
+                <FileUp className="w-8 h-8 text-zinc-300 mb-2" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase text-center">PDF in arrivo</span>
+              </div>
+            </div>
 
-            <textarea
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder="Esempio:
-Giorno A - Upper Body:
-Panca Piana 4x8 90s
-Rematore 3x10 60s
-..."
-              className="w-full h-64 p-4 rounded-3xl bg-base border border-subtle text-primary text-sm focus:border-[#3b82f6]/50 outline-none resize-none mb-6"
-            />
+            <div className="space-y-2 mb-6">
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Contenuto del Piano</label>
+              <textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder="Incolla qui il testo o usa il tasto sopra per estrarlo da una foto..."
+                className="w-full h-48 p-4 rounded-2xl bg-zinc-50 border-2 border-zinc-100 text-zinc-900 text-sm font-medium focus:border-[#3b82f6] outline-none resize-none transition-all placeholder:text-zinc-300"
+              />
+            </div>
 
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsOpen(false)}
-                className="flex-1 py-4 rounded-2xl bg-foreground/5 text-muted font-bold hover:bg-foreground/10 transition-all"
+                className="flex-1 py-4 rounded-2xl bg-zinc-100 text-zinc-500 font-bold hover:bg-zinc-200 transition-all"
               >
                 Annulla
               </button>
               <button 
                 onClick={handleImport}
-                disabled={loading || !text.trim()}
-                className="flex-[2] py-4 rounded-2xl bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white font-black flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.3)] disabled:opacity-20 transition-all"
+                disabled={loading || !text.trim() || isExtracting}
+                className="flex-[2] py-4 rounded-2xl bg-[#3b82f6] text-white font-black flex items-center justify-center gap-2 shadow-xl disabled:opacity-20 transition-all"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                {loading ? "Analisi AI..." : "Analizza & Importa"}
+                {loading ? "Analisi AI..." : "Conferma e Importa"}
               </button>
             </div>
           </div>
