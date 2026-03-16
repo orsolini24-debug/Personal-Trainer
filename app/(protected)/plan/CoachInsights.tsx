@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { getPlanInsights } from "@/app/actions/plan-adaptation"
 import { 
   Sparkles, Target, TrendingUp, ArrowRight, 
-  Loader2, Info, Brain, Milestone 
+  Loader2, Info, Brain, Milestone, Zap 
 } from "lucide-react"
 
 interface Insights {
