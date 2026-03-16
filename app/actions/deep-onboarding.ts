@@ -215,6 +215,10 @@ REGOLE:
 
     const res = JSON.parse(completion.choices[0].message.content || "{}")
     
+    if (!res.proposals || !Array.isArray(res.proposals)) {
+      throw new Error("L'IA ha generato un formato non valido. Riprova.")
+    }
+
     // Create draft
     const draft = await prisma.mesocycle.create({
       data: {
@@ -242,6 +246,8 @@ export async function selectProposal(mesoId: string, optionId: number) {
     const proposals = (meso.aiProposals as any)
     const selected = proposals.find((p: any) => p.id === optionId)
     if (!selected) throw new Error("Option not found")
+
+    const validSessionTypes = ['A', 'B', 'C', 'D', 'V1', 'V2', 'OUTDOOR', 'OTHER']
 
     await prisma.$transaction(async (tx) => {
       // 1. Archive current active ones
@@ -276,10 +282,17 @@ export async function selectProposal(mesoId: string, optionId: number) {
       // 4. Create Days and Exercises
       for (let i = 0; i < selected.mesocycle.plan.length; i++) {
         const day = selected.mesocycle.plan[i]
+        
+        // Ensure dayLabel is valid Enum
+        let dayLabel = day.dayLabel.toUpperCase()
+        if (!validSessionTypes.includes(dayLabel)) {
+          dayLabel = validSessionTypes[i % 4] || 'OTHER'
+        }
+
         const pDay = await tx.planDay.create({
           data: {
             planId: workoutPlan.id,
-            dayLabel: day.dayLabel as SessionType,
+            dayLabel: dayLabel as SessionType,
             focus: day.focus,
             orderIndex: i,
           }
@@ -290,12 +303,12 @@ export async function selectProposal(mesoId: string, optionId: number) {
             planDayId: pDay.id,
             name: ex.name,
             orderIndex: idx,
-            sets: ex.sets,
-            repsMin: ex.repsMin,
-            repsMax: ex.repsMax,
-            targetRir: ex.targetRir,
-            restSec: ex.restSec,
-            notes: ex.notes,
+            sets: Number(ex.sets) || 3,
+            repsMin: Number(ex.repsMin) || 8,
+            repsMax: Number(ex.repsMax) || 12,
+            targetRir: Number(ex.targetRir) || 2,
+            restSec: Number(ex.restSec) || 90,
+            notes: ex.notes || "",
           }))
         })
       }
@@ -305,22 +318,20 @@ export async function selectProposal(mesoId: string, optionId: number) {
       today.setUTCHours(0, 0, 0, 0)
       const nutritionData: any[] = []
       
-      const trainingDaysSet = new Set(selected.mesocycle.plan.map((d: any) => d.dayLabel))
-
       for (let d = 0; d < 28; d++) {
         const date = new Date(today)
         date.setUTCDate(date.getUTCDate() + d)
-        // This logic is simplified - ideally we use the weekly schedule from AI
-        // For now, let's assume if it has a label, it's a training day in order
-        const isTraining = d % 2 === 0 // Mock logic: every other day
+        
+        // Simple alternation logic for training/rest days
+        const isTraining = d % 2 === 0 
         
         nutritionData.push({
           userId: meso.userId,
           date,
-          kcalTarget: isTraining ? selected.nutritionPlan.trainingDayKcal : selected.nutritionPlan.restDayKcal,
-          proteinG: selected.nutritionPlan.macros.p,
-          carbsG: isTraining ? selected.nutritionPlan.macros.c : (selected.nutritionPlan.macros.c * 0.6),
-          fatG: selected.nutritionPlan.macros.f,
+          kcalTarget: isTraining ? (Number(selected.nutritionPlan.trainingDayKcal) || 2500) : (Number(selected.nutritionPlan.restDayKcal) || 2000),
+          proteinG: Number(selected.nutritionPlan.macros?.p) || 150,
+          carbsG: isTraining ? (Number(selected.nutritionPlan.macros?.c) || 250) : ((Number(selected.nutritionPlan.macros?.c) || 250) * 0.7),
+          fatG: Number(selected.nutritionPlan.macros?.f) || 70,
           isTrainingDay: isTraining
         })
       }
@@ -335,7 +346,7 @@ export async function selectProposal(mesoId: string, optionId: number) {
     revalidatePath('/nutrition')
     return { success: true }
   } catch (e: any) {
-    console.error("Select Proposal Error:", e)
+    console.error("Select Proposal Error Detail:", e)
     return { success: false, error: e.message }
   }
 }

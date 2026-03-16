@@ -20,8 +20,13 @@ export default async function PlanPage() {
   if (!session?.user?.id) redirect("/login")
   const userId = session.user.id
   
-  // @ts-ignore
-  const onboardingCompleted = session.user.onboardingCompleted
+  // Check DB for the most up-to-date status
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { onboardingCompleted: true }
+  })
+  
+  const onboardingCompleted = user?.onboardingCompleted || false
 
   // 1. Fetch Draft (Proposal)
   const draftMeso = await prisma.mesocycle.findFirst({
