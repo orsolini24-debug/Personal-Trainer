@@ -3,35 +3,52 @@
 import { auth } from '@/auth'
 import Groq from 'groq-sdk'
 import { prisma } from '@/lib/prisma'
-import { revalidatePath } from 'next/cache'
 import { SportType } from '@prisma/client'
 import { completeDeepOnboarding, DeepOnboardingData } from './deep-onboarding'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'missing' })
+
+// Lista ufficiale SportType dal database per validazione
+const VALID_SPORTS: SportType[] = [
+  'PALESTRA', 'SOCCER', 'PADEL', 'TENNIS', 'BASKETBALL', 'VOLLEYBALL', 'GYMNASTICS', 'CROSSFIT', 
+  'HYROX', 'HOCKEY', 'BASEBALL', 'AMERICAN_FOOTBALL', 'RUGBY', 'CRICKET', 'HANDBALL', 'LACROSS',
+  'RUNNING', 'TRAIL_RUNNING', 'SPRINTING', 'MARATHON', 'TRIATHLON', 'OBSTACLE_RACING',
+  'SKIING', 'SKI_TOURING', 'SNOWBOARDING', 'MOUNTAINEERING', 'CLIMBING', 'TREKKING', 
+  'MTB', 'GRAVEL_BIKING', 'CYCLING', 'SWIMMING', 'OPEN_WATER_SWIMMING', 'WATER_POLO', 
+  'ROWING', 'KAYAKING', 'SURFING', 'WINDSURFING', 'KITESURFING', 'SAILING', 'DIVING', 'SUP',
+  'COMBAT', 'BOXING', 'MUAY_THAI', 'KICKBOXING', 'MMA', 'BJJ', 'JUDO', 'KARATE', 
+  'TAEKWONDO', 'WRESTLING', 'FENCING', 'YOGA', 'PILATES', 'GOLF', 'BADMINTON', 
+  'SQUASH', 'SKATING', 'ARCHERY', 'EQUESTRIAN', 'DANCING', 'CALISTHENICS', 'OTHER'
+]
+
+function validateSport(s: string): SportType {
+  const upper = s.toUpperCase() as SportType
+  if (VALID_SPORTS.includes(upper)) return upper
+  
+  // Mapping di emergenza per sport comuni
+  if (upper.includes('BOULDER')) return 'CLIMBING'
+  if (upper.includes('CALCETTO') || upper.includes('CALCIOTTO')) return 'SOCCER'
+  if (upper.includes('BODYBUILDING') || upper.includes('WEIGHTLIFTING')) return 'PALESTRA'
+  if (upper.includes('ARRAMPICATA')) return 'CLIMBING'
+  if (upper.includes('LOTTA')) return 'COMBAT'
+  if (upper.includes('SCI')) return 'SKIING'
+  
+  return 'OTHER'
+}
 
 export async function chatWithPT(messages: { role: 'user' | 'assistant' | 'system', content: string }[]) {
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
 
   const systemPrompt = `Sei un Personal Trainer d'élite e Preparatore Atletico specializzato in Ricomposizione Corporea e Performance.
-Il tuo obiettivo è fare un'intervista approfondita (Intake) all'atleta per creare il piano perfetto. Non accontentarti di risposte brevi.
+Il tuo obiettivo è fare un'intervista approfondita (Intake) all'atleta per creare il piano perfetto. 
 
 REGOLE DI CONVERSAZIONE:
-1. Sii professionale, empatico e molto tecnico. Usa termini come "volume di lavoro", "intensità", "macronutrienti", "recupero sistemico".
-2. Fai UNA domanda alla volta. Approfondisci ogni risposta.
-3. Se l'utente menziona dolori o infortuni, FAI ALMENO 2 DOMANDE di approfondimento (es. "Quando fa male?", "Hai già fatto fisioterapia?").
-4. DEVI ESSERE OSSESSIVO sui dettagli:
-   - Biometria: Non solo peso, ma chiedi se ha una stima della massa grassa o se si vede "gonfio" o "tonico".
-   - Sport DNA: Chiedi da quanto tempo pratica ogni sport e qual è il livello di competizione.
-   - Livello: Se fa palestra, chiedi i massimali su Squat, Panca e Stacco. Se non li sa, chiedi l'ultimo carico usato per 10 ripetizioni.
-   - Obiettivi: Chiedi PERCHÉ vuole quell'obiettivo ora. Chiedi se c'è un muscolo specifico che vuole migliorare (es. Spalle larghe, gambe possenti).
-   - Stile di Vita: Chiedi quante ore dorme, che lavoro fa (sedentario o pesante) e il livello di stress (1-10).
-   - Nutrizione: Chiedi se ha già provato diete in passato e cosa non ha funzionato.
-5. Quando pensi di avere TUTTE le informazioni necessarie (almeno 10-15 scambi di messaggi), scrivi come ULTIMA parola del messaggio: "###FINISH###".
-
-Dati già raccolti (se presenti):
-${JSON.stringify(messages.filter(m => m.role === 'system'), null, 2)}
-`
+1. Sii professionale, empatico e molto tecnico. Approfondisci ogni risposta.
+2. Se l'utente menziona infortuni (es. crociato, dita rotte), chiedi come influenzano il movimento oggi.
+3. Se l'utente fornisce carichi (es. 100kg panca), usali per capire il suo livello di forza.
+4. Raccogli: Biometria, Sport DNA (tutti gli sport), Livello, Obiettivi, Nutrizione, Logistica.
+5. Quando hai un quadro COMPLETO e DETTAGLIATO, scrivi come ULTIMA parola: "###FINISH###".`
 
   try {
     const completion = await groq.chat.completions.create({
@@ -39,11 +56,8 @@ ${JSON.stringify(messages.filter(m => m.role === 'system'), null, 2)}
       model: 'llama-3.3-70b-versatile',
       temperature: 0.7,
     })
-
-    const response = completion.choices[0].message.content || ""
-    return { response }
+    return { response: completion.choices[0].message.content || "" }
   } catch (e: any) {
-    console.error("AI Chat Error:", e)
     return { error: e.message }
   }
 }
@@ -52,86 +66,80 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
 
-  const extractionPrompt = `Analizza la conversazione tra il PT e l'atleta ed estrai un oggetto JSON completo basato sull'interfaccia DeepOnboardingData.
-
-REGOLE CRITICHE PER GLI SPORT (SportType):
-Usa SOLO questi valori esatti. Se lo sport non è in lista, usa 'OTHER' o quello più vicino:
-PALESTRA, SOCCER, PADEL, TENNIS, BASKETBALL, VOLLEYBALL, GYMNASTICS, CROSSFIT, HYROX, HOCKEY, BASEBALL, AMERICAN_FOOTBALL, RUGBY, CRICKET, HANDBALL, LACROSS, RUNNING, TRAIL_RUNNING, SPRINTING, MARATHON, TRIATHLON, OBSTACLE_RACING, SKIING, SKI_TOURING, SNOWBOARDING, MOUNTAINEERING, CLIMBING, TREKKING, MTB, GRAVEL_BIKING, CYCLING, SWIMMING, OPEN_WATER_SWIMMING, WATER_POLO, ROWING, KAYAKING, SURFING, WINDSURFING, KITESURFING, SAILING, DIVING, SUP, COMBAT, BOXING, MUAY_THAI, KICKBOXING, MMA, BJJ, JUDO, KARATE, TAEKWONDO, WRESTLING, FENCING, YOGA, PILATES, GOLF, BADMINTON, SQUASH, SKATING, ARCHERY, EQUESTRIAN, DANCING, CALISTHENICS, OTHER.
-
-Interfaccia richiesta (JSON):
-{
-  "biologicalSex": "MALE" | "FEMALE",
-  "ageYears": number,
-  "weightKg": number,
-  "heightCm": number,
-  "primarySport": SportType,
-  "mainSports": SportType[],
-  "experienceLevel": "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
-  "primaryGoal": string,
-  "dietaryType": string,
-  "eatingRoutine": { "mealsPerDay": number, "snacks": boolean, "intermittentFasting": boolean },
-  "favoriteFoods": string[],
-  "dislikedFoods": string[],
-  "allergies": string[],
-  "availableDays": number,
-  "sessionDuration": number,
-  "equipmentLevel": "FULL_GYM" | "HOME_GYM" | "BODYWEIGHT_ONLY",
-  "injuriesList": string[]
-}
-
-Conversazione:
-${messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
-
-IMPORTANTE: 
-- Assicurati che primarySport e mainSports contengano solo i valori Enum sopra elencati.
-- Se un dato numerico manca, usa 0.
-- Se una stringa manca, usa "".
-- Non usare null o undefined.
-`
+  const extractionPrompt = `Analizza la conversazione ed estrai un JSON per DeepOnboardingData.
+  
+  Enum SportType ammessi: ${VALID_SPORTS.join(', ')}.
+  
+  Mappa ogni sport citato su uno di questi valori. 
+  Esempio: "Boulder" -> "CLIMBING", "Calcetto" -> "SOCCER".
+  
+  JSON richiesto:
+  {
+    "biologicalSex": "MALE" | "FEMALE",
+    "ageYears": number,
+    "weightKg": number,
+    "heightCm": number,
+    "primarySport": SportType,
+    "mainSports": SportType[],
+    "experienceLevel": "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
+    "primaryGoal": string,
+    "dietaryType": string,
+    "eatingRoutine": { "mealsPerDay": number, "snacks": boolean, "intermittentFasting": boolean },
+    "availableDays": number,
+    "sessionDuration": number,
+    "equipmentLevel": "FULL_GYM" | "HOME_GYM" | "BODYWEIGHT_ONLY",
+    "injuriesList": string[],
+    "strengthRefs": { "squat1RM": number, "bench1RM": number, "deadlift1RM": number }
+  }`
 
   try {
     const completion = await groq.chat.completions.create({
-      messages: [{ role: 'system', content: extractionPrompt }],
+      messages: [
+        { role: 'system', content: "Estrai i dati dall'intervista PT in formato JSON puro." },
+        { role: 'user', content: `Conversazione:\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}\n\n${extractionPrompt}` }
+      ],
       model: 'llama-3.3-70b-versatile',
       response_format: { type: "json_object" }
     })
 
-    const rawData = JSON.parse(completion.choices[0].message.content || "{}")
+    const raw = JSON.parse(completion.choices[0].message.content || "{}")
     
-    // Sanitizzazione finale prima del DB
-    const extractedData: DeepOnboardingData = {
-      biologicalSex: rawData.biologicalSex || "MALE",
-      ageYears: Number(rawData.ageYears) || 25,
-      weightKg: Number(rawData.weightKg) || 70,
-      heightCm: Number(rawData.heightCm) || 170,
-      primarySport: rawData.primarySport || "PALESTRA",
-      mainSports: Array.isArray(rawData.mainSports) ? rawData.mainSports : ["PALESTRA"],
-      experienceLevel: rawData.experienceLevel || "BEGINNER",
-      primaryGoal: rawData.primaryGoal || "",
-      dietaryType: rawData.dietaryType || "OMNIVORE",
+    // VALIDAZIONE E SANITIZZAZIONE RIGIDA
+    const sanitized: DeepOnboardingData = {
+      biologicalSex: raw.biologicalSex === 'FEMALE' ? 'FEMALE' : 'MALE',
+      ageYears: Math.max(1, Number(raw.ageYears) || 25),
+      weightKg: Math.max(1, Number(raw.weightKg) || 70),
+      heightCm: Math.max(1, Number(raw.heightCm) || 175),
+      primarySport: validateSport(raw.primarySport || 'PALESTRA'),
+      mainSports: Array.isArray(raw.mainSports) ? raw.mainSports.map(validateSport) : [validateSport(raw.primarySport || 'PALESTRA')],
+      experienceLevel: raw.experienceLevel || 'INTERMEDIATE',
+      primaryGoal: raw.primaryGoal || 'Miglioramento Performance',
+      dietaryType: raw.dietaryType || 'OMNIVORE',
       eatingRoutine: {
-        mealsPerDay: Number(rawData.eatingRoutine?.mealsPerDay) || 3,
-        snacks: !!rawData.eatingRoutine?.snacks,
-        intermittentFasting: !!rawData.eatingRoutine?.intermittentFasting
+        mealsPerDay: Number(raw.eatingRoutine?.mealsPerDay) || 3,
+        snacks: !!raw.eatingRoutine?.snacks,
+        intermittentFasting: !!raw.eatingRoutine?.intermittentFasting
       },
-      favoriteFoods: Array.isArray(rawData.favoriteFoods) ? rawData.favoriteFoods : [],
-      dislikedFoods: Array.isArray(rawData.dislikedFoods) ? rawData.dislikedFoods : [],
-      allergies: Array.isArray(rawData.allergies) ? rawData.allergies : [],
-      availableDays: Number(rawData.availableDays) || 3,
-      sessionDuration: Number(rawData.sessionDuration) || 60,
-      equipmentLevel: rawData.equipmentLevel || "FULL_GYM",
-      preferredSplit: "CUSTOM",
-      injuriesList: Array.isArray(rawData.injuriesList) ? rawData.injuriesList : [],
+      availableDays: Math.min(7, Math.max(1, Number(raw.availableDays) || 3)),
+      sessionDuration: Math.max(1, Number(raw.sessionDuration) || 60),
+      equipmentLevel: raw.equipmentLevel || 'FULL_GYM',
+      injuriesList: Array.isArray(raw.injuriesList) ? raw.injuriesList : [],
+      strengthRefs: {
+        squat1RM: Number(raw.strengthRefs?.squat1RM) || 0,
+        bench1RM: Number(raw.strengthRefs?.bench1RM) || 0,
+        deadlift1RM: Number(raw.strengthRefs?.deadlift1RM) || 0
+      },
       hasProfessionalData: false,
       trainingYears: 1,
-      strengthRefs: {},
-      dailyRoutine: ""
+      dailyRoutine: "",
+      preferredSplit: "CUSTOM",
+      favoriteFoods: [],
+      dislikedFoods: [],
+      allergies: []
     }
-    
-    const res = await completeDeepOnboarding(extractedData)
-    return res
+
+    return await completeDeepOnboarding(sanitized)
   } catch (e: any) {
-    console.error("Data Extraction Error:", e)
     return { error: e.message }
   }
 }
