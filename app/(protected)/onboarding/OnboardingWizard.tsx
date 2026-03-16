@@ -4,30 +4,30 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { completeDeepOnboarding, type DeepOnboardingData } from '@/app/actions/deep-onboarding'
 import {
-  User, Trophy, Activity, ClipboardList, Utensils, Clock,
+  User, Trophy, Activity, Utensils, Clock,
   ChevronRight, ChevronLeft, Scale, Target, 
   Dumbbell, Zap, Flame, Shield, Check, Loader2, ArrowRight, Calendar
 } from 'lucide-react'
 import { SportType } from '@prisma/client'
 
 const STEPS = [
-  { id: 1, label: 'Profilo', icon: User, color: 'blue' },
-  { id: 2, label: 'DNA Sport', icon: Trophy, color: 'orange' },
-  { id: 3, label: 'Performance', icon: Activity, color: 'purple' },
-  { id: 4, label: 'Obiettivi', icon: Target, color: 'indigo' },
-  { id: 5, label: 'Nutrizione', icon: Utensils, color: 'green' },
-  { id: 6, label: 'Logistica', icon: Clock, color: 'cyan' },
+  { id: 1, label: 'BIO' },
+  { id: 2, label: 'SPORT' },
+  { id: 3, label: 'LIVELLO' },
+  { id: 4, label: 'META' },
+  { id: 5, label: 'FUEL' },
+  { id: 6, label: 'LIFE' },
 ]
 
 const SPORT_OPTIONS = [
-  { value: 'PALESTRA', label: 'Palestra', icon: '🏋️', desc: 'Bodybuilding & Forza' },
-  { value: 'RUNNING', label: 'Corsa', icon: '🏃', desc: 'Maratona & Trail' },
-  { value: 'PADEL', label: 'Padel', icon: '🎾', desc: 'Tecnica & Agilità' },
-  { value: 'CROSSFIT', label: 'CrossFit', icon: '🔥', desc: 'Alta Intensità' },
-  { value: 'CALISTHENICS', label: 'Calisthenics', icon: '🤸', desc: 'Peso Corporeo' },
-  { value: 'SOCCER', label: 'Calcio', icon: '⚽', desc: 'Sport di Squadra' },
-  { value: 'COMBAT', label: 'Combat', icon: '🥊', desc: 'Boxe & MMA' },
-  { value: 'CYCLING', label: 'Ciclismo', icon: '🚴', desc: 'Resistenza' },
+  { value: 'PALESTRA', label: 'Palestra', icon: '🏋️' },
+  { value: 'RUNNING', label: 'Corsa', icon: '🏃' },
+  { value: 'PADEL', label: 'Padel', icon: '🎾' },
+  { value: 'CROSSFIT', label: 'CrossFit', icon: '🔥' },
+  { value: 'CALISTHENICS', label: 'Cali', icon: '🤸' },
+  { value: 'SOCCER', label: 'Calcio', icon: '⚽' },
+  { value: 'COMBAT', label: 'Combat', icon: '🥊' },
+  { value: 'CYCLING', label: 'Bici', icon: '🚴' },
 ]
 
 const INITIAL: DeepOnboardingData = {
@@ -42,7 +42,7 @@ const INITIAL: DeepOnboardingData = {
   preferredSplit: 'CUSTOM', injuriesList: []
 }
 
-export default function OnboardingWizard({ userName }: { userName?: string }) {
+export default function OnboardingWizard({ userName, embedded = false }: { userName?: string, embedded?: boolean }) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [data, setData] = useState<DeepOnboardingData>(INITIAL)
@@ -60,8 +60,12 @@ export default function OnboardingWizard({ userName }: { userName?: string }) {
     const res = await completeDeepOnboarding(data)
     setLoading(false)
     if (res.success) {
-      router.push('/plan')
-      router.refresh()
+      if (embedded) {
+        window.location.reload()
+      } else {
+        router.push('/plan')
+        router.refresh()
+      }
     } else {
       alert("Errore: " + res.error)
     }
@@ -78,267 +82,198 @@ export default function OnboardingWizard({ userName }: { userName?: string }) {
     return true
   }
 
-  // ── UI Components ────────────────────────────────────────────────────────
+  // ── HIGH CONTRAST UI COMPONENTS ──────────────────────────────────────────
 
-  const ModernInput = ({ label, value, onChange, type = "number", suffix, prefixIcon: Icon }: any) => (
-    <div className="space-y-2 group">
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-1 group-focus-within:text-primary transition-colors">
-        {label}
-      </label>
-      <div className="relative flex items-center">
-        {Icon && <Icon className="absolute left-4 w-5 h-5 text-muted/40 group-focus-within:text-primary transition-colors" />}
-        <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          className={`w-full bg-base border border-subtle rounded-2xl p-4 font-black text-lg outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all ${Icon ? 'pl-12' : ''}`}
-        />
-        {suffix && <span className="absolute right-4 font-bold text-muted text-sm">{suffix}</span>}
+  const InputField = ({ label, value, onChange, suffix, stepVal = 1 }: any) => (
+    <div className="flex-1 space-y-2">
+      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">{label}</label>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={value === 0 ? '' : value}
+            onChange={(e) => {
+              const val = e.target.value.replace(',', '.');
+              if (val === '' || /^\d*\.?\d*$/.test(val)) onChange(val === '' ? 0 : val);
+            }}
+            className="w-full h-16 bg-zinc-100 border-2 border-zinc-200 rounded-2xl px-6 font-black text-2xl text-black outline-none focus:border-blue-600 focus:bg-white transition-all"
+          />
+          {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-zinc-400 text-xs uppercase">{suffix}</span>}
+        </div>
+        <div className="flex flex-col gap-1">
+          <button type="button" onClick={() => onChange(Math.max(0, (parseFloat(value.toString()) || 0) + stepVal))} className="p-2 bg-zinc-100 rounded-lg hover:bg-zinc-200 text-black active:scale-95"><ChevronRight className="w-4 h-4 -rotate-90" /></button>
+          <button type="button" onClick={() => onChange(Math.max(0, (parseFloat(value.toString()) || 0) - stepVal))} className="p-2 bg-zinc-100 rounded-lg hover:bg-zinc-200 text-black active:scale-95"><ChevronRight className="w-4 h-4 rotate-90" /></button>
+        </div>
       </div>
     </div>
   )
 
+  const SelectionButton = ({ active, onClick, icon: Icon, label, desc }: any) => (
+    <button 
+      type="button"
+      onClick={onClick}
+      className={`relative p-6 rounded-3xl border-2 transition-all text-left flex flex-col h-full ${
+        active ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-zinc-200 hover:border-zinc-300'
+      }`}
+    >
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${active ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
+        {typeof Icon === 'string' ? <span className="text-2xl">{Icon}</span> : <Icon className="w-6 h-6" />}
+      </div>
+      <h3 className={`font-black text-sm uppercase tracking-tight ${active ? 'text-white' : 'text-zinc-900'}`}>{label}</h3>
+      {desc && <p className={`text-[10px] font-bold mt-1 uppercase ${active ? 'text-blue-100' : 'text-zinc-500'}`}>{desc}</p>}
+      {active && <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-white flex items-center justify-center"><Check className="w-4 h-4 text-blue-600" strokeWidth={4} /></div>}
+    </button>
+  )
+
   return (
-    <div className="min-h-screen bg-[#020205] text-[#f1f5f9] font-sans selection:bg-primary/30 relative">
-      {/* Dynamic Background - Fixed */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+    <div className="w-full max-w-2xl mx-auto space-y-8">
+      
+      {/* Steps Progress */}
+      <div className="flex gap-2">
+        {STEPS.map((s) => (
+          <div key={s.id} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${step >= s.id ? 'bg-blue-600' : 'bg-zinc-200'}`} />
+        ))}
       </div>
 
-      {/* Main Content Scrollable Wrapper */}
-      <div className="relative z-10 w-full min-h-screen flex flex-col items-center py-8 px-4 md:py-16">
-        <div className="w-full max-w-2xl">
-          
-          {/* Header */}
-          <div className="mb-12 space-y-8">
-            <div className="flex justify-between items-center px-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Zap className="w-5 h-5 text-white fill-white" />
-                </div>
-                <div>
-                  <h1 className="text-sm font-black uppercase tracking-widest text-primary">Intake Atleta</h1>
-                  <p className="text-[10px] font-bold text-muted">Performance Ecosystem AI</p>
-                </div>
+      {/* Main Container */}
+      <div className="bg-white rounded-[2.5rem] border border-zinc-200 shadow-2xl p-8 md:p-12 min-h-[500px] flex flex-col">
+        
+        <div className="flex-1">
+          {step === 1 && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase italic">Biometria</h2>
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">Base biologica AI</p>
               </div>
-              <div className="text-right">
-                <span className="text-2xl font-black text-primary italic">Step 0{step}</span>
-                <p className="text-[10px] font-bold text-muted uppercase tracking-tighter">del percorso totale</p>
+              <div className="grid grid-cols-2 gap-4">
+                <SelectionButton active={data.biologicalSex === 'MALE'} onClick={() => set('biologicalSex', 'MALE')} icon={User} label="Uomo" />
+                <SelectionButton active={data.biologicalSex === 'FEMALE'} onClick={() => set('biologicalSex', 'FEMALE')} icon={User} label="Donna" />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-6">
+                <InputField label="Peso Corporeo" value={data.weightKg} onChange={(val: any) => set('weightKg', parseFloat(val))} suffix="kg" stepVal={0.5} />
+                <InputField label="Età Atleta" value={data.ageYears} onChange={(val: any) => set('ageYears', parseInt(val))} suffix="anni" />
               </div>
             </div>
+          )}
 
-            <div className="flex gap-2 px-1">
-              {STEPS.map((s) => (
-                <div 
-                  key={s.id} 
-                  className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${
-                    step >= s.id ? 'bg-primary shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-white/5'
-                  }`} 
-                />
-              ))}
+          {step === 2 && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase italic">DNA Sport</h2>
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">Attività prevalente</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {SPORT_OPTIONS.map(s => (
+                  <SelectionButton key={s.value} active={data.primarySport === s.value} onClick={() => set('primarySport', s.value as SportType)} icon={s.icon} label={s.label} />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Steps Content */}
-          <div className="transition-all duration-500 mb-12">
-            {step === 1 && (
-              <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-black tracking-tighter text-primary">Chi sei?</h2>
-                  <p className="text-muted font-medium">Definiamo le basi biologiche per l'algoritmo AI.</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button 
-                    onClick={() => set('biologicalSex', 'MALE')}
-                    className={`group relative p-8 rounded-[2.5rem] border transition-all duration-500 ${data.biologicalSex === 'MALE' ? 'bg-primary/10 border-primary shadow-2xl shadow-primary/10' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
-                  >
-                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110 ${data.biologicalSex === 'MALE' ? 'bg-primary text-white' : 'bg-base text-muted'}`}>
-                      <User className="w-8 h-8" />
-                    </div>
-                    <span className={`block text-center font-black tracking-tighter ${data.biologicalSex === 'MALE' ? 'text-primary' : 'text-muted'}`}>UOMO</span>
+          {step === 3 && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase italic">Esperienza</h2>
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">Anzianità allenamento</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { v: 'BEGINNER', l: 'Principiante', d: 'Meno di 1 anno' },
+                  { v: 'INTERMEDIATE', l: 'Intermedio', d: '1-3 anni di costanza' },
+                  { v: 'ADVANCED', l: 'Avanzato', d: 'Oltre 3 anni' }
+                ].map(opt => (
+                  <button key={opt.v} type="button" onClick={() => set('experienceLevel', opt.v)} className={`w-full p-6 rounded-2xl border-2 flex items-center justify-between transition-all ${data.experienceLevel === opt.v ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-zinc-200 text-zinc-900 hover:border-zinc-300'}`}>
+                    <div className="text-left"><h3 className="font-black text-lg uppercase">{opt.l}</h3><p className={`text-[10px] font-bold uppercase ${active ? 'text-blue-100' : 'text-zinc-500'}`}>{opt.d}</p></div>
+                    {data.experienceLevel === opt.v && <Check className="w-6 h-6 text-white" strokeWidth={4} />}
                   </button>
-                  <button 
-                    onClick={() => set('biologicalSex', 'FEMALE')}
-                    className={`group relative p-8 rounded-[2.5rem] border transition-all duration-500 ${data.biologicalSex === 'FEMALE' ? 'bg-primary/10 border-primary shadow-2xl shadow-primary/10' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
-                  >
-                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110 ${data.biologicalSex === 'FEMALE' ? 'bg-primary text-white' : 'bg-base text-muted'}`}>
-                      <User className="w-8 h-8" />
-                    </div>
-                    <span className={`block text-center font-black tracking-tighter ${data.biologicalSex === 'FEMALE' ? 'text-primary' : 'text-muted'}`}>DONNA</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase italic">Obiettivo</h2>
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">Meta finale</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { v: 'HYPERTROPHY', l: 'Ipertrofia', i: '📈' },
+                  { v: 'STRENGTH', l: 'Forza', i: '⚡' },
+                  { v: 'WEIGHT_LOSS', l: 'Definizione', i: '🔥' },
+                  { v: 'PERFORMANCE', l: 'Performance', i: '🏆' }
+                ].map(opt => (
+                  <SelectionButton key={opt.v} active={data.primaryGoal === opt.v} onClick={() => set('primaryGoal', opt.v)} icon={opt.i} label={opt.l} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase italic">Fuel</h2>
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">Regime alimentare</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {['OMNIVORE', 'VEGETARIAN', 'VEGAN', 'KETO'].map(t => (
+                  <SelectionButton key={t} active={data.dietaryType === t} onClick={() => set('dietaryType', t)} icon={Utensils} label={t} />
+                ))}
+              </div>
+              <div className="p-8 bg-zinc-50 rounded-3xl border-2 border-zinc-200 flex items-center justify-between">
+                <div className="text-left"><h3 className="font-black text-lg text-zinc-900 uppercase">Pasti / Giorno</h3><p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Frequenza</p></div>
+                <div className="flex gap-2">
+                  {[3, 4, 5, 6].map(n => (
+                    <button key={n} type="button" onClick={() => set('eatingRoutine', {...data.eatingRoutine, mealsPerDay: n})} className={`w-14 h-14 rounded-2xl font-black border-2 transition-all flex items-center justify-center text-xl ${data.eatingRoutine.mealsPerDay === n ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-zinc-200 text-zinc-400 hover:border-zinc-300'}`}>{n}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 6 && (
+            <div className="space-y-10 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-zinc-900 tracking-tighter uppercase italic">Life</h2>
+                <p className="text-zinc-500 font-bold uppercase text-xs tracking-widest">Disponibilità</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-6">
+                <InputField label="Giorni Liberi" value={data.availableDays} onChange={(e: any) => set('availableDays', parseInt(e))} suffix="GIORNI" />
+                <InputField label="Tempo Sessione" value={data.sessionDuration} onChange={(e: any) => set('sessionDuration', parseInt(e))} suffix="MIN" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { v: 'FULL_GYM', l: 'Palestra', i: '🏢' },
+                  { v: 'HOME_GYM', l: 'Home', i: '🏠' },
+                  { v: 'BODYWEIGHT_ONLY', l: 'Libero', i: '🤸' }
+                ].map(opt => (
+                  <button key={opt.v} type="button" onClick={() => set('equipmentLevel', opt.v)} className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${data.equipmentLevel === opt.v ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-zinc-50 border-zinc-200 text-zinc-400'}`}>
+                    <span className="text-3xl mb-1">{opt.i}</span>
+                    <span className="text-[10px] font-black uppercase text-center">{opt.l}</span>
                   </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <ModernInput label="Peso Attuale" value={data.weightKg} onChange={(e: any) => set('weightKg', parseFloat(e.target.value))} suffix="kg" prefixIcon={Scale} />
-                  <ModernInput label="La tua Età" value={data.ageYears} onChange={(e: any) => set('ageYears', parseInt(e.target.value))} suffix="anni" prefixIcon={Clock} />
-                </div>
+                ))}
               </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-black tracking-tighter text-primary">Sport DNA</h2>
-                  <p className="text-muted font-medium">Quale attività domina la tua routine settimanale?</p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {SPORT_OPTIONS.map(s => (
-                    <button 
-                      key={s.value} 
-                      onClick={() => set('primarySport', s.value as SportType)}
-                      className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center gap-3 ${data.primarySport === s.value ? 'bg-orange-500/10 border-orange-500 shadow-lg shadow-orange-500/5' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
-                    >
-                      <span className="text-4xl">{s.icon}</span>
-                      <span className={`text-[10px] font-black uppercase tracking-widest text-center ${data.primarySport === s.value ? 'text-orange-500' : 'text-muted'}`}>{s.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-black tracking-tighter text-primary">Livello Atletico</h2>
-                  <p className="text-muted font-medium">Sii onesto con te stesso per calibrare i volumi.</p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  {[
-                    { v: 'BEGINNER', l: 'Principiante', d: 'Meno di 1 anno di esperienza.', c: 'green' },
-                    { v: 'INTERMEDIATE', l: 'Intermedio', d: '1-3 anni di allenamento.', c: 'blue' },
-                    { v: 'ADVANCED', l: 'Avanzato', d: 'Oltre 3 anni di costanza.', c: 'purple' }
-                  ].map(opt => (
-                    <button 
-                      key={opt.v}
-                      onClick={() => set('experienceLevel', opt.v)}
-                      className={`p-6 rounded-[2rem] border text-left transition-all duration-300 flex items-center gap-4 ${data.experienceLevel === opt.v ? `bg-surface border-${opt.c}-500/40 ring-1 ring-${opt.c}-500/20` : 'bg-surface/50 border-subtle hover:border-white/10'}`}
-                    >
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${data.experienceLevel === opt.v ? `bg-${opt.c}-500 text-white` : 'bg-base text-muted'}`}>
-                        <Trophy className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className={`font-black text-lg ${data.experienceLevel === opt.v ? 'text-primary' : 'text-muted'}`}>{opt.l}</h3>
-                        <p className="text-xs font-medium text-muted/60">{opt.d}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {step === 4 && (
-              <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-black tracking-tighter text-primary">La tua Meta</h2>
-                  <p className="text-muted font-medium">L'AI genererà il percorso basandosi su questo.</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { v: 'HYPERTROPHY', l: 'Ipertrofia', i: Flame, c: 'orange' },
-                    { v: 'STRENGTH', l: 'Forza Pura', i: Dumbbell, c: 'blue' },
-                    { v: 'WEIGHT_LOSS', l: 'Definizione', i: Scale, c: 'green' },
-                    { v: 'PERFORMANCE', l: 'Performance', i: Activity, c: 'indigo' }
-                  ].map(opt => (
-                    <button 
-                      key={opt.v}
-                      onClick={() => set('primaryGoal', opt.v)}
-                      className={`p-6 rounded-[2.5rem] border text-left transition-all duration-300 group ${data.primaryGoal === opt.v ? `bg-surface border-${opt.c}-500/40 ring-1 ring-${opt.c}-500/20` : 'bg-surface/50 border-subtle hover:border-white/10'}`}
-                    >
-                      <opt.i className={`w-8 h-8 mb-4 ${data.primaryGoal === opt.v ? `text-${opt.c}-500` : 'text-muted'}`} />
-                      <h3 className={`font-black text-lg ${data.primaryGoal === opt.v ? 'text-primary' : 'text-muted'}`}>{opt.l}</h3>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {step === 5 && (
-              <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-black tracking-tighter text-primary">Carburante</h2>
-                  <p className="text-muted font-medium">Ottimizziamo i macronutrienti per le tue sessioni.</p>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex flex-wrap gap-2 p-2 bg-surface border border-subtle rounded-3xl">
-                    {['OMNIVORE', 'VEGETARIAN', 'VEGAN', 'KETO'].map(t => (
-                      <button 
-                        key={t} 
-                        onClick={() => set('dietaryType', t)}
-                        className={`flex-1 min-w-[110px] py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${data.dietaryType === t ? 'bg-primary text-white shadow-lg' : 'text-muted hover:text-primary'}`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="p-8 rounded-[2.5rem] bg-surface border border-subtle flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="text-center sm:text-left">
-                      <h3 className="font-black text-lg text-primary">Frequenza Pasti</h3>
-                      <p className="text-xs text-muted font-medium">Quanti pasti solidi al giorno?</p>
-                    </div>
-                    <div className="flex gap-2">
-                      {[3, 4, 5, 6].map(n => (
-                        <button key={n} onClick={() => set('eatingRoutine', {...data.eatingRoutine, mealsPerDay: n})} className={`w-10 h-10 rounded-xl font-black border ${data.eatingRoutine.mealsPerDay === n ? 'bg-primary border-primary text-white' : 'bg-base border-subtle text-muted'}`}>{n}</button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {step === 6 && (
-              <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-black tracking-tighter text-primary">Logistica</h2>
-                  <p className="text-muted font-medium">Ultimi dettagli prima della generazione.</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <ModernInput label="Giorni Disponibili" value={data.availableDays} onChange={(e: any) => set('availableDays', parseInt(e.target.value))} suffix="/ sett" prefixIcon={Calendar} />
-                  <ModernInput label="Durata Sessione" value={data.sessionDuration} onChange={(e: any) => set('sessionDuration', parseInt(e.target.value))} suffix="min" prefixIcon={Clock} />
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { v: 'FULL_GYM', l: 'Palestra Commerciale', i: '🏢' },
-                    { v: 'HOME_GYM', l: 'Home Gym Essentials', i: '🏠' },
-                    { v: 'BODYWEIGHT_ONLY', l: 'Solo Corpo Libero', i: '🤸' }
-                  ].map(opt => (
-                    <button key={opt.v} onClick={() => set('equipmentLevel', opt.v)} className={`w-full p-6 rounded-3xl border text-left flex items-center gap-4 ${data.equipmentLevel === opt.v ? 'bg-primary/10 border-primary' : 'bg-surface/50 border-subtle'}`}>
-                      <span className="text-2xl">{opt.i}</span>
-                      <span className={`font-black tracking-tight ${data.equipmentLevel === opt.v ? 'text-primary' : 'text-muted'}`}>{opt.l}</span>
-                      {data.equipmentLevel === opt.v && <Check className="ml-auto text-primary" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex gap-4">
-            {step > 1 && (
-              <button onClick={() => setStep(s => s - 1)} className="px-8 py-5 rounded-[2rem] bg-surface border border-subtle text-muted font-black hover:text-primary transition-all">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-            )}
-            <button 
-              onClick={() => step < STEPS.length ? setStep(s => s + 1) : handleComplete()}
-              disabled={!canProceed() || loading}
-              className="flex-1 py-5 rounded-[2rem] bg-gradient-to-r from-primary to-accent text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-20 transition-all"
-            >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : step === STEPS.length ? 'Analizza & Genera' : 'Continua'}
-              {!loading && <ArrowRight className="w-6 h-6" />}
-            </button>
-          </div>
-
+            </div>
+          )}
         </div>
+
+        {/* Buttons */}
+        <div className="flex gap-4 mt-12 pt-8 border-t border-zinc-100">
+          {step > 1 && (
+            <button type="button" onClick={() => setStep(s => s - 1)} className="px-8 py-5 rounded-2xl bg-zinc-100 text-zinc-600 font-black hover:bg-zinc-200 active:scale-95 transition-all"><ChevronLeft className="w-6 h-6" /></button>
+          )}
+          <button 
+            type="button" 
+            onClick={() => step < STEPS.length ? setStep(s => s + 1) : handleComplete()}
+            disabled={!canProceed() || loading}
+            className={`flex-1 py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-20 ${canProceed() ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-zinc-100 text-zinc-400'}`}
+          >
+            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>{step === STEPS.length ? 'Finalizza' : 'Continua'} <ArrowRight className="w-6 h-6" strokeWidth={3} /></>}
+          </button>
+        </div>
+
       </div>
     </div>
   )
