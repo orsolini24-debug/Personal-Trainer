@@ -4,11 +4,10 @@ import { auth } from '@/auth'
 import Groq from 'groq-sdk'
 import { prisma } from '@/lib/prisma'
 import { SportType } from '@prisma/client'
-import { completeDeepOnboarding, DeepOnboardingData } from './deep-onboarding'
+import { completeDeepOnboarding, type DeepOnboardingData } from './deep-onboarding'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'missing' })
 
-// Lista ufficiale SportType dal database per validazione
 const VALID_SPORTS: SportType[] = [
   'PALESTRA', 'SOCCER', 'PADEL', 'TENNIS', 'BASKETBALL', 'VOLLEYBALL', 'GYMNASTICS', 'CROSSFIT', 
   'HYROX', 'HOCKEY', 'BASEBALL', 'AMERICAN_FOOTBALL', 'RUGBY', 'CRICKET', 'HANDBALL', 'LACROSS',
@@ -22,17 +21,14 @@ const VALID_SPORTS: SportType[] = [
 ]
 
 function validateSport(s: string): SportType {
-  const upper = s.toUpperCase() as SportType
+  const upper = (s || '').toUpperCase().replace(/\s+/g, '_') as SportType
   if (VALID_SPORTS.includes(upper)) return upper
-  
-  // Mapping di emergenza per sport comuni
   if (upper.includes('BOULDER')) return 'CLIMBING'
   if (upper.includes('CALCETTO') || upper.includes('CALCIOTTO')) return 'SOCCER'
   if (upper.includes('BODYBUILDING') || upper.includes('WEIGHTLIFTING')) return 'PALESTRA'
   if (upper.includes('ARRAMPICATA')) return 'CLIMBING'
   if (upper.includes('LOTTA')) return 'COMBAT'
   if (upper.includes('SCI')) return 'SKIING'
-  
   return 'OTHER'
 }
 
@@ -40,15 +36,11 @@ export async function chatWithPT(messages: { role: 'user' | 'assistant' | 'syste
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
 
-  const systemPrompt = `Sei un Personal Trainer d'élite e Preparatore Atletico specializzato in Ricomposizione Corporea e Performance.
-Il tuo obiettivo è fare un'intervista approfondita (Intake) all'atleta per creare il piano perfetto. 
-
-REGOLE DI CONVERSAZIONE:
-1. Sii professionale, empatico e molto tecnico. Approfondisci ogni risposta.
-2. Se l'utente menziona infortuni (es. crociato, dita rotte), chiedi come influenzano il movimento oggi.
-3. Se l'utente fornisce carichi (es. 100kg panca), usali per capire il suo livello di forza.
-4. Raccogli: Biometria, Sport DNA (tutti gli sport), Livello, Obiettivi, Nutrizione, Logistica.
-5. Quando hai un quadro COMPLETO e DETTAGLIATO, scrivi come ULTIMA parola: "###FINISH###".`
+  const systemPrompt = `Sei un Personal Trainer d'élite. Fai un'intervista profonda. 
+  REGOLE:
+  1. Una domanda alla volta.
+  2. Approfondisci infortuni e carichi (es. i 100kg di panca citati).
+  3. Quando hai tutto, scrivi ###FINISH###.`
 
   try {
     const completion = await groq.chat.completions.create({
@@ -66,37 +58,13 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
 
-  const extractionPrompt = `Analizza la conversazione ed estrai un JSON per DeepOnboardingData.
-  
-  Enum SportType ammessi: ${VALID_SPORTS.join(', ')}.
-  
-  Mappa ogni sport citato su uno di questi valori. 
-  Esempio: "Boulder" -> "CLIMBING", "Calcetto" -> "SOCCER".
-  
-  JSON richiesto:
-  {
-    "biologicalSex": "MALE" | "FEMALE",
-    "ageYears": number,
-    "weightKg": number,
-    "heightCm": number,
-    "primarySport": SportType,
-    "mainSports": SportType[],
-    "experienceLevel": "BEGINNER" | "INTERMEDIATE" | "ADVANCED",
-    "primaryGoal": string,
-    "dietaryType": string,
-    "eatingRoutine": { "mealsPerDay": number, "snacks": boolean, "intermittentFasting": boolean },
-    "availableDays": number,
-    "sessionDuration": number,
-    "equipmentLevel": "FULL_GYM" | "HOME_GYM" | "BODYWEIGHT_ONLY",
-    "injuriesList": string[],
-    "strengthRefs": { "squat1RM": number, "bench1RM": number, "deadlift1RM": number }
-  }`
+  const extractionPrompt = `Estrai i dati in JSON. Sport ammessi: ${VALID_SPORTS.join(', ')}.`
 
   try {
     const completion = await groq.chat.completions.create({
       messages: [
-        { role: 'system', content: "Estrai i dati dall'intervista PT in formato JSON puro." },
-        { role: 'user', content: `Conversazione:\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}\n\n${extractionPrompt}` }
+        { role: 'system', content: "Estrai JSON puro per DeepOnboardingData." },
+        { role: 'user', content: `Chat:\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}\n\n${extractionPrompt}` }
       ],
       model: 'llama-3.3-70b-versatile',
       response_format: { type: "json_object" }
@@ -104,7 +72,6 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
 
     const raw = JSON.parse(completion.choices[0].message.content || "{}")
     
-    // VALIDAZIONE E SANITIZZAZIONE RIGIDA
     const sanitized: DeepOnboardingData = {
       biologicalSex: raw.biologicalSex === 'FEMALE' ? 'FEMALE' : 'MALE',
       ageYears: Math.max(1, Number(raw.ageYears) || 25),
@@ -112,8 +79,14 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
       heightCm: Math.max(1, Number(raw.heightCm) || 175),
       primarySport: validateSport(raw.primarySport || 'PALESTRA'),
       mainSports: Array.isArray(raw.mainSports) ? raw.mainSports.map(validateSport) : [validateSport(raw.primarySport || 'PALESTRA')],
+      sportLevels: raw.sportLevels || {},
       experienceLevel: raw.experienceLevel || 'INTERMEDIATE',
-      primaryGoal: raw.primaryGoal || 'Miglioramento Performance',
+      trainingYears: Number(raw.trainingYears) || 1,
+      strengthRefs: raw.strengthRefs || {},
+      primaryGoal: raw.primaryGoal || 'Performance',
+      isFollowingPlan: !!raw.isFollowingPlan,
+      currentPlanText: raw.currentPlanText || "",
+      targetEvent: raw.targetEvent || "",
       dietaryType: raw.dietaryType || 'OMNIVORE',
       eatingRoutine: {
         mealsPerDay: Number(raw.eatingRoutine?.mealsPerDay) || 3,
@@ -123,19 +96,13 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
       availableDays: Math.min(7, Math.max(1, Number(raw.availableDays) || 3)),
       sessionDuration: Math.max(1, Number(raw.sessionDuration) || 60),
       equipmentLevel: raw.equipmentLevel || 'FULL_GYM',
+      preferredSplit: raw.preferredSplit || "CUSTOM",
       injuriesList: Array.isArray(raw.injuriesList) ? raw.injuriesList : [],
-      strengthRefs: {
-        squat1RM: Number(raw.strengthRefs?.squat1RM) || 0,
-        bench1RM: Number(raw.strengthRefs?.bench1RM) || 0,
-        deadlift1RM: Number(raw.strengthRefs?.deadlift1RM) || 0
-      },
       hasProfessionalData: false,
-      trainingYears: 1,
-      dailyRoutine: "",
-      preferredSplit: "CUSTOM",
-      favoriteFoods: [],
-      dislikedFoods: [],
-      allergies: []
+      dailyRoutine: raw.dailyRoutine || "",
+      favoriteFoods: Array.isArray(raw.favoriteFoods) ? raw.favoriteFoods : [],
+      dislikedFoods: Array.isArray(raw.dislikedFoods) ? raw.dislikedFoods : [],
+      allergies: Array.isArray(raw.allergies) ? raw.allergies : []
     }
 
     return await completeDeepOnboarding(sanitized)
