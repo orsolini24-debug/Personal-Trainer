@@ -11,7 +11,9 @@ import {
 } from "lucide-react"
 import AIPanButton from "./AIPanButton"
 import ProposalSelector from "./ProposalSelector"
+import PlanImportButton from "./PlanImportButton"
 import { MesoStatus } from "@prisma/client"
+import Link from "next/link"
 
 export default async function PlanPage() {
   const session = await auth()
@@ -64,8 +66,9 @@ export default async function PlanPage() {
           <p className="text-sm font-black uppercase tracking-[0.2em] text-[#3b82f6] mb-1">Centro di Preparazione</p>
           <h1 className="text-4xl font-black tracking-tight text-[#f1f5f9]">Plan Manager</h1>
         </div>
-        <div className="flex gap-3">
-          <AIPanButton label={activeMeso ? "Aggiorna Piano" : "Nuova Programmazione"} />
+        <div className="flex items-center gap-3">
+          {!activeMeso && <AIPanButton label="Nuova Programmazione" />}
+          <PlanImportButton />
           <button className="p-3 rounded-2xl bg-white/5 text-[#64748b] hover:text-[#f1f5f9] transition-all border border-white/5 group" title="Archivio">
             <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
@@ -220,18 +223,20 @@ export default async function PlanPage() {
             </div>
           ) : (
             archivedMesos.map(m => (
-              <div key={m.id} className="p-6 bg-[#111118] rounded-[2rem] border border-white/5 flex justify-between items-center group hover:bg-white/[0.02] transition-all cursor-pointer">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[#64748b] shrink-0 group-hover:bg-[#3b82f6]/10 group-hover:text-[#3b82f6] transition-all">
-                    <Archive className="w-6 h-6" />
+              <Link key={m.id} href={`/plan/${m.id}`}>
+                <div className="p-6 bg-[#111118] rounded-[2rem] border border-white/5 flex justify-between items-center group hover:bg-white/[0.02] transition-all cursor-pointer h-full">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[#64748b] shrink-0 group-hover:bg-[#3b82f6]/10 group-hover:text-[#3b82f6] transition-all">
+                      <Archive className="w-6 h-6" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-[#f1f5f9] truncate">{m.name}</p>
+                      <p className="text-[10px] text-[#64748b] font-bold uppercase tracking-widest mt-0.5">{format(new Date(m.startDate), "MMM yyyy", { locale: it })}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-black text-[#f1f5f9] truncate">{m.name}</p>
-                    <p className="text-[10px] text-[#64748b] font-bold uppercase tracking-widest mt-0.5">{format(new Date(m.startDate), "MMM yyyy", { locale: it })}</p>
-                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#64748b] group-hover:translate-x-1 transition-transform shrink-0" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-[#64748b] group-hover:translate-x-1 transition-transform shrink-0" />
-              </div>
+              </Link>
             ))
           )}
         </div>
