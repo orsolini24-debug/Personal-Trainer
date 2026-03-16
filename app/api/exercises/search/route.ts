@@ -14,6 +14,7 @@ export async function GET(request: Request) {
       where: {
         OR: [
           { name: { contains: q, mode: 'insensitive' } },
+          { nameIt: { contains: q, mode: 'insensitive' } },
           { nameAlt: { contains: q, mode: 'insensitive' } }
         ]
       },
@@ -21,6 +22,7 @@ export async function GET(request: Request) {
       select: {
         id: true,
         name: true,
+        nameIt: true,
         nameAlt: true,
         primaryMuscles: true,
         equipment: true

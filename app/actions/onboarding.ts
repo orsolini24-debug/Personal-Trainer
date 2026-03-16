@@ -4,7 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import Groq from 'groq-sdk'
-import { SessionType } from '@prisma/client'
+import { SessionType, SportType } from '@prisma/client'
 
 export interface OnboardingData {
   // Step 1
@@ -19,6 +19,8 @@ export interface OnboardingData {
   // Step 3
   primaryGoal: string
   secondarySports: string[]
+  mainSports: string[]
+  sportLevels: Record<string, string>
   targetEvent?: string
   // Step 4
   availableDays: number
@@ -50,6 +52,8 @@ export async function completeOnboarding(data: OnboardingData) {
       strengthRefs: data.strengthRefs,
       primaryGoal: data.primaryGoal,
       secondarySports: data.secondarySports,
+      mainSports: data.mainSports as SportType[],
+      sportLevels: data.sportLevels,
       targetEvent: data.targetEvent ?? null,
       availableDays: data.availableDays,
       sessionDuration: data.sessionDuration,
@@ -71,6 +75,8 @@ export async function completeOnboarding(data: OnboardingData) {
       strengthRefs: data.strengthRefs,
       primaryGoal: data.primaryGoal,
       secondarySports: data.secondarySports,
+      mainSports: data.mainSports as SportType[],
+      sportLevels: data.sportLevels,
       targetEvent: data.targetEvent ?? null,
       availableDays: data.availableDays,
       sessionDuration: data.sessionDuration,
@@ -127,6 +133,8 @@ Genera un piano di allenamento periodizzato di 4 settimane (Mesociclo 1) per que
 - Peso: ${profile.weightKg} kg, Altezza: ${profile.heightCm} cm
 - Livello: ${profile.experienceLevel} (${profile.trainingYears} anni di allenamento)
 - Obiettivo: ${profile.primaryGoal}
+- Sport principali (DNA Sportivo): ${profile.mainSports.join(', ') || 'Nessuno'}
+- Livelli sportivi: ${JSON.stringify(profile.sportLevels)}
 - Sport secondari: ${profile.secondarySports.join(', ') || 'Nessuno'}
 - Target/Evento: ${profile.targetEvent || 'Nessuno'}
 - Giorni disponibili: ${profile.availableDays}/settimana
@@ -139,53 +147,56 @@ Genera un piano di allenamento periodizzato di 4 settimane (Mesociclo 1) per que
 - Forze di riferimento (stima 1RM): Squat=${profile.strengthRefs.squat1RM ?? 'N/D'} kg, Panca=${profile.strengthRefs.bench1RM ?? 'N/D'} kg, Stacco=${profile.strengthRefs.deadlift1RM ?? 'N/D'} kg, Military=${profile.strengthRefs.ohp1RM ?? 'N/D'} kg
 
 ## Istruzioni
-Rispondi SOLO con un JSON valido. Nessun testo prima o dopo. Schema esatto:
+Rispondi SOLO con un JSON valido. Nessun testo prima o dopo. 
+Il piano deve essere COMPLEMENTARE agli sport principali dell'atleta. Se gioca a calcio o padel, non eccedere col volume sulle gambe nei giorni vicini alle partite.
+Se l'atleta punta alla performance sportiva, seleziona esercizi funzionali al suo sport DNA.
 
+Schema esatto:
 {
   "mesocycle": {
-    "name": "Mesociclo 1 – [obiettivo sintetico]",
+    "name": "...",
     "durationWeeks": 4,
-    "objectives": "Descrizione dettagliata degli obiettivi del mesociclo",
-    "progressionLogic": "Come progredisce settimana per settimana (S1→S4)",
-    "deloadWeek": "Descrizione deload S4"
+    "objectives": "...",
+    "progressionLogic": "...",
+    "deloadWeek": "..."
   },
   "plan": {
-    "name": "Piano ${profile.availableDays}x/settimana",
+    "name": "...",
     "sessionTypes": ["A","B","C"],
     "weeklySchedule": { "1": "A", "2": "B", "3": "off", "4": "C", "5": "off", "6": "off", "0": "off" }
   },
   "sessions": [
     {
       "type": "A",
-      "focus": "Lower – Quadricipiti + Glutei",
+      "focus": "...",
       "exercises": [
         {
-          "name": "Nome esercizio",
+          "name": "...",
           "sets": 4,
           "repsMin": 6,
           "repsMax": 10,
           "targetRir": 2,
           "restSec": 180,
-          "notes": "Note tecniche e coaching cue specifici"
+          "notes": "..."
         }
       ]
     }
   ],
   "nutrition": {
-    "trainingDayKcal": ${Math.round(TDEE * 1.1)},
-    "restDayKcal": ${Math.round(TDEE * 0.9)},
-    "proteinG": ${Math.round(profile.weightKg * 2.0)},
-    "carbsTrainingG": ${Math.round((TDEE * 1.1 * 0.45) / 4)},
-    "carbsRestG": ${Math.round((TDEE * 0.9 * 0.30) / 4)},
-    "fatG": ${Math.round((TDEE * 0.9 * 0.28) / 9)},
-    "mealTiming": "Suggerimento timing pasti rispetto all'allenamento",
-    "supplementProtocol": "Protocollo integratori con timing preciso"
+    "trainingDayKcal": 2500,
+    "restDayKcal": 2000,
+    "proteinG": 160,
+    "carbsTrainingG": 300,
+    "carbsRestG": 150,
+    "fatG": 70,
+    "mealTiming": "...",
+    "supplementProtocol": "..."
   },
   "weeklyProgression": {
-    "week1": "S1: -15/20% dai carichi target, focus tecnica",
-    "week2": "S2: ...",
-    "week3": "S3: ...",
-    "week4": "S4 Deload: ..."
+    "week1": "...",
+    "week2": "...",
+    "week3": "...",
+    "week4": "..."
   }
 }`
 

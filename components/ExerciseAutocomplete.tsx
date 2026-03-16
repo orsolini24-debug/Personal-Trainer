@@ -7,6 +7,7 @@ import { Dumbbell } from 'lucide-react'
 interface ExerciseResult {
   id: string
   name: string
+  nameIt: string | null
   nameAlt: string | null
   primaryMuscles: string[]
   equipment: string
@@ -86,7 +87,7 @@ export default function ExerciseAutocomplete({ value, onChange, onSelect, placeh
   }
 
   const handleSelect = (ex: ExerciseResult) => {
-    onChange(ex.name)
+    onChange(ex.nameIt || ex.name)
     setIsOpen(false)
     if (onSelect) onSelect(ex)
   }
@@ -132,14 +133,17 @@ export default function ExerciseAutocomplete({ value, onChange, onSelect, placeh
                   }}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--fg-primary)' }}>
-                      {ex.name}
+                    <p className="text-sm font-bold truncate" style={{ color: 'var(--fg-primary)' }}>
+                      {ex.nameIt || ex.name}
                     </p>
-                    {ex.primaryMuscles.length > 0 && (
-                      <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: 'var(--accent)' }}>
-                        {ex.primaryMuscles.join(', ')}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {ex.nameIt && <span className="text-[9px] text-[#64748b] truncate italic">({ex.name})</span>}
+                      {ex.primaryMuscles.length > 0 && (
+                        <p className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--accent)' }}>
+                          {ex.primaryMuscles[0]}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="shrink-0 flex items-center gap-1 text-[10px] px-2 py-1 rounded-md" style={{ background: 'var(--bg-base)', color: 'var(--fg-muted)', border: '1px solid var(--border-default)' }}>
                     <Dumbbell className="w-3 h-3" />
