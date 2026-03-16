@@ -66,10 +66,12 @@ export default function OnboardingWizard({ userName }: { userName?: string }) {
   const handleFinish = async (chatHistory: Message[]) => {
     setIsFinishing(true)
     const res = await extractProfileData(chatHistory)
-    if (res.success) {
+    
+    if ('success' in res && res.success) {
       window.location.reload()
     } else {
-      alert("Errore durante la finalizzazione: " + res.error)
+      const errorMsg = 'error' in res ? res.error : "Errore sconosciuto"
+      alert("Errore durante la finalizzazione: " + errorMsg)
       setIsFinishing(false)
     }
   }
