@@ -1,13 +1,12 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { format, addDays, startOfWeek } from "date-fns"
+import { format } from "date-fns"
 import { it } from "date-fns/locale"
 import { 
-  Calendar as CalendarIcon, CheckCircle2, Flag, 
-  Milestone, Target, Dumbbell, Sparkles, Archive,
-  ArrowRight, Info, AlertTriangle, PlayCircle,
-  Utensils, Zap, BookOpen, Settings2
+  Milestone, Target, Sparkles, Archive,
+  ArrowRight, Info, PlayCircle,
+  Utensils, BookOpen, Settings2
 } from "lucide-react"
 import AIPanButton from "./AIPanButton"
 import ProposalSelector from "./ProposalSelector"
@@ -23,6 +22,34 @@ export default async function PlanPage() {
   
   // @ts-ignore
   const onboardingCompleted = session.user.onboardingCompleted
+
+  // 1. Fetch Draft (Proposal)
+  const draftMeso = await prisma.mesocycle.findFirst({
+    where: { userId, status: MesoStatus.DRAFT },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  // 2. Fetch Active Mesocycle
+  const activeMeso = await prisma.mesocycle.findFirst({
+    where: { userId, status: MesoStatus.ACTIVE },
+    include: {
+      workoutPlans: {
+        include: {
+          planDays: {
+            include: { planExercises: { orderBy: { orderIndex: 'asc' } } },
+          },
+        },
+      },
+    },
+    orderBy: { startDate: 'desc' }
+  })
+
+  // 3. Fetch Archive
+  const archivedMesos = await prisma.mesocycle.findMany({
+    where: { userId, status: { in: [MesoStatus.ARCHIVED, MesoStatus.COMPLETED] } },
+    orderBy: { endDate: 'desc' },
+    take: 10
+  })
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-24 px-4 animate-in fade-in duration-700">
@@ -45,13 +72,8 @@ export default async function PlanPage() {
       </div>
 
       {!onboardingCompleted ? (
-        <section className="bg-surface rounded-[3rem] p-8 md:p-12 border border-subtle relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none">
-            <Target className="w-96 h-96 text-[#3b82f6]" />
-          </div>
-          <div className="relative z-10">
-            <OnboardingWizard embedded={true} userName={session.user.name || undefined} />
-          </div>
+        <section className="bg-white rounded-[3rem] p-8 md:p-12 border-4 border-zinc-200 shadow-2xl relative overflow-hidden">
+          <OnboardingWizard embedded={true} userName={session.user.name || undefined} />
         </section>
       ) : (
         <>
@@ -68,7 +90,6 @@ export default async function PlanPage() {
           {/* ── ACTIVE MESOCYCLE ── */}
           {activeMeso ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* ... (rest of the active meso code) */}
               <div className="lg:col-span-8 space-y-6">
                 <section className="bg-surface rounded-[2.5rem] p-8 border border-subtle relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
@@ -131,9 +152,8 @@ export default async function PlanPage() {
                 </section>
               </div>
 
-              {/* Side Content: Nutrition & KPIs */}
+              {/* Side Content */}
               <div className="lg:col-span-4 space-y-6">
-                {/* Nutritional Strategy Section */}
                 <section className="bg-surface rounded-[2.5rem] p-6 border border-subtle group hover:border-[#10b981]/30 transition-all">
                   <h2 className="text-lg font-black text-primary mb-6 flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[#10b981]/10 text-[#10b981]">
@@ -141,13 +161,11 @@ export default async function PlanPage() {
                     </div>
                     Piano Alimentare
                   </h2>
-                  
                   <div className="space-y-6">
                     <div className="p-4 rounded-2xl bg-base border border-subtle">
                       <p className="text-[10px] font-black text-muted uppercase tracking-widest mb-2">Target Proteico</p>
                       <p className="text-2xl font-black text-primary">160g <span className="text-sm font-medium opacity-50">/ giorno</span></p>
                     </div>
-                    
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-4 rounded-2xl bg-base border border-subtle">
                         <p className="text-[10px] font-black text-[#3b82f6] uppercase mb-1">Allenamento</p>
@@ -158,14 +176,9 @@ export default async function PlanPage() {
                         <p className="text-lg font-black text-primary">2000 <span className="text-[10px] opacity-50">kcal</span></p>
                       </div>
                     </div>
-
-                    <div className="p-4 rounded-2xl bg-foreground/5 border border-dashed border-default text-xs text-[#94a3b8] italic leading-relaxed">
-                      "Priorità a carboidrati complessi pre-match e idratazione elettrolitica durante le sessioni outdoor."
-                    </div>
                   </div>
                 </section>
 
-                {/* Performance Roadmap */}
                 <section className="bg-surface rounded-[2.5rem] p-6 border border-subtle">
                   <h2 className="text-lg font-black text-primary mb-6 flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-[#f59e0b]/10 text-[#f59e0b]">
@@ -179,27 +192,20 @@ export default async function PlanPage() {
                       <p className="text-[10px] text-[#10b981] font-black uppercase mb-1">Sett 1-2</p>
                       <p className="text-sm font-bold text-primary">Adattamento & Tecnica</p>
                     </div>
-                    <div className="relative">
-                      <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-[#3b82f6] ring-8 ring-surface animate-pulse"></div>
-                      <p className="text-[10px] text-[#3b82f6] font-black uppercase mb-1">Sett 3</p>
-                      <p className="text-sm font-bold text-primary">Peak Volume</p>
-                    </div>
                   </div>
                 </section>
               </div>
             </div>
           ) : !draftMeso && (
             <section className="bg-surface rounded-[3rem] p-12 border border-subtle text-center border-dashed group hover:border-[#3b82f6]/30 transition-all duration-700">
-              <div className="w-20 h-20 rounded-3xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Sparkles className="w-10 h-10 animate-pulse" />
-              </div>
+              <Sparkles className="w-10 h-10 text-[#3b82f6] mx-auto mb-6 animate-pulse" />
               <h2 className="text-3xl font-black text-primary mb-3">Nessuna Programmazione Attiva</h2>
               <p className="text-muted max-w-sm mx-auto mb-8 leading-relaxed font-medium">L'AI genererà 3 proposte strategiche basate sui tuoi sport primari e i tuoi obiettivi di performance.</p>
               <AIPanButton label="Genera Strategie AI" />
             </section>
           )}
 
-          {/* ── ARCHIVE & HISTORY ── */}
+          {/* Archive */}
           <div id="archive" className="pt-10 border-t border-subtle scroll-mt-20">
             <h2 className="text-xl font-black text-primary mb-6 flex items-center gap-3">
               <Archive className="w-5 h-5 text-muted" /> Archivio Mesocicli
@@ -215,9 +221,7 @@ export default async function PlanPage() {
                   <Link key={m.id} href={`/plan/${m.id}`}>
                     <div className="p-6 bg-surface rounded-[2rem] border border-subtle flex justify-between items-center group hover:bg-white/[0.02] transition-all cursor-pointer h-full">
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-12 h-12 rounded-2xl bg-foreground/5 flex items-center justify-center text-muted shrink-0 group-hover:bg-[#3b82f6]/10 group-hover:text-[#3b82f6] transition-all">
-                          <Archive className="w-6 h-6" />
-                        </div>
+                        <Archive className="w-6 h-6 text-muted shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-black text-primary truncate">{m.name}</p>
                           <p className="text-[10px] text-muted font-bold uppercase tracking-widest mt-0.5">
