@@ -21,60 +21,72 @@ const STEPS = [
 
 const ALL_SPORTS = [
   // PALESTRA & FORZA
-  { id: 'BODYBUILDING', label: 'Bodybuilding', cat: 'Forza', icon: '💪' },
-  { id: 'POWERLIFTING', label: 'Powerlifting', cat: 'Forza', icon: '🏋️' },
+  { id: 'PALESTRA', label: 'Palestra / BB', cat: 'Forza', icon: '💪' },
   { id: 'CROSSFIT', label: 'CrossFit', cat: 'Forza', icon: '🔥' },
   { id: 'CALISTHENICS', label: 'Calisthenics', cat: 'Forza', icon: '🤸' },
-  { id: 'WEIGHTLIFTING', label: 'Weightlifting', cat: 'Forza', icon: '🏋️‍♂️' },
-  { id: 'STRONGMAN', label: 'Strongman', cat: 'Forza', icon: '⛓️' },
+  { id: 'GYMNASTICS', label: 'Ginnastica', cat: 'Forza', icon: '🤸‍♂️' },
   
   // CORSA & ENDURANCE
-  { id: 'RUNNING', label: 'Corsa (Strada)', cat: 'Endurance', icon: '🏃' },
+  { id: 'RUNNING', label: 'Corsa', cat: 'Endurance', icon: '🏃' },
   { id: 'TRAIL_RUNNING', label: 'Trail Running', cat: 'Endurance', icon: '⛰️' },
+  { id: 'SPRINTING', label: 'Sprint', cat: 'Endurance', icon: '⚡' },
   { id: 'MARATHON', label: 'Maratona', icon: '🏁', cat: 'Endurance' },
+  { id: 'TRIATHLON', label: 'Triathlon', cat: 'Endurance', icon: '🏊' },
   { id: 'CYCLING', label: 'Ciclismo', cat: 'Endurance', icon: '🚴' },
   { id: 'MTB', label: 'MTB', cat: 'Endurance', icon: '🚵' },
-  { id: 'TRIATHLON', label: 'Triathlon', cat: 'Endurance', icon: '🏊' },
+  { id: 'GRAVEL_BIKING', label: 'Gravel', cat: 'Endurance', icon: '🚲' },
   { id: 'SWIMMING', label: 'Nuoto', cat: 'Endurance', icon: '🏊‍♂️' },
+  { id: 'OPEN_WATER_SWIMMING', label: 'Nuoto Fondo', cat: 'Endurance', icon: '🌊' },
   { id: 'ROWING', label: 'Canottaggio', cat: 'Endurance', icon: '🚣' },
 
   // SPORT DI SQUADRA
   { id: 'SOCCER', label: 'Calcio', cat: 'Squadra', icon: '⚽' },
+  { id: 'PADEL', label: 'Padel', cat: 'Squadra', icon: '🎾' },
+  { id: 'TENNIS', label: 'Tennis', cat: 'Squadra', icon: '🎾' },
   { id: 'BASKETBALL', label: 'Basket', cat: 'Squadra', icon: '🏀' },
   { id: 'VOLLEYBALL', label: 'Volley', cat: 'Squadra', icon: '🏐' },
   { id: 'RUGBY', label: 'Rugby', cat: 'Squadra', icon: '🏉' },
-  { id: 'WATERPOLO', label: 'Pallanuoto', cat: 'Squadra', icon: '🤽' },
-  { id: 'PADEL', label: 'Padel', cat: 'Squadra', icon: '🎾' },
-  { id: 'TENNIS', label: 'Tennis', cat: 'Squadra', icon: '🎾' },
+  { id: 'AMERICAN_FOOTBALL', label: 'Football', cat: 'Squadra', icon: '🏈' },
+  { id: 'WATER_POLO', label: 'Pallanuoto', cat: 'Squadra', icon: '🤽' },
+  { id: 'HANDBALL', label: 'Pallamano', cat: 'Squadra', icon: '🤾' },
 
   // LOTTA & COMBATTIMENTO
+  { id: 'COMBAT', label: 'Lotta / Arti Marziali', cat: 'Lotta', icon: '🥋' },
   { id: 'BOXING', label: 'Boxe', cat: 'Lotta', icon: '🥊' },
   { id: 'KICKBOXING', label: 'Kickboxing', cat: 'Lotta', icon: '🥋' },
+  { id: 'MUAY_THAI', label: 'Muay Thai', cat: 'Lotta', icon: '🥊' },
   { id: 'MMA', label: 'MMA', cat: 'Lotta', icon: '🤼' },
   { id: 'BJJ', label: 'BJJ', cat: 'Lotta', icon: '🥋' },
-  { id: 'WRESTLING', label: 'Lotta Libera', cat: 'Lotta', icon: '🤼‍♂️' },
   { id: 'JUDO', label: 'Judo', cat: 'Lotta', icon: '🥋' },
-  { id: 'MUAY_THAI', label: 'Muay Thai', cat: 'Lotta', icon: '🥊' },
+  { id: 'WRESTLING', label: 'Wrestling', cat: 'Lotta', icon: '🤼‍♂️' },
+  { id: 'KARATE', label: 'Karate', cat: 'Lotta', icon: '🥋' },
+  { id: 'TAEKWONDO', label: 'Taekwondo', cat: 'Lotta', icon: '🥋' },
+  { id: 'FENCING', label: 'Scherma', cat: 'Lotta', icon: '🤺' },
 
   // MONTAGNA & OUTDOOR
   { id: 'CLIMBING', label: 'Arrampicata', cat: 'Outdoor', icon: '🧗' },
-  { id: 'HIKING', label: 'Trekking', cat: 'Outdoor', icon: '🥾' },
+  { id: 'TREKKING', label: 'Trekking', cat: 'Outdoor', icon: '🥾' },
+  { id: 'MOUNTAINEERING', label: 'Alpinismo', cat: 'Outdoor', icon: '🏔️' },
   { id: 'SKIING', label: 'Sci', cat: 'Outdoor', icon: '⛷️' },
+  { id: 'SKI_TOURING', label: 'Sci Alpinismo', cat: 'Outdoor', icon: '🎿' },
   { id: 'SNOWBOARDING', label: 'Snowboard', cat: 'Outdoor', icon: '🏂' },
-  { id: 'SURFING', label: 'Surf', cat: 'Outdoor', icon: '🏄' },
-  { id: 'WINDSURF', label: 'Windsurf', cat: 'Outdoor', icon: '⛵' },
 
-  // ACQUATICI
-  { id: 'DIVING', label: 'Tuffi', cat: 'Acqua', icon: '💦' },
-  { id: 'KAYAK', label: 'Kayak', cat: 'Acqua', icon: '🛶' },
+  // ACQUATICI & WIND
+  { id: 'SURFING', label: 'Surf', cat: 'Acqua', icon: '🏄' },
+  { id: 'WINDSURFING', label: 'Windsurf', cat: 'Acqua', icon: '⛵' },
+  { id: 'KITESURFING', label: 'Kitesurf', cat: 'Acqua', icon: '🏄‍♂️' },
   { id: 'SAILING', label: 'Vela', cat: 'Acqua', icon: '⛵' },
+  { id: 'KAYAKING', label: 'Kayak', cat: 'Acqua', icon: '🛶' },
+  { id: 'DIVING', label: 'Subacquea', cat: 'Acqua', icon: '🤿' },
+  { id: 'SUP', label: 'SUP', cat: 'Acqua', icon: '🏄‍♀️' },
 
   // ALTRI
   { id: 'YOGA', label: 'Yoga', cat: 'Mind', icon: '🧘' },
   { id: 'PILATES', label: 'Pilates', cat: 'Mind', icon: '🧘‍♀️' },
-  { id: 'DANCE', label: 'Danza', cat: 'Art', icon: '💃' },
   { id: 'GOLF', label: 'Golf', cat: 'Sport', icon: '⛳' },
   { id: 'SKATING', label: 'Pattinaggio', cat: 'Sport', icon: '⛸️' },
+  { id: 'DANCING', label: 'Danza', cat: 'Sport', icon: '💃' },
+  { id: 'ARCHERY', label: 'Tiro con Arco', cat: 'Sport', icon: '🏹' },
 ]
 
 const INITIAL: DeepOnboardingData = {
