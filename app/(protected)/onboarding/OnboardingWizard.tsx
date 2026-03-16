@@ -1,39 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { completeDeepOnboarding, type DeepOnboardingData } from '@/app/actions/deep-onboarding'
 import {
-  User, Dumbbell, Target, Calendar, Shield,
-  ChevronRight, ChevronLeft, Check, Loader2, Trophy,
-  Activity, Scale, PieChart, Utensils, ClipboardList,
-  Flame, HeartPulse, Clock, Zap, Star, AlertCircle, FastForward
+  User, Trophy, Activity, ClipboardList, Utensils, Clock,
+  ChevronRight, ChevronLeft, Scale, Target, 
+  Dumbbell, Zap, Flame, Shield, Check, Loader2, ArrowRight
 } from 'lucide-react'
 import { SportType } from '@prisma/client'
 
 const STEPS = [
-  { id: 1, label: 'Bio & Corpo', icon: User },
-  { id: 2, label: 'Sport DNA', icon: Trophy },
-  { id: 3, label: 'Performance', icon: Activity },
-  { id: 4, label: 'Stato Attuale', icon: ClipboardList },
-  { id: 5, label: 'Nutrizione', icon: Utensils },
-  { id: 6, label: 'Routine & Logistica', icon: Clock },
+  { id: 1, label: 'Profilo', icon: User, color: 'blue' },
+  { id: 2, label: 'DNA Sport', icon: Trophy, color: 'orange' },
+  { id: 3, label: 'Performance', icon: Activity, color: 'purple' },
+  { id: 4, label: 'Obiettivi', icon: Target, color: 'indigo' },
+  { id: 5, label: 'Nutrizione', icon: Utensils, color: 'green' },
+  { id: 6, label: 'Logistica', icon: Clock, color: 'cyan' },
 ]
 
 const SPORT_OPTIONS = [
-  { value: 'PALESTRA', label: 'Palestra / Bodybuilding', icon: '🏋️' },
-  { value: 'CALISTHENICS', label: 'Calisthenics', icon: '🤸' },
-  { value: 'CROSSFIT', label: 'CrossFit', icon: '🔥' },
-  { value: 'HYROX', label: 'Hyrox', icon: '⏱️' },
-  { value: 'RUNNING', label: 'Corsa', icon: '🏃' },
-  { value: 'PADEL', label: 'Padel', icon: '🎾' },
-  { value: 'SOCCER', label: 'Calcio', icon: '⚽' },
-  { value: 'COMBAT', label: 'Boxe / MMA', icon: '🥊' },
-  { value: 'CYCLING', label: 'Ciclismo', icon: '🚴' },
-  { value: 'SWIMMING', label: 'Nuoto', icon: '🏊' },
-  { value: 'SKIING', label: 'Sci', icon: '⛷️' },
-  { value: 'HOCKEY', label: 'Hockey', icon: '🏒' },
-  { value: 'BASEBALL', label: 'Baseball', icon: '⚾' },
+  { value: 'PALESTRA', label: 'Palestra', icon: '🏋️', desc: 'Bodybuilding & Forza' },
+  { value: 'RUNNING', label: 'Corsa', icon: '🏃', desc: 'Maratona & Trail' },
+  { value: 'PADEL', label: 'Padel', icon: '🎾', desc: 'Tecnica & Agilità' },
+  { value: 'CROSSFIT', label: 'CrossFit', icon: '🔥', desc: 'Alta Intensità' },
+  { value: 'CALISTHENICS', label: 'Calisthenics', icon: '🤸', desc: 'Peso Corporeo' },
+  { value: 'SOCCER', label: 'Calcio', icon: '⚽', desc: 'Sport di Squadra' },
+  { value: 'COMBAT', label: 'Combat', icon: '🥊', desc: 'Boxe & MMA' },
+  { value: 'CYCLING', label: 'Ciclismo', icon: '🚴', desc: 'Resistenza' },
 ]
 
 const INITIAL: DeepOnboardingData = {
@@ -53,8 +47,13 @@ export default function OnboardingWizard({ userName }: { userName?: string }) {
   const [step, setStep] = useState(1)
   const [data, setData] = useState<DeepOnboardingData>(INITIAL)
   const [loading, setLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
-  const set = <K extends keyof DeepOnboardingData>(k: K, v: DeepOnboardingData[K]) => setData(d => ({ ...d, [k]: v }))
+  useEffect(() => setIsMounted(true), [])
+
+  const set = <K extends keyof DeepOnboardingData>(k: K, v: DeepOnboardingData[K]) => {
+    setData(d => ({ ...d, [k]: v }))
+  }
 
   const handleComplete = async () => {
     setLoading(true)
@@ -68,198 +67,7 @@ export default function OnboardingWizard({ userName }: { userName?: string }) {
     }
   }
 
-  const handleNext = () => setStep(s => s + 1)
-  const handlePrev = () => setStep(s => s - 1)
-
-  // ── RENDER STEPS ─────────────────────────────────────────────────────────
-
-  const Step1Bio = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500"><Scale className="w-6 h-6" /></div>
-        <h2 className="text-2xl font-black text-[#f1f5f9]">Bio & Composizione</h2>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {['MALE', 'FEMALE'].map(s => (
-          <button key={s} onClick={() => set('biologicalSex', s)} className={`p-4 rounded-2xl border font-bold transition-all ${data.biologicalSex === s ? 'bg-[#3b82f6]/10 border-[#3b82f6] text-[#3b82f6]' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>
-            {s === 'MALE' ? 'Uomo' : 'Donna'}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-[#64748b]">Peso (kg)</label>
-          <input type="number" step="0.1" value={data.weightKg} onChange={e=>set('weightKg', parseFloat(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-[#64748b]">Età</label>
-          <input type="number" value={data.ageYears} onChange={e=>set('ageYears', parseInt(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
-        </div>
-      </div>
-      <div className="p-5 rounded-3xl bg-[#0a0a0f] border border-white/5 space-y-4">
-        <div className="flex justify-between items-center">
-          <p className="text-sm font-bold text-[#f1f5f9]">Dati Professionali?</p>
-          <button onClick={() => set('hasProfessionalData', !data.hasProfessionalData)} className={`text-[10px] px-3 py-1.5 rounded-full font-bold uppercase transition-all ${data.hasProfessionalData ? 'bg-green-500/20 text-green-500 border border-green-500/30' : 'bg-white/5 text-[#64748b] border border-white/5'}`}>
-            {data.hasProfessionalData ? 'Sì, ho dati BIA/Visita' : 'No, sono stime'}
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-[#64748b]">Massa Grassa %</label>
-            <input type="number" value={data.bodyFatPct || ''} onChange={e=>set('bodyFatPct', parseFloat(e.target.value))} placeholder="es. 15" className="w-full p-3 rounded-xl bg-white/5 border border-white/5 text-[#f1f5f9] outline-none" />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-[#64748b]">Massa Magra (kg)</label>
-            <input type="number" value={data.leanMassKg || ''} onChange={e=>set('leanMassKg', parseFloat(e.target.value))} placeholder="es. 62" className="w-full p-3 rounded-xl bg-white/5 border border-white/5 text-[#f1f5f9] outline-none" />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const Step2Sport = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500"><Trophy className="w-6 h-6" /></div>
-        <h2 className="text-2xl font-black text-[#f1f5f9]">Sport DNA</h2>
-      </div>
-      <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-        {SPORT_OPTIONS.map(s => (
-          <button key={s.value} onClick={() => set('primarySport', s.value as SportType)} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${data.primarySport === s.value ? 'bg-[#f59e0b]/10 border-[#f59e0b] text-[#f59e0b]' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>
-            <span className="text-2xl">{s.icon}</span>
-            <span className="text-[10px] font-black uppercase text-center">{s.label}</span>
-          </button>
-        ))}
-      </div>
-      
-      {data.primarySport === 'RUNNING' && (
-        <div className="p-5 rounded-3xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 space-y-4">
-          <p className="text-xs font-black text-[#3b82f6] uppercase tracking-widest">Metrica Corsa</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-[#64748b]">Ritmo Medio (min/km)</label>
-              <input type="text" value={data.runningData?.avgPace || ''} onChange={e=>set('runningData', {...data.runningData, avgPace: e.target.value})} placeholder="es. 4:50" className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-[#64748b]">Distanza Max (km)</label>
-              <input type="number" value={data.runningData?.maxDistance || ''} onChange={e=>set('runningData', {...data.runningData, maxDistance: parseFloat(e.target.value)})} placeholder="es. 21" className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none" />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-
-  const Step3Experience = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500"><Activity className="w-6 h-6" /></div>
-        <h2 className="text-2xl font-black text-[#f1f5f9]">Esperienza & Forza</h2>
-      </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-2">
-          {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map(l => (
-            <button key={l} onClick={() => set('experienceLevel', l)} className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${data.experienceLevel === l ? 'bg-purple-500/20 border-purple-500 text-purple-500' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>{l}</button>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {[{ k: 'squat1RM' as const, l: 'Squat' }, { k: 'bench1RM' as const, l: 'Panca' }, { k: 'deadlift1RM' as const, l: 'Stacco' }, { k: 'ohp1RM' as const, l: 'Military' }].map(({ k, l }) => (
-            <div key={k} className="space-y-1">
-              <label className="text-[10px] font-bold text-[#64748b] uppercase">{l} Max (kg)</label>
-              <input type="number" value={data.strengthRefs[k] || ''} onChange={e => set('strengthRefs', { ...data.strengthRefs, [k]: parseInt(e.target.value) || undefined })} className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-
-  const Step4Status = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500"><ClipboardList className="w-6 h-6" /></div>
-        <h2 className="text-2xl font-black text-[#f1f5f9]">Stato Attuale</h2>
-      </div>
-      <div className="space-y-4">
-        <div className="p-5 rounded-3xl bg-[#0a0a0f] border border-white/5 space-y-3">
-          <p className="text-sm font-bold text-[#f1f5f9]">Stai seguendo un piano ora?</p>
-          <div className="flex gap-2">
-            <button onClick={() => set('isFollowingPlan', true)} className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${data.isFollowingPlan ? 'bg-[#6366f1]/20 border-[#6366f1] text-[#6366f1]' : 'bg-white/5 border-transparent text-[#64748b]'}`}>Sì</button>
-            <button onClick={() => set('isFollowingPlan', false)} className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${!data.isFollowingPlan ? 'bg-white/10 border-white/20 text-[#f1f5f9]' : 'bg-white/5 border-transparent text-[#64748b]'}`}>No</button>
-          </div>
-          {data.isFollowingPlan && (
-            <textarea value={data.currentPlanText} onChange={e=>set('currentPlanText', e.target.value)} placeholder="Incolla il tuo piano attuale qui (testo o elenco esercizi)..." rows={4} className="w-full p-3 rounded-xl bg-white/5 border border-white/5 text-[#f1f5f9] outline-none text-[10px] resize-none" />
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-[#64748b]">Gara / Evento Target (opzionale)</label>
-          <input type="text" value={data.targetEvent || ''} onChange={e=>set('targetEvent', e.target.value)} placeholder="es. Maratona di Milano, Torneo Padel..." className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-sm font-medium" />
-        </div>
-      </div>
-    </div>
-  )
-
-  const Step5Nutrition = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-green-500/10 text-green-500"><Utensils className="w-6 h-6" /></div>
-        <h2 className="text-2xl font-black text-[#f1f5f9]">Nutrizione & Gusti</h2>
-      </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2">
-          {['OMNIVORE', 'VEGETARIAN', 'VEGAN', 'KETO'].map(t => (
-            <button key={t} onClick={() => set('dietaryType', t)} className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${data.dietaryType === t ? 'bg-green-500/20 border-green-500 text-green-500' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>{t}</button>
-          ))}
-        </div>
-        <div className="space-y-3">
-          <div className="p-4 rounded-2xl bg-[#0a0a0f] border border-white/5">
-            <label className="text-[10px] font-bold text-[#64748b] uppercase mb-2 block">Routine Pasti</label>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#f1f5f9]">Quanti pasti al giorno?</span>
-              <div className="flex gap-2">
-                {[3, 4, 5, 6].map(n => (
-                  <button key={n} onClick={() => set('eatingRoutine', {...data.eatingRoutine, mealsPerDay: n})} className={`w-8 h-8 rounded-lg text-xs font-bold ${data.eatingRoutine.mealsPerDay === n ? 'bg-green-500 text-white' : 'bg-white/5 text-[#64748b]'}`}>{n}</button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <textarea placeholder="Cibi Preferiti (es. Salmone, Avocado, Pasta)" onBlur={e=>set('favoriteFoods', e.target.value.split(',').map(s=>s.trim()))} className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-xs" />
-          <textarea placeholder="Cibi da Evitare / Allergie" onBlur={e=>set('dislikedFoods', e.target.value.split(',').map(s=>s.trim()))} className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-xs" />
-        </div>
-      </div>
-    </div>
-  )
-
-  const Step6Routine = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500"><Clock className="w-6 h-6" /></div>
-        <h2 className="text-2xl font-black text-[#f1f5f9]">Logistica & Allenamento</h2>
-      </div>
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-[#64748b] uppercase">Giorni/Sett</label>
-            <input type="number" value={data.availableDays} onChange={e=>set('availableDays', parseInt(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-[#64748b] uppercase">Durata (min)</label>
-            <input type="number" value={data.sessionDuration} onChange={e=>set('sessionDuration', parseInt(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-2">
-          {[
-            { v: 'FULL_GYM', l: 'Palestra Completa' },
-            { v: 'HOME_GYM', l: 'Home Gym (Manubri/Panca)' },
-            { v: 'BODYWEIGHT_ONLY', l: 'Corpo Libero' }
-          ].map(opt => (
-            <button key={opt.v} onClick={() => set('equipmentLevel', opt.v)} className={`p-4 rounded-2xl border text-left font-bold transition-all ${data.equipmentLevel === opt.v ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>{opt.l}</button>
-          ))}
-        </div>
-        <textarea value={data.dailyRoutine} onChange={e=>set('dailyRoutine', e.target.value)} placeholder="Descrivi brevemente la tua giornata tipo (es. Lavoro sedentario, cammino molto...)" rows={3} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-xs resize-none" />
-      </div>
-    </div>
-  )
+  if (!isMounted) return null
 
   const canProceed = () => {
     if (step === 1) return data.biologicalSex && data.weightKg > 0 && data.ageYears > 0
@@ -270,50 +78,359 @@ export default function OnboardingWizard({ userName }: { userName?: string }) {
     return true
   }
 
+  // ── UI Components ────────────────────────────────────────────────────────
+
+  const CardSelect = ({ active, onClick, icon, label, desc, colorClass }: any) => (
+    <button
+      onClick={onClick}
+      className={`relative p-6 rounded-[2rem] border transition-all duration-300 text-left group overflow-hidden ${
+        active 
+          ? `bg-surface border-${colorClass}/40 ring-1 ring-${colorClass}/30` 
+          : 'bg-surface/50 border-subtle hover:border-white/20'
+      }`}
+    >
+      {active && (
+        <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-${colorClass}/10 blur-3xl rounded-full`} />
+      )}
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-2xl bg-base border border-subtle group-hover:scale-110 transition-transform ${active ? `text-${colorClass}` : 'text-muted'}`}>
+        {icon}
+      </div>
+      <h3 className={`font-black text-lg ${active ? 'text-primary' : 'text-muted'}`}>{label}</h3>
+      <p className="text-xs font-medium text-muted/60 mt-1">{desc}</p>
+      {active && <div className={`absolute bottom-6 right-6 w-6 h-6 rounded-full bg-${colorClass} flex items-center justify-center text-white`}><Check className="w-4 h-4" /></div>}
+    </button>
+  )
+
+  const ModernInput = ({ label, value, onChange, type = "number", suffix, prefixIcon: Icon }: any) => (
+    <div className="space-y-2 group">
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-1 group-focus-within:text-primary transition-colors">
+        {label}
+      </label>
+      <div className="relative flex items-center">
+        {Icon && <Icon className="absolute left-4 w-5 h-5 text-muted/40 group-focus-within:text-primary transition-colors" />}
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          className={`w-full bg-base border border-subtle rounded-2xl p-4 font-black text-lg outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all ${Icon ? 'pl-12' : ''}`}
+        />
+        {suffix && <span className="absolute right-4 font-bold text-muted text-sm">{suffix}</span>}
+      </div>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#05050f] p-4 absolute inset-0 z-[100] font-sans selection:bg-[#3b82f6]/30">
-      <div className="w-full max-w-lg bg-[#111118] p-8 md:p-10 rounded-[3.5rem] border border-white/5 shadow-2xl relative overflow-hidden">
-        
-        {/* Deep Progress bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#0a0a0f] flex">
-          {STEPS.map(s => (
-            <div key={s.id} className={`h-full flex-1 transition-all duration-700 ${step >= s.id ? 'bg-gradient-to-r from-[#3b82f6] to-[#6366f1]' : 'bg-transparent'}`} />
-          ))}
-        </div>
+    <div className="min-h-screen bg-[#020205] text-[#f1f5f9] flex items-center justify-center p-4 md:p-8 font-sans overflow-hidden selection:bg-primary/30">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
 
-        <div className="mb-10 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3b82f6] to-[#6366f1] flex items-center justify-center font-black text-white text-[10px] shadow-lg">PE</div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#64748b]">Athlete Intake</span>
+      <div className="w-full max-w-2xl relative z-10">
+        {/* Progress Header */}
+        <div className="mb-12 space-y-8">
+          <div className="flex justify-between items-center px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+                <Zap className="w-5 h-5 text-white fill-white" />
+              </div>
+              <div>
+                <h1 className="text-sm font-black uppercase tracking-widest text-primary">Intake Atleta</h1>
+                <p className="text-[10px] font-bold text-muted">Performance Ecosystem AI</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-primary italic">Step 0{step}</span>
+              <p className="text-[10px] font-bold text-muted uppercase tracking-tighter">del percorso totale</p>
+            </div>
           </div>
-          <span className="text-[10px] font-black text-[#3b82f6] bg-[#3b82f6]/10 px-2 py-1 rounded-md">{Math.round((step/STEPS.length)*100)}%</span>
+
+          <div className="flex gap-2 px-1">
+            {STEPS.map((s) => (
+              <div 
+                key={s.id} 
+                className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${
+                  step >= s.id ? 'bg-primary shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-white/5'
+                }`} 
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="min-h-[420px]">
-          {step === 1 && <Step1Bio />}
-          {step === 2 && <Step2Sport />}
-          {step === 3 && <Step3Experience />}
-          {step === 4 && <Step4Status />}
-          {step === 5 && <Step5Nutrition />}
-          {step === 6 && <Step6Routine />}
+        {/* Content Area */}
+        <div className="min-h-[480px] transition-all duration-500">
+          
+          {/* STEP 1: BIO */}
+          {step === 1 && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tighter text-primary">Chi sei?</h2>
+                <p className="text-muted font-medium">Definiamo le basi biologiche per l'algoritmo AI.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => set('biologicalSex', 'MALE')}
+                  className={`group relative p-8 rounded-[2.5rem] border transition-all duration-500 ${data.biologicalSex === 'MALE' ? 'bg-primary/10 border-primary shadow-2xl shadow-primary/10' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
+                >
+                  <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110 ${data.biologicalSex === 'MALE' ? 'bg-primary text-white' : 'bg-base text-muted'}`}>
+                    <User className="w-8 h-8" />
+                  </div>
+                  <span className={`block text-center font-black tracking-tighter ${data.biologicalSex === 'MALE' ? 'text-primary' : 'text-muted'}`}>UOMO</span>
+                </button>
+                <button 
+                  onClick={() => set('biologicalSex', 'FEMALE')}
+                  className={`group relative p-8 rounded-[2.5rem] border transition-all duration-500 ${data.biologicalSex === 'FEMALE' ? 'bg-primary/10 border-primary shadow-2xl shadow-primary/10' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
+                >
+                  <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110 ${data.biologicalSex === 'FEMALE' ? 'bg-primary text-white' : 'bg-base text-muted'}`}>
+                    <User className="w-8 h-8" />
+                  </div>
+                  <span className={`block text-center font-black tracking-tighter ${data.biologicalSex === 'FEMALE' ? 'text-primary' : 'text-muted'}`}>DONNA</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <ModernInput 
+                  label="Peso Attuale" 
+                  value={data.weightKg} 
+                  onChange={(e: any) => set('weightKg', parseFloat(e.target.value))} 
+                  suffix="kg"
+                  prefixIcon={Scale}
+                />
+                <ModernInput 
+                  label="La tua Età" 
+                  value={data.ageYears} 
+                  onChange={(e: any) => set('ageYears', parseInt(e.target.value))} 
+                  suffix="anni"
+                  prefixIcon={Clock}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: SPORT DNA */}
+          {step === 2 && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tighter text-primary">Sport DNA</h2>
+                <p className="text-muted font-medium">Quale attività domina la tua routine settimanale?</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
+                {SPORT_OPTIONS.map(s => (
+                  <button 
+                    key={s.value} 
+                    onClick={() => set('primarySport', s.value as SportType)}
+                    className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center gap-3 ${data.primarySport === s.value ? 'bg-orange-500/10 border-orange-500 shadow-lg shadow-orange-500/5' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
+                  >
+                    <span className="text-4xl group-hover:scale-125 transition-transform">{s.icon}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${data.primarySport === s.value ? 'text-orange-500' : 'text-muted'}`}>{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: PERFORMANCE */}
+          {step === 3 && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tighter text-primary">Livello Atletico</h2>
+                <p className="text-muted font-medium">Sii onesto con te stesso per calibrare i volumi.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {[
+                  { v: 'BEGINNER', l: 'Principiante', d: 'Meno di 1 anno di esperienza costante.', c: 'green' },
+                  { v: 'INTERMEDIATE', l: 'Intermedio', d: '1-3 anni di allenamento strutturato.', c: 'blue' },
+                  { v: 'ADVANCED', l: 'Avanzato', d: 'Oltre 3 anni, padronanza dei fondamentali.', c: 'purple' }
+                ].map(opt => (
+                  <button 
+                    key={opt.v}
+                    onClick={() => set('experienceLevel', opt.v)}
+                    className={`p-6 rounded-[2rem] border text-left transition-all duration-300 relative overflow-hidden group ${data.experienceLevel === opt.v ? `bg-surface border-${opt.c}-500/40 ring-1 ring-${opt.c}-500/20` : 'bg-surface/50 border-subtle hover:border-white/10'}`}
+                  >
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${data.experienceLevel === opt.v ? `bg-${opt.c}-500 text-white` : 'bg-base text-muted'}`}>
+                        <Trophy className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className={`font-black text-lg ${data.experienceLevel === opt.v ? 'text-primary' : 'text-muted'}`}>{opt.l}</h3>
+                        <p className="text-xs font-medium text-muted/60">{opt.d}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: OBIETTIVI */}
+          {step === 4 && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tighter text-primary">La tua Meta</h2>
+                <p className="text-muted font-medium">L'AI genererà il percorso basandosi su questo.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { v: 'HYPERTROPHY', l: 'Ipertrofia', d: 'Costruzione massa muscolare', i: Flame, c: 'orange' },
+                  { v: 'STRENGTH', l: 'Forza Pura', d: 'Massimizzare i massimali (1RM)', i: Dumbbell, c: 'blue' },
+                  { v: 'WEIGHT_LOSS', l: 'Definizione', d: 'Perdita grasso & Recomposing', i: Scale, c: 'green' },
+                  { v: 'PERFORMANCE', l: 'Performance', d: 'Funzionalità per il tuo sport', i: Activity, c: 'indigo' }
+                ].map(opt => (
+                  <button 
+                    key={opt.v}
+                    onClick={() => set('primaryGoal', opt.v)}
+                    className={`p-6 rounded-[2.5rem] border text-left transition-all duration-300 group ${data.primaryGoal === opt.v ? `bg-surface border-${opt.c}-500/40 ring-1 ring-${opt.c}-500/20` : 'bg-surface/50 border-subtle hover:border-white/10'}`}
+                  >
+                    <opt.i className={`w-8 h-8 mb-4 ${data.primaryGoal === opt.v ? `text-${opt.c}-500` : 'text-muted'}`} />
+                    <h3 className={`font-black text-lg ${data.primaryGoal === opt.v ? 'text-primary' : 'text-muted'}`}>{opt.l}</h3>
+                    <p className="text-[10px] font-bold text-muted/50 uppercase tracking-tighter">{opt.d}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: NUTRITION */}
+          {step === 5 && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tighter text-primary">Carburante</h2>
+                <p className="text-muted font-medium">Ottimizziamo i macronutrienti per le tue sessioni.</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex gap-2 p-2 bg-surface border border-subtle rounded-3xl">
+                  {['OMNIVORE', 'VEGETARIAN', 'VEGAN', 'KETO'].map(t => (
+                    <button 
+                      key={t} 
+                      onClick={() => set('dietaryType', t)}
+                      className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${data.dietaryType === t ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted hover:text-primary'}`}
+                    >
+                      {t.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="p-8 rounded-[2.5rem] bg-surface border border-subtle flex items-center justify-between">
+                  <div>
+                    <h3 className="font-black text-lg text-primary">Frequenza Pasti</h3>
+                    <p className="text-xs text-muted font-medium">Quanti pasti solidi al giorno?</p>
+                  </div>
+                  <div className="flex gap-3">
+                    {[3, 4, 5, 6].map(n => (
+                      <button 
+                        key={n} 
+                        onClick={() => set('eatingRoutine', {...data.eatingRoutine, mealsPerDay: n})}
+                        className={`w-12 h-12 rounded-2xl font-black transition-all border ${data.eatingRoutine.mealsPerDay === n ? 'bg-primary border-primary text-white' : 'bg-base border-subtle text-muted hover:border-white/20'}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 6: LOGISTICS */}
+          {step === 6 && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tighter text-primary">Logistica</h2>
+                <p className="text-muted font-medium">Ultimi dettagli prima della generazione del piano.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <ModernInput 
+                  label="Giorni Disponibili" 
+                  value={data.availableDays} 
+                  onChange={(e: any) => set('availableDays', parseInt(e.target.value))} 
+                  suffix="/ sett"
+                  prefixIcon={Calendar}
+                />
+                <ModernInput 
+                  label="Durata Sessione" 
+                  value={data.sessionDuration} 
+                  onChange={(e: any) => set('sessionDuration', parseInt(e.target.value))} 
+                  suffix="min"
+                  prefixIcon={Clock}
+                />
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { v: 'FULL_GYM', l: 'Palestra Commerciale', i: '🏢' },
+                  { v: 'HOME_GYM', l: 'Home Gym Essentials', i: '🏠' },
+                  { v: 'BODYWEIGHT_ONLY', l: 'Solo Corpo Libero', i: '🤸' }
+                ].map(opt => (
+                  <button 
+                    key={opt.v}
+                    onClick={() => set('equipmentLevel', opt.v)}
+                    className={`w-full p-6 rounded-3xl border text-left transition-all duration-300 flex items-center gap-4 ${data.equipmentLevel === opt.v ? 'bg-primary/10 border-primary' : 'bg-surface/50 border-subtle hover:border-white/10'}`}
+                  >
+                    <span className="text-2xl">{opt.i}</span>
+                    <span className={`font-black tracking-tight ${data.equipmentLevel === opt.v ? 'text-primary' : 'text-muted'}`}>{opt.l}</span>
+                    {data.equipmentLevel === opt.v && <Check className="ml-auto text-primary" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
 
-        <div className="flex gap-3 mt-10">
+        {/* Footer Navigation */}
+        <div className="mt-12 flex gap-4">
           {step > 1 && (
-            <button onClick={handlePrev} className="px-6 py-4 rounded-3xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] hover:bg-white/5 transition-all">
-              <ChevronLeft className="w-5 h-5" />
+            <button 
+              onClick={() => setStep(s => s - 1)}
+              className="px-8 py-5 rounded-[2rem] bg-surface border border-subtle text-muted font-black hover:text-primary hover:border-primary/40 transition-all flex items-center justify-center"
+            >
+              <ChevronLeft className="w-6 h-6" />
             </button>
           )}
           <button 
-            onClick={() => step < STEPS.length ? handleNext() : handleComplete()}
+            onClick={() => step < STEPS.length ? setStep(s => s + 1) : handleComplete()}
             disabled={!canProceed() || loading}
-            className="flex-1 py-4 rounded-[2rem] bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white font-black flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(59,130,246,0.3)] disabled:opacity-20 active:scale-95 transition-all"
+            className="flex-1 py-5 rounded-[2rem] bg-gradient-to-r from-primary to-accent text-white font-black text-lg flex items-center justify-center gap-3 shadow-[0_10px_40px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-10 transition-all group"
           >
-            {step === STEPS.length ? (loading ? 'Configurazione...' : 'Inizia Trasformazione') : 'Continua'}
-            <ChevronRight className="w-5 h-5" />
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                {step === STEPS.length ? 'Analizza & Genera' : 'Prossimo Step'}
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes slide-in-bottom {
+          0% { transform: translateY(20px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 1; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
     </div>
   )
 }
