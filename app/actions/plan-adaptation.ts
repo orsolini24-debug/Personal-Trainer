@@ -14,12 +14,15 @@ export async function getPlanInsights(mesoId: string) {
   const meso = await prisma.mesocycle.findUnique({
     where: { id: mesoId },
     include: {
+      sessions: {
+        orderBy: { date: 'desc' },
+        take: 10,
+        include: { exercises: true }
+      },
       workoutPlans: {
         include: {
-          sessions: {
-            orderBy: { date: 'desc' },
-            take: 10,
-            include: { exercises: true }
+          planDays: {
+            include: { planExercises: true }
           }
         }
       },
@@ -33,7 +36,8 @@ export async function getPlanInsights(mesoId: string) {
   
   ATLETA: ${JSON.stringify(meso.user.profile)}
   MESOCICLO: ${meso.name} - ${meso.objectives}
-  ULTIME SESSIONI: ${JSON.stringify(meso.workoutPlans[0]?.sessions)}
+  ULTIME SESSIONI REALI: ${JSON.stringify(meso.sessions)}
+  PIANO PROGRAMMATO: ${JSON.stringify(meso.workoutPlans[0])}
 
   Fornisci un JSON con:
   1. "expectedObjectives": Array di stringhe con KPI attesi a fine mese.
