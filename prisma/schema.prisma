@@ -277,7 +277,8 @@ model ExerciseDefinition {
   descriptionIt    String?     @db.Text // Spiegazione dettagliata in italiano
   tips             String?     @db.Text
   tipsIt           String?     @db.Text
-  mediaUrl         String?     // Link a immagine o animazione (gif/video)
+  mediaUrl         String?     // Link a immagine o animazione principale
+  mediaUrls        String[]    // Lista di tutti i link media (es. start/end position)
   createdAt        DateTime    @default(now())
 
   planExercises    PlanExercise[]

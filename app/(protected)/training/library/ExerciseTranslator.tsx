@@ -2,46 +2,92 @@
 
 import { useState } from "react"
 import { translateExercisesBatch } from "@/app/actions/exercises-translation"
-import { Languages, Loader2, CheckCircle2 } from "lucide-react"
+import { Languages, Loader2, CheckCircle2, Play, CircleStop } from "lucide-react"
 
 export default function ExerciseTranslator() {
   const [loading, setLoading] = useState(false)
+  const [isAuto, setIsAuto] = useState(false)
+  const [totalTranslated, setTotalTranslated] = useState(0)
   const [result, setResult] = useState<{ success: boolean, count: number, error?: string } | null>(null)
 
-  const handleTranslate = async () => {
+  const handleTranslate = async (auto = false) => {
     setLoading(true)
-    setResult(null)
+    if (!auto) setResult(null)
+    
     const res = await translateExercisesBatch(30)
-    setLoading(false)
-    setResult({ success: res.success, count: res.count ?? 0, error: res.error })
+    
+    if (res.success && res.count && res.count > 0) {
+      setTotalTranslated(prev => prev + (res.count || 0))
+      setResult({ success: true, count: res.count })
+      
+      if (auto && isAuto) {
+        // Continue if in auto mode
+        setTimeout(() => handleTranslate(true), 1000)
+      } else {
+        setLoading(false)
+        setIsAuto(false)
+      }
+    } else {
+      setLoading(false)
+      setIsAuto(false)
+      setResult({ success: res.success, count: res.count ?? 0, error: res.error || (res.count === 0 ? "Tutti gli esercizi sono già tradotti." : undefined) })
+    }
+  }
+
+  const toggleAuto = () => {
+    if (isAuto) {
+      setIsAuto(false)
+    } else {
+      setIsAuto(true)
+      handleTranslate(true)
+    }
   }
 
   return (
-    <div className="bg-[#111118] border border-white/5 rounded-3xl p-6 relative overflow-hidden">
-      <div className="flex items-center justify-between relative z-10">
+    <div className="bg-[#111118] border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#3b82f6]/5 rounded-full blur-3xl group-hover:bg-[#3b82f6]/10 transition-all duration-700"></div>
+      
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6]">
-            <Languages className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] border border-[#3b82f6]/20">
+            <Languages className="w-7 h-7" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[#f1f5f9]">Localizzazione AI</h3>
-            <p className="text-xs text-[#64748b]">Traduci e arricchisci gli esercizi in Italiano.</p>
+            <h3 className="text-xl font-black text-[#f1f5f9]">Localizzazione AI</h3>
+            <p className="text-xs text-[#64748b] mt-1 font-medium italic">Database: ~630 esercizi da tradurre e arricchire.</p>
           </div>
         </div>
-        <button
-          onClick={handleTranslate}
-          disabled={loading}
-          className="px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 flex items-center gap-2 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-        >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
-          {loading ? "Traduzione in corso..." : "Batch 30"}
-        </button>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button
+            onClick={() => handleTranslate(false)}
+            disabled={loading}
+            className="flex-1 md:flex-none px-5 py-3 bg-white/5 hover:bg-white/10 text-[#f1f5f9] rounded-2xl font-bold text-xs transition-all border border-white/5 disabled:opacity-50"
+          >
+            {loading && !isAuto ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Batch 30"}
+          </button>
+          
+          <button
+            onClick={toggleAuto}
+            className={`flex-[2] md:flex-none px-6 py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 ${isAuto ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white shadow-blue-500/20'}`}
+          >
+            {isAuto ? <CircleStop className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {isAuto ? "Ferma Auto" : "Traduzione Automatica"}
+          </button>
+        </div>
       </div>
 
-      {result && result.success && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-[#10b981] animate-in slide-in-from-top duration-300">
-          <CheckCircle2 className="w-4 h-4" />
-          Aggiornati {result.count} esercizi con successo.
+      {(totalTranslated > 0 || result) && (
+        <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-[#10b981] transition-all duration-1000" style={{ width: loading ? '100%' : '0%', opacity: loading ? 1 : 0 }}></div>
+          </div>
+          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+            <span className={result?.error ? "text-red-500" : "text-[#10b981] flex items-center gap-1"}>
+              {result?.error ? result.error : <><CheckCircle2 className="w-3 h-3" /> {isAuto ? "Processando..." : "Completato"}</>}
+            </span>
+            <span className="text-[#64748b]">Totale Sessione: {totalTranslated}</span>
+          </div>
         </div>
       )}
     </div>

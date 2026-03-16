@@ -178,9 +178,16 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
                   </div>
                 )}
 
-                {ex.mediaUrl && (
-                  <div className="rounded-2xl overflow-hidden border border-white/10 aspect-video bg-black/40">
-                    <img src={ex.mediaUrl} alt={ex.name} className="w-full h-full object-contain" />
+                {ex.mediaUrls && ex.mediaUrls.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {ex.mediaUrls.map((url, i) => (
+                      <div key={i} className="rounded-2xl overflow-hidden border border-white/10 aspect-[3/4] bg-black/40 relative group/img">
+                        <img src={url} alt={`${ex.name} ${i}`} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-[8px] font-black text-white uppercase tracking-widest">
+                          Pos. {i === 0 ? 'Start' : 'End'}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

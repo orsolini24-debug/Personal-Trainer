@@ -73,6 +73,14 @@ async function main() {
     if (ex.level === "beginner") difficulty = "BEGINNER"
     if (ex.level === "expert") difficulty = "ADVANCED"
 
+    // Construct media URLs (using images from the repository)
+    let mediaUrl = undefined
+    let mediaUrls: string[] = []
+    if (ex.images && ex.images.length > 0) {
+      mediaUrls = ex.images.map((img: string) => `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${img}`)
+      mediaUrl = mediaUrls[0]
+    }
+
     try {
       await prisma.exerciseDefinition.upsert({
         where: { name: ex.name },
@@ -82,6 +90,8 @@ async function main() {
           equipment: mappedEq,
           isCompound,
           difficulty,
+          mediaUrl,
+          mediaUrls,
           description: ex.instructions ? ex.instructions.join("\n") : undefined
         },
         create: {
@@ -91,6 +101,8 @@ async function main() {
           equipment: mappedEq,
           isCompound,
           difficulty,
+          mediaUrl,
+          mediaUrls,
           description: ex.instructions ? ex.instructions.join("\n") : undefined
         }
       })
