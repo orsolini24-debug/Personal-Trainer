@@ -95,35 +95,35 @@ function PlateCalculator({
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-50 bg-[#111118] border-t border-white/10 rounded-t-[2rem] p-6 shadow-2xl animate-slide-up">
+      <div className="fixed inset-x-0 bottom-0 z-50 bg-surface border-t border-default rounded-t-[2rem] p-6 shadow-2xl animate-slide-up">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-[#f1f5f9] flex items-center gap-2">
+          <h3 className="text-lg font-bold text-primary flex items-center gap-2">
             <Layers className="w-5 h-5 text-[#3b82f6]" /> Calcolatore Dischi
           </h3>
-          <button onClick={onClose} className="text-[#64748b] hover:text-[#f1f5f9] p-1">
+          <button onClick={onClose} className="text-muted hover:text-primary p-1">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         <div className="flex flex-col items-center mb-8">
-          <p className="text-[#64748b] text-sm mb-2">Peso Totale</p>
+          <p className="text-muted text-sm mb-2">Peso Totale</p>
           <div className="flex items-center gap-4">
-            <button onClick={() => setTargetWeight(w => Math.max(20, w - 2.5))} className="w-12 h-12 rounded-full bg-[#0a0a0f] border border-white/5 flex items-center justify-center text-[#f1f5f9] hover:bg-white/5">
+            <button onClick={() => setTargetWeight(w => Math.max(20, w - 2.5))} className="w-12 h-12 rounded-full bg-base border border-subtle flex items-center justify-center text-primary hover:bg-white/5">
               <Minus className="w-5 h-5" />
             </button>
-            <span className="text-4xl font-black text-[#f1f5f9] w-32 text-center">{targetWeight} <span className="text-lg text-[#64748b] font-medium">kg</span></span>
-            <button onClick={() => setTargetWeight(w => w + 2.5)} className="w-12 h-12 rounded-full bg-[#0a0a0f] border border-white/5 flex items-center justify-center text-[#f1f5f9] hover:bg-white/5">
+            <span className="text-4xl font-black text-primary w-32 text-center">{targetWeight} <span className="text-lg text-muted font-medium">kg</span></span>
+            <button onClick={() => setTargetWeight(w => w + 2.5)} className="w-12 h-12 rounded-full bg-base border border-subtle flex items-center justify-center text-primary hover:bg-white/5">
               <Plus className="w-5 h-5" />
             </button>
           </div>
           {remaining > 0 && <p className="text-xs text-[#f59e0b] mt-2">Impossibile ottenere peso esatto (mancano {remaining * 2}kg)</p>}
         </div>
 
-        <div className="bg-[#0a0a0f] p-4 rounded-xl border border-white/5 mb-6">
-          <p className="text-xs text-[#64748b] uppercase tracking-wider font-bold mb-3 text-center">Per ogni lato</p>
+        <div className="bg-base p-4 rounded-xl border border-subtle mb-6">
+          <p className="text-xs text-muted uppercase tracking-wider font-bold mb-3 text-center">Per ogni lato</p>
           <div className="flex justify-center gap-2 flex-wrap">
             {platesNeeded.length === 0 ? (
-              <span className="text-sm text-[#64748b]">Solo bilanciere ({barbellWeight}kg)</span>
+              <span className="text-sm text-muted">Solo bilanciere ({barbellWeight}kg)</span>
             ) : (
               platesNeeded.map((p, idx) => (
                 <div key={idx} className="flex flex-col items-center">
@@ -133,8 +133,8 @@ function PlateCalculator({
                         style={{ height: `${Math.max(20, p.weight * 3)}px` }}></div>
                     ))}
                   </div>
-                  <span className="text-xs font-bold text-[#f1f5f9] mt-2">{p.weight}</span>
-                  <span className="text-[10px] text-[#64748b]">x{p.count}</span>
+                  <span className="text-xs font-bold text-primary mt-2">{p.weight}</span>
+                  <span className="text-[10px] text-muted">x{p.count}</span>
                 </div>
               ))
             )}
@@ -490,7 +490,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
 
   // ─ Schermata tracker ─
   return (
-    <div className="flex flex-col h-[100dvh] select-none fixed inset-0 z-[100] bg-[#05050f]">
+    <div className="flex flex-col h-[100dvh] select-none fixed inset-0 z-[100] bg-base">
 
       <PlateCalculator 
         isOpen={calcOpen} 
@@ -504,12 +504,12 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-[#0d0d1a]"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
-        <button onClick={handleAbandon} className="p-2 rounded-xl text-[#64748b] hover:bg-white/5">
+        <button onClick={handleAbandon} className="p-2 rounded-xl text-muted hover:bg-white/5">
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center">
-          <span className="text-lg font-black tabular-nums tracking-wider text-[#f1f5f9]">
+          <span className="text-lg font-black tabular-nums tracking-wider text-primary">
             {fmt(elapsedSecs)}
           </span>
           <span className="text-[10px] font-bold uppercase text-[#3b82f6] tracking-widest flex items-center gap-1">
@@ -527,21 +527,21 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       </div>
 
       {/* Quick Mode Toggle */}
-      <div className="bg-[#141424] px-4 py-2 flex justify-between items-center border-b border-white/5">
+      <div className="bg-elevated px-4 py-2 flex justify-between items-center border-b border-subtle">
         <div className="flex items-center gap-2">
-          <FastForward className={`w-4 h-4 ${quickMode ? 'text-[#f59e0b]' : 'text-[#64748b]'}`} />
-          <span className="text-xs font-bold text-[#f1f5f9]">Modalità Rapida</span>
+          <FastForward className={`w-4 h-4 ${quickMode ? 'text-[#f59e0b]' : 'text-muted'}`} />
+          <span className="text-xs font-bold text-primary">Modalità Rapida</span>
         </div>
         <button 
           onClick={() => setQuickMode(!quickMode)}
-          className={`w-10 h-6 rounded-full p-1 transition-colors ${quickMode ? 'bg-[#f59e0b]' : 'bg-[#0a0a18] border border-white/10'}`}
+          className={`w-10 h-6 rounded-full p-1 transition-colors ${quickMode ? 'bg-[#f59e0b]' : 'bg-[#0a0a18] border border-default'}`}
         >
           <div className={`w-4 h-4 rounded-full bg-white transition-transform ${quickMode ? 'translate-x-4' : 'translate-x-0'}`} />
         </button>
       </div>
 
       {/* Progress barre esercizi */}
-      <div className="flex items-center gap-1 px-4 py-2 bg-[#05050f]">
+      <div className="flex items-center gap-1 px-4 py-2 bg-base">
         {data.exercises.map((e, i) => {
           const done_ = (completedSets[e.id] ?? []).filter(s => !s.isWarmup).length
           const full = done_ >= e.sets
@@ -561,7 +561,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       {/* ── Rest timer overlay ── */}
       {isResting && (
         <div
-          className="absolute inset-x-0 top-32 z-20 mx-4 rounded-2xl p-4 flex items-center gap-4 bg-[#141424]"
+          className="absolute inset-x-0 top-32 z-20 mx-4 rounded-2xl p-4 flex items-center gap-4 bg-elevated"
           style={{ border: `1px solid ${accent}40`, boxShadow: `0 12px 40px ${accent}30` }}
         >
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -569,14 +569,14 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
             <Timer className="w-5 h-5" style={{ color: accent }} />
           </div>
           <div className="flex-1">
-            <p className="text-xs font-bold uppercase tracking-wider mb-0.5 text-[#94a3b8]">Recupero</p>
+            <p className="text-xs font-bold uppercase tracking-wider mb-0.5 text-muted">Recupero</p>
             <div className="h-1.5 rounded-full overflow-hidden bg-white/10">
               <div className="h-full rounded-full transition-all ease-linear"
                 style={{ width: `${(restLeft / restTotal) * 100}%`, background: accent }} />
             </div>
           </div>
           <span className="text-2xl font-black tabular-nums" style={{ color: accent }}>{fmt(restLeft)}</span>
-          <button onClick={skipRest} className="text-xs font-bold px-3 py-2 rounded-lg bg-white/5 text-[#f1f5f9]">
+          <button onClick={skipRest} className="text-xs font-bold px-3 py-2 rounded-lg bg-white/5 text-primary">
             Skip
           </button>
         </div>
@@ -588,29 +588,29 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
         {/* Esercizio header */}
         <div className="flex items-center gap-3">
           <button onClick={handlePrevExercise} disabled={exIdx === 0}
-            className="p-3 rounded-xl shrink-0 disabled:opacity-30 bg-[#141424] border border-white/5 text-[#f1f5f9]">
+            className="p-3 rounded-xl shrink-0 disabled:opacity-30 bg-elevated border border-subtle text-primary">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 text-center">
             <span className="text-[10px] font-black uppercase tracking-widest block mb-1" style={{ color: accent }}>
               {exIdx + 1} / {data.exercises.length}
             </span>
-            <h2 className="text-2xl font-black leading-tight text-[#f1f5f9] mb-1">
+            <h2 className="text-2xl font-black leading-tight text-primary mb-1">
               {ex.name}
             </h2>
-            <p className="text-xs text-[#94a3b8] font-medium">
+            <p className="text-xs text-muted font-medium">
               {ex.sets}x{ex.repsMin === ex.repsMax ? ex.repsMin : `${ex.repsMin}-${ex.repsMax}`} · Rest {ex.restSec}s
             </p>
           </div>
           <button onClick={handleNextExercise}
-            className="p-3 rounded-xl shrink-0 bg-[#141424] border border-white/5 text-[#f1f5f9]">
+            className="p-3 rounded-xl shrink-0 bg-elevated border border-subtle text-primary">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
         {/* Note piano */}
         {ex.planNotes && (
-          <div className="px-4 py-3 rounded-xl text-sm leading-relaxed flex items-start gap-3 bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-[#f1f5f9]">
+          <div className="px-4 py-3 rounded-xl text-sm leading-relaxed flex items-start gap-3 bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-primary">
             <AlertTriangle className="w-5 h-5 shrink-0 text-[#f59e0b]" />
             <p>{ex.planNotes}</p>
           </div>
@@ -619,14 +619,14 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
         {/* Serie completate / correnti */}
         <div className="space-y-3 mt-6">
           <div className="flex justify-between items-center px-2">
-            <p className="text-xs font-black uppercase tracking-wider text-[#64748b]">
+            <p className="text-xs font-black uppercase tracking-wider text-muted">
               Log Serie
             </p>
-            <span className="text-[10px] text-[#64748b]">Swipe a destra per completare</span>
+            <span className="text-[10px] text-muted">Swipe a destra per completare</span>
           </div>
 
           {/* Intestazione Colonne */}
-          <div className="grid grid-cols-12 gap-2 px-2 text-[10px] font-bold text-[#64748b] uppercase tracking-wider text-center">
+          <div className="grid grid-cols-12 gap-2 px-2 text-[10px] font-bold text-muted uppercase tracking-wider text-center">
             <span className="col-span-2">Set</span>
             <span className="col-span-3">Kg</span>
             <span className="col-span-3">Reps</span>
@@ -645,9 +645,9 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
               return (
                 <div key={setNum} className="grid grid-cols-12 gap-2 items-center px-3 py-4 rounded-2xl bg-[#10b981]/10 border border-[#10b981]/20">
                   <span className="col-span-2 text-sm font-black text-center text-[#10b981]">{setNum}</span>
-                  <span className="col-span-3 text-lg font-black text-center text-[#f1f5f9]">{logged.weightKg}</span>
-                  <span className="col-span-3 text-lg font-black text-center text-[#f1f5f9]">{logged.repsActual}</span>
-                  {!quickMode && <span className="col-span-2 text-sm font-bold text-center text-[#94a3b8]">{logged.rirActual ?? '-'}</span>}
+                  <span className="col-span-3 text-lg font-black text-center text-primary">{logged.weightKg}</span>
+                  <span className="col-span-3 text-lg font-black text-center text-primary">{logged.repsActual}</span>
+                  {!quickMode && <span className="col-span-2 text-sm font-bold text-center text-muted">{logged.rirActual ?? '-'}</span>}
                   <div className={`flex justify-center ${quickMode ? 'col-span-4' : 'col-span-2'}`}>
                     <Check className="w-5 h-5 text-[#10b981]" />
                   </div>
@@ -658,16 +658,16 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
             if (isCurrent) {
               return (
                 <SwipeableRow key={setNum} onSwipe={handleCompleteSet} disabled={totalDone >= ex.sets} accent={accent}>
-                  <div className="grid grid-cols-12 gap-2 items-center p-3 rounded-2xl bg-[#111118] border border-white/10 shadow-lg">
+                  <div className="grid grid-cols-12 gap-2 items-center p-3 rounded-2xl bg-surface border border-default shadow-lg">
                     <div className="col-span-2 flex flex-col items-center">
-                      <span className="text-xs font-black text-[#f1f5f9] bg-white/10 w-6 h-6 rounded-full flex items-center justify-center mb-1">{setNum}</span>
+                      <span className="text-xs font-black text-primary bg-white/10 w-6 h-6 rounded-full flex items-center justify-center mb-1">{setNum}</span>
                       {isWarmup && <span className="text-[9px] text-[#f59e0b] font-bold">WARM</span>}
                     </div>
                     
                     {/* Active Inputs */}
                     <div className="col-span-3">
                       <div 
-                        className="w-full h-12 bg-[#0a0a0f] border border-white/10 rounded-xl flex items-center justify-center text-lg font-black text-[#f1f5f9] cursor-pointer"
+                        className="w-full h-12 bg-base border border-default rounded-xl flex items-center justify-center text-lg font-black text-primary cursor-pointer"
                         onPointerDown={(e) => {
                           // Lungo tocco per plate calculator
                           const timer = setTimeout(() => setCalcOpen(true), 500);
@@ -685,7 +685,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                     
                     <div className="col-span-3">
                       <div 
-                        className="w-full h-12 bg-[#0a0a0f] border border-white/10 rounded-xl flex items-center justify-center text-lg font-black text-[#f1f5f9] cursor-pointer"
+                        className="w-full h-12 bg-base border border-default rounded-xl flex items-center justify-center text-lg font-black text-primary cursor-pointer"
                         onClick={() => {
                           const val = prompt("Inserisci Reps:", reps);
                           if (val !== null) setReps(val);
@@ -698,7 +698,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                     {!quickMode && (
                       <div className="col-span-2">
                         <div 
-                          className="w-full h-12 bg-[#0a0a0f] border border-white/10 rounded-xl flex items-center justify-center text-sm font-bold text-[#94a3b8] cursor-pointer"
+                          className="w-full h-12 bg-base border border-default rounded-xl flex items-center justify-center text-sm font-bold text-muted cursor-pointer"
                           onClick={() => {
                             const val = prompt("Inserisci RIR (0-4):", rir);
                             if (val !== null) setRir(val);
@@ -713,7 +713,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                       <button 
                         onClick={fillFromPrevious}
                         disabled={!prevBest}
-                        className="w-10 h-12 flex items-center justify-center bg-white/5 rounded-xl disabled:opacity-30 text-[#f1f5f9] text-xl font-black"
+                        className="w-10 h-12 flex items-center justify-center bg-white/5 rounded-xl disabled:opacity-30 text-primary text-xl font-black"
                       >
                         =
                       </button>
@@ -721,7 +721,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                   </div>
                   {/* Previous stat hint */}
                   {prevBest && (
-                    <p className="text-[10px] text-center text-[#64748b] mt-1">
+                    <p className="text-[10px] text-center text-muted mt-1">
                       Precedente: {prevBest.weightKg}kg x {prevBest.repsActual}
                     </p>
                   )}
@@ -731,11 +731,11 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
 
             // Future sets
             return (
-              <div key={setNum} className="grid grid-cols-12 gap-2 items-center px-3 py-3 rounded-2xl bg-[#0a0a0f] opacity-50">
-                <span className="col-span-2 text-sm font-black text-center text-[#64748b]">{setNum}</span>
-                <span className="col-span-3 text-sm font-bold text-center text-[#64748b]">{prev?.weightKg ?? '-'}</span>
-                <span className="col-span-3 text-sm font-bold text-center text-[#64748b]">{prev?.repsActual ?? '-'}</span>
-                {!quickMode && <span className="col-span-2 text-sm font-bold text-center text-[#64748b]">-</span>}
+              <div key={setNum} className="grid grid-cols-12 gap-2 items-center px-3 py-3 rounded-2xl bg-base opacity-50">
+                <span className="col-span-2 text-sm font-black text-center text-muted">{setNum}</span>
+                <span className="col-span-3 text-sm font-bold text-center text-muted">{prev?.weightKg ?? '-'}</span>
+                <span className="col-span-3 text-sm font-bold text-center text-muted">{prev?.repsActual ?? '-'}</span>
+                {!quickMode && <span className="col-span-2 text-sm font-bold text-center text-muted">-</span>}
                 <div className={`flex justify-center ${quickMode ? 'col-span-4' : 'col-span-2'}`}>
                   <div className="w-4 h-4 rounded-full border border-[#64748b]"></div>
                 </div>
@@ -747,11 +747,11 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       </div>
 
       {/* ── Fixed Bottom Actions ── */}
-      <div className="shrink-0 p-4 bg-[#0d0d1a] border-t border-white/5 space-y-3 pb-safe">
+      <div className="shrink-0 p-4 bg-[#0d0d1a] border-t border-subtle space-y-3 pb-safe">
         <div className="flex gap-3">
           <button
             onClick={() => setIsWarmup(v => !v)}
-            className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${isWarmup ? 'bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30' : 'bg-[#141424] text-[#64748b] border border-white/5'}`}
+            className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${isWarmup ? 'bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30' : 'bg-elevated text-muted border border-subtle'}`}
           >
             + Warm-up
           </button>

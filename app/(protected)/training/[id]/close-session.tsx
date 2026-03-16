@@ -72,33 +72,33 @@ export default function CloseSessionForm({ sessionId, initialData }: { sessionId
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#f1f5f9] mb-1.5">RPE (1-10)</label>
+          <label className="block text-sm font-medium text-primary mb-1.5">RPE (1-10)</label>
           <input
             type="number"
             min="1" max="10"
             value={rpe}
             onChange={e => setRpe(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
+            className="w-full px-4 py-3 rounded-xl border border-default bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#f1f5f9] mb-1.5">Durata (min)</label>
+          <label className="block text-sm font-medium text-primary mb-1.5">Durata (min)</label>
           <input
             type="number"
             value={duration}
             onChange={e => setDuration(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
+            className="w-full px-4 py-3 rounded-xl border border-default bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
           />
         </div>
       </div>
       <div>
         <div className="flex justify-between items-center mb-1.5">
-          <label className="block text-sm font-medium text-[#f1f5f9]">Note</label>
+          <label className="block text-sm font-medium text-primary">Note</label>
           {recognition && (
             <button
               type="button"
               onClick={toggleRecording}
-              className={`p-1.5 rounded-full ${isRecording ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-white/5 text-[#64748b] hover:text-[#f1f5f9]'}`}
+              className={`p-1.5 rounded-full ${isRecording ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-white/5 text-muted hover:text-primary'}`}
             >
               {isRecording ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
             </button>
@@ -108,7 +108,7 @@ export default function CloseSessionForm({ sessionId, initialData }: { sessionId
           value={notes}
           onChange={e => setNotes(e.target.value)}
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#0a0a0f] text-[#f1f5f9] resize-none focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
+          className="w-full px-4 py-3 rounded-xl border border-default bg-base text-primary resize-none focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
           placeholder="Come ti sei sentito? Premi il microfono per dettare."
         />
       </div>

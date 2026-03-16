@@ -44,7 +44,7 @@ export default function ExerciseTranslator() {
   }
 
   return (
-    <div className="bg-[#111118] border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+    <div className="bg-surface border border-subtle rounded-3xl p-6 relative overflow-hidden group">
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#3b82f6]/5 rounded-full blur-3xl group-hover:bg-[#3b82f6]/10 transition-all duration-700"></div>
       
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
@@ -53,8 +53,8 @@ export default function ExerciseTranslator() {
             <Languages className="w-7 h-7" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[#f1f5f9]">Localizzazione AI</h3>
-            <p className="text-xs text-[#64748b] mt-1 font-medium italic">Database: ~630 esercizi da tradurre e arricchire.</p>
+            <h3 className="text-xl font-black text-primary">Localizzazione AI</h3>
+            <p className="text-xs text-muted mt-1 font-medium italic">Database: ~630 esercizi da tradurre e arricchire.</p>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export default function ExerciseTranslator() {
           <button
             onClick={() => handleTranslate(false)}
             disabled={loading}
-            className="flex-1 md:flex-none px-5 py-3 bg-white/5 hover:bg-white/10 text-[#f1f5f9] rounded-2xl font-bold text-xs transition-all border border-white/5 disabled:opacity-50"
+            className="flex-1 md:flex-none px-5 py-3 bg-white/5 hover:bg-white/10 text-primary rounded-2xl font-bold text-xs transition-all border border-subtle disabled:opacity-50"
           >
             {loading && !isAuto ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Batch 30"}
           </button>
@@ -86,7 +86,7 @@ export default function ExerciseTranslator() {
             <span className={result?.error ? "text-red-500" : "text-[#10b981] flex items-center gap-1"}>
               {result?.error ? result.error : <><CheckCircle2 className="w-3 h-3" /> {isAuto ? "Processando..." : "Completato"}</>}
             </span>
-            <span className="text-[#64748b]">Totale Sessione: {totalTranslated}</span>
+            <span className="text-muted">Totale Sessione: {totalTranslated}</span>
           </div>
         </div>
       )}

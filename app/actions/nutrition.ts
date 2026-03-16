@@ -46,15 +46,19 @@ export async function getOrCreateNutritionDay(date: Date) {
     let baseFat = 70;
 
     // Optional dynamic calculation based on user info
-    if (user?.weightKg) {
+    if (user?.profile?.weightKg) {
       // Very basic Mifflin-St Jeor estimate (assuming moderate activity)
       // Men: 10 x weight (kg) + 6.25 x height (cm) - 5 x age (y) + 5
       // Women: 10 x weight (kg) + 6.25 x height (cm) - 5 x age (y) - 161
-      let bmr = 10 * user.weightKg;
-      if (user.heightCm) bmr += 6.25 * user.heightCm;
-      if (user.birthDate) {
-        const age = new Date().getFullYear() - user.birthDate.getFullYear();
+      let bmr = 10 * user.profile.weightKg;
+      if (user.profile.heightCm) bmr += 6.25 * user.profile.heightCm;
+      
+      const birthDate = user.profile.birthDate;
+      if (birthDate) {
+        const age = new Date().getFullYear() - birthDate.getFullYear();
         bmr -= 5 * age;
+      } else if (user.profile.ageYears) {
+        bmr -= 5 * user.profile.ageYears;
       }
       
       if (user.profile?.biologicalSex === "FEMALE") {
@@ -71,8 +75,8 @@ export async function getOrCreateNutritionDay(date: Date) {
       else if (user.profile?.primaryGoal === "HYPERTROPHY") baseKcal = tdee + 300;
       else baseKcal = tdee;
 
-      baseProtein = Math.round(user.weightKg * 2.0); // 2g/kg
-      baseFat = Math.round(user.weightKg * 0.8); // 0.8g/kg
+      baseProtein = Math.round(user.profile.weightKg * 2.0); // 2g/kg
+      baseFat = Math.round(user.profile.weightKg * 0.8); // 0.8g/kg
       baseCarbs = Math.round((baseKcal - (baseProtein * 4) - (baseFat * 9)) / 4);
     }
 

@@ -121,9 +121,15 @@ export async function importMesociclo1() {
   if (existing) return { error: 'Piano già importato', mesocycleId: existing.id }
 
   // ── 1. Aggiorna dati atleta ────────────────────────────────────────────
+  await prisma.userProfile.upsert({
+    where: { userId },
+    update: { weightKg: 83, heightCm: 171, birthDate: new Date('1997-01-01') },
+    create: { userId, weightKg: 83, heightCm: 171, birthDate: new Date('1997-01-01') },
+  })
+  
   await prisma.user.update({
     where: { id: userId },
-    data: { weightKg: 83, heightCm: 171, birthDate: new Date('1997-01-01') },
+    data: { onboardingCompleted: true }
   })
 
   // ── 2. Crea Mesociclo ──────────────────────────────────────────────────

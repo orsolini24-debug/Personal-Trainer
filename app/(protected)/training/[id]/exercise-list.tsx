@@ -42,15 +42,15 @@ function TimerComponent() {
   }
 
   return (
-    <div className="bg-[#111118] p-4 rounded-xl border border-white/5 mb-6 flex items-center gap-4">
+    <div className="bg-surface p-4 rounded-xl border border-subtle mb-6 flex items-center gap-4">
       <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
         <Timer className="w-5 h-5" />
       </div>
       {!isActive ? (
         <div className="flex items-center gap-2 flex-1">
-          <input type="number" value={inputMinutes} onChange={e=>setInputMinutes(e.target.value)} className="w-12 p-1 bg-[#0a0a0f] border border-white/10 rounded text-center text-sm focus:outline-none focus:border-blue-500" placeholder="m" />
+          <input type="number" value={inputMinutes} onChange={e=>setInputMinutes(e.target.value)} className="w-12 p-1 bg-base border border-default rounded text-center text-sm focus:outline-none focus:border-blue-500" placeholder="m" />
           <span>:</span>
-          <input type="number" value={inputSeconds} onChange={e=>setInputSeconds(e.target.value)} className="w-12 p-1 bg-[#0a0a0f] border border-white/10 rounded text-center text-sm focus:outline-none focus:border-blue-500" placeholder="s" />
+          <input type="number" value={inputSeconds} onChange={e=>setInputSeconds(e.target.value)} className="w-12 p-1 bg-base border border-default rounded text-center text-sm focus:outline-none focus:border-blue-500" placeholder="s" />
           <button onClick={startTimer} className="ml-auto px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">Start</button>
         </div>
       ) : (
@@ -123,15 +123,15 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
       {/* Lista */}
       <div className="space-y-3">
         {exercises.map((ex, idx) => (
-          <div key={ex.id} className="flex items-center justify-between p-4 bg-[#0a0a0f] rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+          <div key={ex.id} className="flex items-center justify-between p-4 bg-base rounded-xl border border-subtle hover:border-default transition-colors">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-[#f1f5f9]">{idx + 1}. {ex.name}</span>
-                <button onClick={() => openChart(ex.name)} className="p-1 text-[#64748b] hover:text-[#3b82f6] transition-colors" title="Vedi progressione">
+                <span className="font-semibold text-primary">{idx + 1}. {ex.name}</span>
+                <button onClick={() => openChart(ex.name)} className="p-1 text-muted hover:text-[#3b82f6] transition-colors" title="Vedi progressione">
                   <Activity className="w-4 h-4" />
                 </button>
               </div>
-              <div className="text-sm text-[#64748b] mt-1.5 flex gap-4">
+              <div className="text-sm text-muted mt-1.5 flex gap-4">
                 {ex.sets && ex.reps && <span className="bg-white/5 px-2 py-0.5 rounded">{ex.sets}x{ex.reps}</span>}
                 {ex.loadKg != null && <span className="bg-[#3b82f6]/10 text-[#3b82f6] px-2 py-0.5 rounded font-medium">{ex.loadKg} kg</span>}
                 {ex.rir != null && <span className="bg-white/5 px-2 py-0.5 rounded">RIR {ex.rir}</span>}
@@ -142,13 +142,13 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
             </button>
           </div>
         ))}
-        {exercises.length === 0 && <p className="text-sm text-[#64748b] text-center py-4">Nessun esercizio aggiunto.</p>}
+        {exercises.length === 0 && <p className="text-sm text-muted text-center py-4">Nessun esercizio aggiunto.</p>}
       </div>
 
       {/* Form Aggiungi */}
-      <form onSubmit={handleAdd} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end bg-[#111118] p-5 rounded-xl border border-white/5">
+      <form onSubmit={handleAdd} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end bg-surface p-5 rounded-xl border border-subtle">
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">Esercizio *</label>
+          <label className="block text-xs font-medium text-primary mb-1.5">Esercizio *</label>
           <ExerciseAutocomplete
             value={name}
             onChange={setName}
@@ -156,20 +156,20 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">Serie</label>
-          <input type="number" value={sets} onChange={e => setSets(e.target.value)} className="w-full px-3 py-2 text-sm border border-white/10 rounded-lg bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 4" />
+          <label className="block text-xs font-medium text-primary mb-1.5">Serie</label>
+          <input type="number" value={sets} onChange={e => setSets(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 4" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">Reps</label>
-          <input type="text" value={reps} onChange={e => setReps(e.target.value)} className="w-full px-3 py-2 text-sm border border-white/10 rounded-lg bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 8-10" />
+          <label className="block text-xs font-medium text-primary mb-1.5">Reps</label>
+          <input type="text" value={reps} onChange={e => setReps(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 8-10" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">Kg</label>
-          <input type="number" step="0.5" value={loadKg} onChange={e => setLoadKg(e.target.value)} className="w-full px-3 py-2 text-sm border border-white/10 rounded-lg bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 100" />
+          <label className="block text-xs font-medium text-primary mb-1.5">Kg</label>
+          <input type="number" step="0.5" value={loadKg} onChange={e => setLoadKg(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 100" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[#f1f5f9] mb-1.5">RIR (0-4)</label>
-          <input type="number" value={rir} onChange={e => setRir(e.target.value)} className="w-full px-3 py-2 text-sm border border-white/10 rounded-lg bg-[#0a0a0f] text-[#f1f5f9] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 2" />
+          <label className="block text-xs font-medium text-primary mb-1.5">RIR (0-4)</label>
+          <input type="number" value={rir} onChange={e => setRir(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 2" />
         </div>
         <div className="col-span-2 md:col-span-6 mt-2">
           <button type="submit" disabled={loading || !name} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)]">
@@ -181,14 +181,14 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
       {/* Chart Modal */}
       {chartExName && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#111118] border border-white/10 rounded-2xl p-6 w-full max-w-lg relative shadow-2xl">
-            <button onClick={() => setChartExName(null)} className="absolute top-4 right-4 text-[#64748b] hover:text-[#f1f5f9]">
+          <div className="bg-surface border border-default rounded-2xl p-6 w-full max-w-lg relative shadow-2xl">
+            <button onClick={() => setChartExName(null)} className="absolute top-4 right-4 text-muted hover:text-primary">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-xl font-bold mb-6 text-[#f1f5f9]">Progressione: <span className="text-[#3b82f6]">{chartExName}</span></h3>
+            <h3 className="text-xl font-bold mb-6 text-primary">Progressione: <span className="text-[#3b82f6]">{chartExName}</span></h3>
             
             {chartData.length < 2 ? (
-              <p className="text-[#64748b] py-8 text-center">Dati insufficienti per questo esercizio (min 2 sessioni).</p>
+              <p className="text-muted py-8 text-center">Dati insufficienti per questo esercizio (min 2 sessioni).</p>
             ) : (
               <div className="h-48 relative mb-4">
                 {/* SVG Line Chart */}

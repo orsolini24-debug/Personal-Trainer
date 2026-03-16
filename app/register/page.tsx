@@ -49,11 +49,11 @@ export default function RegisterPage() {
 
   if (step === 'success') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#0a0a0f]">
-        <div className="bg-[#111118]/40 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl max-w-md w-full text-center space-y-6">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-base">
+        <div className="bg-surface/40 backdrop-blur-xl p-10 rounded-[3rem] border border-default shadow-2xl max-w-md w-full text-center space-y-6">
           <CheckCircle className="mx-auto text-[#10b981]" size={48} />
-          <h2 className="text-2xl font-bold text-[#f1f5f9]">Account creato!</h2>
-          <p className="text-[#64748b]">Ora puoi accedere con le tue credenziali.</p>
+          <h2 className="text-2xl font-bold text-primary">Account creato!</h2>
+          <p className="text-muted">Ora puoi accedere con le tue credenziali.</p>
           <Link href="/login" className="block w-full bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white py-4 rounded-2xl font-bold text-center hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all hover:-translate-y-0.5">
             Vai al Login
           </Link>
@@ -63,7 +63,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden relative bg-[#0a0a0f]">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden relative bg-base">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#3b82f6]/10 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#6366f1]/10 rounded-full blur-[120px] animate-pulse" />
 
@@ -72,51 +72,51 @@ export default function RegisterPage() {
           <div className="inline-flex p-4 bg-gradient-to-br from-[#3b82f6] to-[#6366f1] rounded-[2rem] shadow-[0_0_30px_rgba(99,102,241,0.4)] mb-4">
             <Dumbbell size={32} className="text-white" />
           </div>
-          <h1 className="text-5xl font-black text-[#f1f5f9] tracking-tighter">
+          <h1 className="text-5xl font-black text-primary tracking-tighter">
             Performance<span className="text-[#3b82f6]">.</span>
           </h1>
-          <p className="text-[#64748b] font-medium tracking-wide uppercase text-[10px]">
+          <p className="text-muted font-medium tracking-wide uppercase text-[10px]">
             Crea il tuo account gratuito
           </p>
         </div>
 
-        <div className="bg-[#111118]/40 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="bg-surface/40 backdrop-blur-xl p-10 rounded-[3rem] border border-default shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-50" />
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest ml-1">Nome *</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Nome *</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="text" name="name" required placeholder="Giorgio"
-                  className="w-full pl-12 pr-4 py-4 bg-[#0a0a0f] border border-white/10 rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-[#f1f5f9] transition-all font-medium placeholder:text-[#64748b]/50" />
+                  className="w-full pl-12 pr-4 py-4 bg-base border border-default rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest ml-1">Email *</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Email *</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="email" name="email" required placeholder="tu@email.com"
-                  className="w-full pl-12 pr-4 py-4 bg-[#0a0a0f] border border-white/10 rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-[#f1f5f9] transition-all font-medium placeholder:text-[#64748b]/50" />
+                  className="w-full pl-12 pr-4 py-4 bg-base border border-default rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest ml-1">Password *</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Password *</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="password" name="password" required minLength={8} placeholder="Minimo 8 caratteri"
-                  className="w-full pl-12 pr-4 py-4 bg-[#0a0a0f] border border-white/10 rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-[#f1f5f9] transition-all font-medium placeholder:text-[#64748b]/50" />
+                  className="w-full pl-12 pr-4 py-4 bg-base border border-default rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#64748b] uppercase tracking-widest ml-1">Conferma Password *</label>
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Conferma Password *</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="password" name="confirmPassword" required placeholder="Ripeti la password"
-                  className={`w-full pl-12 pr-4 py-4 bg-[#0a0a0f] border rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-[#f1f5f9] transition-all font-medium placeholder:text-[#64748b]/50 ${passwordError ? 'border-[#ef4444]' : 'border-white/10'}`} />
+                  className={`w-full pl-12 pr-4 py-4 bg-base border rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50 ${passwordError ? 'border-[#ef4444]' : 'border-default'}`} />
               </div>
               {passwordError && <p className="text-[11px] text-[#ef4444] font-bold ml-1">{passwordError}</p>}
             </div>
@@ -137,8 +137,8 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-white/5 text-center">
-            <p className="text-xs text-[#64748b] font-medium">
+          <div className="mt-6 pt-6 border-t border-subtle text-center">
+            <p className="text-xs text-muted font-medium">
               Hai già un account?{' '}
               <Link href="/login" className="text-[#3b82f6] font-bold hover:underline">Accedi</Link>
             </p>

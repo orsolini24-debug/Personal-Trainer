@@ -17,9 +17,7 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  weightKg      Float?
-  heightCm      Int?
-  birthDate     DateTime?
+  onboardingCompleted Boolean @default(false)
 
   profile          UserProfile?
   mesocycles       Mesocycle[]
@@ -42,6 +40,7 @@ model UserProfile {
   
   // Step 1 – Bio & Body Comp
   biologicalSex    String?  // "MALE", "FEMALE"
+  birthDate        DateTime?
   ageYears         Int?
   weightKg         Float?
   heightCm         Int?
@@ -145,6 +144,13 @@ model Exercise {
   reps           String?
   loadKg         Float?
   rir            Int?
+  
+  // Expanded metadata fields
+  restSec        Int?
+  repsMin        Int?
+  repsMax        Int?
+  planNotes      String?
+  
   technicalNotes String?
   createdAt      DateTime       @default(now())
 
@@ -157,6 +163,14 @@ model DistrictStress {
   session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   district   District
   intensity  Int
+}
+
+model SessionStressDefinition {
+  id          String      @id @default(cuid())
+  sessionType SessionType
+  district    District
+  intensity   Int
+  @@unique([sessionType, district])
 }
 
 // ─── WORKOUT PLANS (SCHEDE) ──────────────────────────────────────────────────

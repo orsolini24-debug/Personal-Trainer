@@ -74,10 +74,10 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <p className="text-sm font-black uppercase tracking-widest mb-1 text-[#3b82f6]">Database</p>
-          <h1 className="text-4xl font-black tracking-tight text-[#f1f5f9]">
+          <h1 className="text-4xl font-black tracking-tight text-primary">
             Libreria Esercizi
           </h1>
-          <p className="mt-1 text-[#64748b] font-medium">
+          <p className="mt-1 text-muted font-medium">
             {exercises.length} movimenti catalogati per la tua performance.
           </p>
         </div>
@@ -96,16 +96,16 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
 
       {/* Grid esercizi */}
       {exercises.length === 0 ? (
-        <div className="text-center py-20 rounded-3xl bg-[#111118] border border-white/5 border-dashed">
-          <Dumbbell className="w-16 h-16 mx-auto mb-4 text-[#64748b] opacity-20" />
-          <p className="text-[#64748b] font-medium">Nessun esercizio trovato per questi filtri.</p>
+        <div className="text-center py-20 rounded-3xl bg-surface border border-subtle border-dashed">
+          <Dumbbell className="w-16 h-16 mx-auto mb-4 text-muted opacity-20" />
+          <p className="text-muted font-medium">Nessun esercizio trovato per questi filtri.</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {exercises.map(ex => (
             <details
               key={ex.id}
-              className="rounded-3xl overflow-hidden group transition-all duration-300 border border-white/5 hover:border-white/10"
+              className="rounded-3xl overflow-hidden group transition-all duration-300 border border-subtle hover:border-default"
               style={{ background: 'var(--bg-surface)' }}
             >
               <summary className="flex items-center gap-4 px-5 py-4 cursor-pointer list-none select-none">
@@ -122,7 +122,7 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-base text-[#f1f5f9] group-hover:text-[#3b82f6] transition-colors">
+                    <p className="font-bold text-base text-primary group-hover:text-[#3b82f6] transition-colors">
                       {ex.nameIt || ex.name}
                     </p>
                     {ex.isCompound && (
@@ -142,7 +142,7 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
                   </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/5 text-[#64748b] group-hover:bg-[#3b82f6]/10 group-hover:text-[#3b82f6] transition-all">
+                <div className="p-2 rounded-xl bg-white/5 text-muted group-hover:bg-[#3b82f6]/10 group-hover:text-[#3b82f6] transition-all">
                   <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" />
                 </div>
               </summary>
@@ -151,22 +151,22 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
                 <div className="h-px w-full bg-white/5" />
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-2xl bg-[#0a0a0f] border border-white/5">
-                    <p className="text-[9px] uppercase font-bold text-[#64748b] tracking-widest mb-1">Attrezzatura</p>
-                    <p className="text-xs font-bold text-[#f1f5f9]">{EQUIPMENT_LABELS[ex.equipment]}</p>
+                  <div className="p-3 rounded-2xl bg-base border border-subtle">
+                    <p className="text-[9px] uppercase font-bold text-muted tracking-widest mb-1">Attrezzatura</p>
+                    <p className="text-xs font-bold text-primary">{EQUIPMENT_LABELS[ex.equipment]}</p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-[#0a0a0f] border border-white/5">
-                    <p className="text-[9px] uppercase font-bold text-[#64748b] tracking-widest mb-1">Livello</p>
-                    <p className="text-xs font-bold text-[#f1f5f9]">{ex.difficulty}</p>
+                  <div className="p-3 rounded-2xl bg-base border border-subtle">
+                    <p className="text-[9px] uppercase font-bold text-muted tracking-widest mb-1">Livello</p>
+                    <p className="text-xs font-bold text-primary">{ex.difficulty}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-[#f1f5f9] font-bold text-sm">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
                     <Info className="w-4 h-4 text-[#3b82f6]" />
                     Esecuzione
                   </div>
-                  <p className="text-xs leading-relaxed text-[#94a3b8] bg-[#0a0a0f] p-4 rounded-2xl border border-white/5">
+                  <p className="text-xs leading-relaxed text-muted bg-base p-4 rounded-2xl border border-subtle">
                     {ex.descriptionIt || ex.description || "Nessuna istruzione dettagliata disponibile."}
                   </p>
                 </div>
@@ -174,14 +174,14 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
                 {ex.tipsIt || ex.tips && (
                   <div className="text-xs leading-relaxed p-4 rounded-2xl bg-[#10b981]/5 border border-[#10b981]/20">
                     <span className="font-bold block mb-2 text-[#10b981] uppercase tracking-widest text-[10px]">Coach Tips</span>
-                    <span className="text-[#f1f5f9] opacity-80">{ex.tipsIt || ex.tips}</span>
+                    <span className="text-primary opacity-80">{ex.tipsIt || ex.tips}</span>
                   </div>
                 )}
 
                 {ex.mediaUrls && ex.mediaUrls.length > 0 && (
                   <div className="grid grid-cols-2 gap-2">
                     {ex.mediaUrls.map((url, i) => (
-                      <div key={i} className="rounded-2xl overflow-hidden border border-white/10 aspect-[3/4] bg-black/40 relative group/img">
+                      <div key={i} className="rounded-2xl overflow-hidden border border-default aspect-[3/4] bg-black/40 relative group/img">
                         <img src={url} alt={`${ex.name} ${i}`} className="w-full h-full object-cover" />
                         <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-[8px] font-black text-white uppercase tracking-widest">
                           Pos. {i === 0 ? 'Start' : 'End'}

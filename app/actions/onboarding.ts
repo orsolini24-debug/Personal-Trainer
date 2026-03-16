@@ -40,48 +40,54 @@ export async function completeOnboarding(data: OnboardingData) {
   const userId = session.user.id
 
   // 1. Upsert UserProfile
-  await prisma.userProfile.upsert({
-    where: { userId },
-    update: {
-      biologicalSex: data.biologicalSex,
-      ageYears: data.ageYears,
-      weightKg: data.weightKg,
-      heightCm: data.heightCm,
-      experienceLevel: data.experienceLevel,
-      trainingYears: data.trainingYears,
-      strengthRefs: data.strengthRefs,
-      primaryGoal: data.primaryGoal,
-      mainSports: data.mainSports as SportType[],
-      sportLevels: data.sportLevels,
-      targetEvent: data.targetEvent ?? null,
-      availableDays: data.availableDays,
-      sessionDuration: data.sessionDuration,
-      equipmentLevel: data.equipmentLevel,
-      preferredSplit: data.preferredSplit,
-      injuriesList: data.injuriesList,
-      onboardingCompleted: true,
-    },
-    create: {
-      userId,
-      biologicalSex: data.biologicalSex,
-      ageYears: data.ageYears,
-      weightKg: data.weightKg,
-      heightCm: data.heightCm,
-      experienceLevel: data.experienceLevel,
-      trainingYears: data.trainingYears,
-      strengthRefs: data.strengthRefs,
-      primaryGoal: data.primaryGoal,
-      mainSports: data.mainSports as SportType[],
-      sportLevels: data.sportLevels,
-      targetEvent: data.targetEvent ?? null,
-      availableDays: data.availableDays,
-      sessionDuration: data.sessionDuration,
-      equipmentLevel: data.equipmentLevel,
-      preferredSplit: data.preferredSplit,
-      injuriesList: data.injuriesList,
-      onboardingCompleted: true,
-    },
-  })
+  await prisma.$transaction([
+    prisma.userProfile.upsert({
+      where: { userId },
+      update: {
+        biologicalSex: data.biologicalSex,
+        ageYears: data.ageYears,
+        weightKg: data.weightKg,
+        heightCm: data.heightCm,
+        experienceLevel: data.experienceLevel,
+        trainingYears: data.trainingYears,
+        strengthRefs: data.strengthRefs,
+        primaryGoal: data.primaryGoal,
+        mainSports: data.mainSports as SportType[],
+        sportLevels: data.sportLevels,
+        targetEvent: data.targetEvent ?? null,
+        availableDays: data.availableDays,
+        sessionDuration: data.sessionDuration,
+        equipmentLevel: data.equipmentLevel,
+        preferredSplit: data.preferredSplit,
+        injuriesList: data.injuriesList,
+        onboardingCompleted: true,
+      },
+      create: {
+        userId,
+        biologicalSex: data.biologicalSex,
+        ageYears: data.ageYears,
+        weightKg: data.weightKg,
+        heightCm: data.heightCm,
+        experienceLevel: data.experienceLevel,
+        trainingYears: data.trainingYears,
+        strengthRefs: data.strengthRefs,
+        primaryGoal: data.primaryGoal,
+        mainSports: data.mainSports as SportType[],
+        sportLevels: data.sportLevels,
+        targetEvent: data.targetEvent ?? null,
+        availableDays: data.availableDays,
+        sessionDuration: data.sessionDuration,
+        equipmentLevel: data.equipmentLevel,
+        preferredSplit: data.preferredSplit,
+        injuriesList: data.injuriesList,
+        onboardingCompleted: true,
+      },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true }
+    })
+  ])
 
   // 2. Crea infortuni come record Injury se presenti
   if (data.injuriesList.length > 0) {

@@ -362,8 +362,8 @@
   
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: var(--bg-base, #05050F);
-    color: var(--fg-primary, #F1F5F9);
+    background-color: var(--background);
+    color: var(--foreground);
     line-height: 1.6;
     letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
@@ -371,7 +371,6 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
     font-optical-sizing: auto;
-    color-scheme: dark;
   }
 
   h1, h2, h3, h4, h5, h6 {

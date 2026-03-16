@@ -4,46 +4,6 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { SessionType, District } from '@prisma/client'
 
-// ── Stress distrettuale per tipo sessione (dal PDF matrice) ──────────────────
-const SESSION_STRESS: Record<string, Array<{ district: District; intensity: number }>> = {
-  A: [
-    { district: 'KNEE',       intensity: 2 },
-    { district: 'HAMSTRING',  intensity: 2 },
-    { district: 'GLUTE',      intensity: 2 },
-    { district: 'LOWER_BACK', intensity: 1 },
-    { district: 'CALF',       intensity: 1 },
-    { district: 'CORE',       intensity: 1 },
-  ],
-  B: [
-    { district: 'CHEST',      intensity: 2 },
-    { district: 'SHOULDER',   intensity: 2 },
-    { district: 'TRICEP',     intensity: 2 },
-  ],
-  C: [
-    { district: 'UPPER_BACK', intensity: 2 },
-    { district: 'LOWER_BACK', intensity: 2 },
-    { district: 'BICEP',      intensity: 1 },
-    { district: 'CORE',       intensity: 1 },
-  ],
-  D: [
-    { district: 'QUAD',       intensity: 2 },
-    { district: 'KNEE',       intensity: 2 },
-    { district: 'GLUTE',      intensity: 1 },
-    { district: 'CALF',       intensity: 1 },
-    { district: 'CORE',       intensity: 1 },
-  ],
-  V1: [
-    { district: 'QUAD',      intensity: 1 },
-    { district: 'HAMSTRING', intensity: 1 },
-    { district: 'CALF',      intensity: 1 },
-  ],
-  V2: [
-    { district: 'SHOULDER', intensity: 1 },
-    { district: 'CORE',     intensity: 1 },
-    { district: 'CALF',     intensity: 1 },
-  ],
-}
-
 // ── startSession ─────────────────────────────────────────────────────────────
 export async function startSession(planDayId: string, plannedSessionId?: string) {
   const session = await auth()
@@ -82,7 +42,6 @@ export async function startSession(planDayId: string, plannedSessionId?: string)
   })
 
   // Crea Exercise records dal PlanExercise
-  // Codifica restSec e repsRange in reps/technicalNotes per non cambiare schema
   await prisma.exercise.createMany({
     data: planDay.planExercises.map(pe => ({
       sessionId: workoutSession.id,
@@ -91,12 +50,10 @@ export async function startSession(planDayId: string, plannedSessionId?: string)
       sets: pe.sets,
       reps: pe.repsMin === pe.repsMax ? String(pe.repsMin) : `${pe.repsMin}-${pe.repsMax}`,
       rir: pe.targetRir,
-      technicalNotes: JSON.stringify({
-        restSec: pe.restSec,
-        repsMin: pe.repsMin,
-        repsMax: pe.repsMax,
-        plan: pe.notes ?? '',
-      }),
+      restSec: pe.restSec,
+      repsMin: pe.repsMin,
+      repsMax: pe.repsMax,
+      planNotes: pe.notes,
     })),
   })
 
@@ -270,9 +227,12 @@ export async function finishSession(params: {
     },
   })
 
-  // Crea DistrictStress
+  // Crea DistrictStress from SessionStressDefinition in DB
   const sessionType = active.workoutSession.type
-  const stressData = SESSION_STRESS[sessionType] ?? []
+  const stressData = await prisma.sessionStressDefinition.findMany({
+    where: { sessionType },
+  })
+
   if (stressData.length > 0) {
     await prisma.districtStress.createMany({
       data: stressData.map(s => ({

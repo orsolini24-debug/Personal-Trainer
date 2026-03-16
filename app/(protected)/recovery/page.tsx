@@ -55,10 +55,10 @@ export default async function RecoveryPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      <h1 className="text-3xl font-bold tracking-tight text-[#f1f5f9]">Recovery Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-primary">Recovery Dashboard</h1>
       
       {/* ── Whoop-style Recovery Orb ── */}
-      <section className="bg-[#111118] rounded-3xl p-6 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
+      <section className="bg-surface rounded-3xl p-6 border border-subtle flex flex-col items-center justify-center relative overflow-hidden">
         {/* Sfondo decorativo sfumato per dare profondità */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none"></div>
         <RecoveryOrb score={todayLog?.recoveryScore ?? 0} label={todayLog?.recoveryScore ? "Recovery" : "Nessun Dato"} />
@@ -66,33 +66,33 @@ export default async function RecoveryPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
+          <section className="bg-surface rounded-2xl p-6 border border-subtle">
             <RecoveryForm initialData={todayLog} />
           </section>
 
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-xl font-bold mb-6 text-[#f1f5f9]">Storico & Trend</h2>
+          <section className="bg-surface rounded-2xl p-6 border border-subtle">
+            <h2 className="text-xl font-bold mb-6 text-primary">Storico & Trend</h2>
             <RecoveryHistory history={history} />
           </section>
         </div>
 
         <div className="space-y-8">
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-xl font-bold mb-4 text-[#f1f5f9]">Metriche Avanzate</h2>
+          <section className="bg-surface rounded-2xl p-6 border border-subtle">
+            <h2 className="text-xl font-bold mb-4 text-primary">Metriche Avanzate</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-[#0a0a0f] rounded-xl border border-white/5">
-                <p className="text-sm text-[#64748b] mb-1">ACWR (Rischio Infortuni)</p>
+              <div className="p-4 bg-base rounded-xl border border-subtle">
+                <p className="text-sm text-muted mb-1">ACWR (Rischio Infortuni)</p>
                 <div className="flex items-end gap-3">
-                  <span className={`text-2xl font-bold ${todayLog?.acwr && todayLog.acwr > 1.5 ? 'text-[#ef4444]' : 'text-[#f1f5f9]'}`}>
+                  <span className={`text-2xl font-bold ${todayLog?.acwr && todayLog.acwr > 1.5 ? 'text-[#ef4444]' : 'text-primary'}`}>
                     {todayLog?.acwr ? todayLog.acwr.toFixed(2) : '-'}
                   </span>
                   {todayLog?.acwr && todayLog.acwr > 1.5 && <span className="text-xs text-[#ef4444] mb-1">Alto Rischio</span>}
                 </div>
               </div>
-              <div className="p-4 bg-[#0a0a0f] rounded-xl border border-white/5">
-                <p className="text-sm text-[#64748b] mb-1">Monotony (7gg)</p>
+              <div className="p-4 bg-base rounded-xl border border-subtle">
+                <p className="text-sm text-muted mb-1">Monotony (7gg)</p>
                 <div className="flex items-end gap-3">
-                  <span className={`text-2xl font-bold ${monotony && monotony > 2 ? 'text-[#f59e0b]' : 'text-[#f1f5f9]'}`}>
+                  <span className={`text-2xl font-bold ${monotony && monotony > 2 ? 'text-[#f59e0b]' : 'text-primary'}`}>
                     {monotony ? monotony.toFixed(2) : '-'}
                   </span>
                   {monotony && monotony > 2 && <span className="text-xs text-[#f59e0b] mb-1">Stallo</span>}
@@ -102,8 +102,8 @@ export default async function RecoveryPage() {
           </section>
 
           {/* ── Muscle Heatmap ── */}
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-xl font-bold mb-6 text-[#f1f5f9]">Tensione Muscolare (7gg)</h2>
+          <section className="bg-surface rounded-2xl p-6 border border-subtle">
+            <h2 className="text-xl font-bold mb-6 text-primary">Tensione Muscolare (7gg)</h2>
             <div className="grid grid-cols-2 gap-4 mb-8">
               <MuscleHeatmap stress={districtTotals} side="front" />
               <MuscleHeatmap stress={districtTotals} side="back" />
@@ -120,26 +120,26 @@ export default async function RecoveryPage() {
                   const recoveryDays = Math.ceil(total / 0.8);
                   
                   return (
-                    <div key={district} className="flex flex-col justify-center p-3 bg-[#0a0a0f] rounded-xl border border-white/5 gap-2">
+                    <div key={district} className="flex flex-col justify-center p-3 bg-base rounded-xl border border-subtle gap-2">
                       <div className="flex justify-between items-center w-full">
-                        <span className="text-xs font-bold text-[#f1f5f9] truncate">{district}</span>
+                        <span className="text-xs font-bold text-primary truncate">{district}</span>
                         <span className="text-[10px] text-[#ef4444] font-medium px-2 py-0.5 bg-[#ef4444]/10 rounded-md">
                           Recupero stimato: {recoveryDays} gg
                         </span>
                       </div>
-                      <div className="w-full h-1.5 bg-[#141424] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-elevated rounded-full overflow-hidden">
                         <div className="h-full bg-[#ef4444] transition-all" style={{ width: `${visualPct}%` }}></div>
                       </div>
                     </div>
                   )
               })}
               {Object.keys(districtTotals).filter(k => districtTotals[k as District] > 0).length === 0 && (
-                <p className="text-sm text-[#64748b] text-center w-full py-4">Nessun affaticamento registrato.</p>
+                <p className="text-sm text-muted text-center w-full py-4">Nessun affaticamento registrato.</p>
               )}
             </div>
           </section>
 
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
+          <section className="bg-surface rounded-2xl p-6 border border-subtle">
             <DeviceForm devices={devices} />
           </section>
         </div>
