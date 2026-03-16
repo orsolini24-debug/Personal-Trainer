@@ -1,7 +1,7 @@
 "use server"
 
 import { auth } from "@/auth"
-import pdf from "pdf-parse"
+const pdf = require("pdf-parse")
 
 export async function extractTextFromPDF(base64Data: string) {
   const session = await auth()
