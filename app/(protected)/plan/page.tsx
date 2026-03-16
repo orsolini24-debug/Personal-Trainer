@@ -14,6 +14,7 @@ import PlanImportButton from "./PlanImportButton"
 import { MesoStatus } from "@prisma/client"
 import Link from "next/link"
 import OnboardingWizard from "@/app/(protected)/onboarding/OnboardingWizard"
+import CoachInsights from "./CoachInsights"
 
 export default async function PlanPage() {
   const session = await auth()
@@ -92,6 +93,11 @@ export default async function PlanPage() {
             </section>
           )}
 
+          {/* ── COACH INSIGHTS (AI ADAPTATION) ── */}
+          {activeMeso && (
+            <CoachInsights mesoId={activeMeso.id} />
+          )}
+
           {/* ── ACTIVE MESOCYCLE ── */}
           {activeMeso ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -134,12 +140,19 @@ export default async function PlanPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {activeMeso.workoutPlans[0]?.planDays.map(pd => (
-                        <div key={pd.id} className="bg-base p-5 rounded-[2rem] border border-subtle hover:border-[#3b82f6]/30 transition-all group/card">
+                        <Link 
+                          key={pd.id} 
+                          href={`/training/active?planDayId=${pd.id}`}
+                          className="bg-base p-5 rounded-[2rem] border border-subtle hover:border-[#3b82f6]/30 transition-all group/card cursor-pointer block"
+                        >
                           <div className="flex justify-between items-start mb-4">
                             <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center font-black text-[#3b82f6] group-hover/card:bg-[#3b82f6] group-hover/card:text-white transition-all">
                               {pd.dayLabel}
                             </div>
-                            <ArrowRight className="w-4 h-4 text-muted opacity-0 group-hover/card:opacity-100 transition-all" />
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-black text-[#3b82f6] opacity-0 group-hover/card:opacity-100 transition-all uppercase tracking-widest">Inizia Sessione</span>
+                              <ArrowRight className="w-4 h-4 text-[#3b82f6] opacity-0 group-hover/card:opacity-100 transition-all" />
+                            </div>
                           </div>
                           <p className="font-black text-primary mb-1">{pd.focus}</p>
                           <p className="text-[10px] text-muted uppercase font-bold tracking-tighter mb-4">{pd.planExercises.length} Esercizi</p>
@@ -150,7 +163,7 @@ export default async function PlanPage() {
                               </p>
                             ))}
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
