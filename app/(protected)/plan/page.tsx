@@ -45,17 +45,8 @@ export default async function PlanPage() {
   const archivedMesos = await prisma.mesocycle.findMany({
     where: { userId, status: { in: [MesoStatus.ARCHIVED, MesoStatus.COMPLETED] } },
     orderBy: { endDate: 'desc' },
-    take: 5
+    take: 10
   })
-
-  // ── RENDER PROPOSALS (Selection State) ──
-  if (draftMeso && draftMeso.aiProposals) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 pb-20">
-        <ProposalSelector mesoId={draftMeso.id} proposals={draftMeso.aiProposals as any} />
-      </div>
-    )
-  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-24 px-4 animate-in fade-in duration-700">
@@ -67,13 +58,23 @@ export default async function PlanPage() {
           <h1 className="text-4xl font-black tracking-tight text-[#f1f5f9]">Plan Manager</h1>
         </div>
         <div className="flex items-center gap-3">
-          {!activeMeso && <AIPanButton label="Nuova Programmazione" />}
+          {!activeMeso && !draftMeso && <AIPanButton label="Nuova Programmazione" />}
           <PlanImportButton />
-          <button className="p-3 rounded-2xl bg-white/5 text-[#64748b] hover:text-[#f1f5f9] transition-all border border-white/5 group" title="Archivio">
+          <a href="#archive" className="p-3 rounded-2xl bg-white/5 text-[#64748b] hover:text-[#f1f5f9] transition-all border border-white/5 group" title="Vai all'Archivio">
             <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </button>
+          </a>
         </div>
       </div>
+
+      {/* ── PROPOSALS SECTION (If Draft Exists) ── */}
+      {draftMeso && draftMeso.aiProposals && (
+        <section className="bg-[#111118]/50 rounded-[3rem] p-8 border border-[#3b82f6]/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none">
+            <Sparkles className="w-64 h-64 text-[#3b82f6]" />
+          </div>
+          <ProposalSelector mesoId={draftMeso.id} proposals={draftMeso.aiProposals as any} />
+        </section>
+      )}
 
       {/* ── ACTIVE MESOCYCLE ── */}
       {activeMeso ? (
@@ -199,19 +200,19 @@ export default async function PlanPage() {
             </section>
           </div>
         </div>
-      ) : (
+      ) : !draftMeso && (
         <section className="bg-[#111118] rounded-[3rem] p-12 border border-white/5 text-center border-dashed group hover:border-[#3b82f6]/30 transition-all duration-700">
           <div className="w-20 h-20 rounded-3xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
             <Sparkles className="w-10 h-10 animate-pulse" />
           </div>
           <h2 className="text-3xl font-black text-[#f1f5f9] mb-3">Nessuna Programmazione Attiva</h2>
           <p className="text-[#64748b] max-w-sm mx-auto mb-8 leading-relaxed font-medium">L'AI genererà 3 proposte strategiche basate sui tuoi sport primari e i tuoi obiettivi di performance.</p>
-          <AIPanButton />
+          <AIPanButton label="Genera Strategie AI" />
         </section>
       )}
 
       {/* ── ARCHIVE & HISTORY ── */}
-      <div className="pt-10 border-t border-white/5">
+      <div id="archive" className="pt-10 border-t border-white/5 scroll-mt-20">
         <h2 className="text-xl font-black text-[#f1f5f9] mb-6 flex items-center gap-3">
           <Archive className="w-5 h-5 text-[#64748b]" /> Archivio Mesocicli
         </h2>
@@ -231,7 +232,9 @@ export default async function PlanPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-black text-[#f1f5f9] truncate">{m.name}</p>
-                      <p className="text-[10px] text-[#64748b] font-bold uppercase tracking-widest mt-0.5">{format(new Date(m.startDate), "MMM yyyy", { locale: it })}</p>
+                      <p className="text-[10px] text-[#64748b] font-bold uppercase tracking-widest mt-0.5">
+                        {format(new Date(m.startDate), "MMM yyyy", { locale: it })}
+                      </p>
                     </div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-[#64748b] group-hover:translate-x-1 transition-transform shrink-0" />
