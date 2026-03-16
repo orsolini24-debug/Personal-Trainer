@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileUp } from "lucide-react"
+import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileType } from "lucide-react"
 import { analyzeAndImportPlan } from "@/app/actions/import-analysis"
 import { extractTextFromImage } from "@/app/actions/import-vision"
+import { extractTextFromPDF } from "@/app/actions/import-pdf"
 import { useRouter } from "next/navigation"
 
 export default function PlanImportButton() {
@@ -11,7 +12,8 @@ export default function PlanImportButton() {
   const [text, setText] = useState("")
   const [loading, setLoading] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const pdfInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   const handleImport = async () => {
@@ -30,7 +32,7 @@ export default function PlanImportButton() {
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -43,6 +45,25 @@ export default function PlanImportButton() {
         setText(prev => prev + (prev ? "\n\n" : "") + res.text)
       } else {
         alert("Errore durante l'estrazione del testo dall'immagine: " + res.error)
+      }
+      setIsExtracting(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handlePdfChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsExtracting(true)
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string
+      const res = await extractTextFromPDF(base64)
+      if (res.success && res.text) {
+        setText(prev => prev + (prev ? "\n\n" : "") + res.text)
+      } else {
+        alert("Errore durante l'estrazione del testo dal PDF: " + res.error)
       }
       setIsExtracting(false)
     }
@@ -76,27 +97,32 @@ export default function PlanImportButton() {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <button 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => imageInputRef.current?.click()}
                 disabled={isExtracting}
                 className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed border-zinc-200 hover:border-[#3b82f6] hover:bg-blue-50 transition-all group"
               >
                 {isExtracting ? <Loader2 className="w-8 h-8 animate-spin text-[#3b82f6] mb-2" /> : <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-[#3b82f6] mb-2" />}
                 <span className="text-xs font-black text-zinc-500 group-hover:text-[#3b82f6] uppercase tracking-widest">Carica Foto</span>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
               </button>
               
-              <div className="flex flex-col items-center justify-center p-6 rounded-3xl bg-zinc-50 border-2 border-zinc-100">
-                <FileUp className="w-8 h-8 text-zinc-300 mb-2" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase text-center">PDF in arrivo</span>
-              </div>
+              <button 
+                onClick={() => pdfInputRef.current?.click()}
+                disabled={isExtracting}
+                className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed border-zinc-200 hover:border-[#3b82f6] hover:bg-blue-50 transition-all group"
+              >
+                {isExtracting ? <Loader2 className="w-8 h-8 animate-spin text-[#3b82f6] mb-2" /> : <FileType className="w-8 h-8 text-zinc-400 group-hover:text-[#3b82f6] mb-2" />}
+                <span className="text-xs font-black text-zinc-500 group-hover:text-[#3b82f6] uppercase tracking-widest">Carica PDF</span>
+                <input type="file" ref={pdfInputRef} onChange={handlePdfChange} accept="application/pdf" className="hidden" />
+              </button>
             </div>
 
             <div className="space-y-2 mb-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Contenuto del Piano</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Testo Estratto / Contenuto</label>
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Incolla qui il testo o usa il tasto sopra per estrarlo da una foto..."
+                placeholder="Il testo estratto apparirà qui. Puoi anche incollarlo manualmente..."
                 className="w-full h-48 p-4 rounded-2xl bg-zinc-50 border-2 border-zinc-100 text-zinc-900 text-sm font-medium focus:border-[#3b82f6] outline-none resize-none transition-all placeholder:text-zinc-300"
               />
             </div>
