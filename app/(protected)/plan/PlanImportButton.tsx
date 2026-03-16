@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileType } from "lucide-react"
 import { analyzeAndImportPlan } from "@/app/actions/import-analysis"
 import { extractTextFromImage } from "@/app/actions/import-vision"
-import { extractTextFromPDF } from "@/app/actions/import-pdf"
 import { useRouter } from "next/navigation"
 
 export default function PlanImportButton() {
@@ -15,6 +14,19 @@ export default function PlanImportButton() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const pdfInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  // Load PDF.js dynamically
+  useEffect(() => {
+    if (isOpen) {
+      const script = document.createElement('script')
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
+      script.onload = () => {
+        // @ts-ignore
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js'
+      }
+      document.head.appendChild(script)
+    }
+  }, [isOpen])
 
   const handleImport = async () => {
     if (!text.trim()) return
@@ -44,7 +56,7 @@ export default function PlanImportButton() {
       if (res.success && res.text) {
         setText(prev => prev + (prev ? "\n\n" : "") + res.text)
       } else {
-        alert("Errore durante l'estrazione del testo dall'immagine: " + res.error)
+        alert("Errore durante l'estrazione: " + res.error)
       }
       setIsExtracting(false)
     }
@@ -58,16 +70,26 @@ export default function PlanImportButton() {
     setIsExtracting(true)
     const reader = new FileReader()
     reader.onload = async (event) => {
-      const base64 = event.target?.result as string
-      const res = await extractTextFromPDF(base64)
-      if (res.success && res.text) {
-        setText(prev => prev + (prev ? "\n\n" : "") + res.text)
-      } else {
-        alert("Errore durante l'estrazione del testo dal PDF: " + res.error)
+      try {
+        const typedarray = new Uint8Array(event.target?.result as ArrayBuffer)
+        // @ts-ignore
+        const pdf = await window.pdfjsLib.getDocument(typedarray).promise
+        let fullText = ""
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          const strings = content.items.map((item: any) => item.str)
+          fullText += strings.join(" ") + "\n\n"
+        }
+        
+        setText(prev => prev + (prev ? "\n\n" : "") + fullText)
+      } catch (error) {
+        alert("Errore durante la lettura del PDF. Se è una scansione, prova a caricarlo come foto.")
       }
       setIsExtracting(false)
     }
-    reader.readAsDataURL(file)
+    reader.readAsArrayBuffer(file)
   }
 
   return (
@@ -118,22 +140,17 @@ export default function PlanImportButton() {
             </div>
 
             <div className="space-y-2 mb-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Testo Estratto / Contenuto</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Contenuto Analizzato</label>
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Il testo estratto apparirà qui. Puoi anche incollarlo manualmente..."
-                className="w-full h-48 p-4 rounded-2xl bg-zinc-50 border-2 border-zinc-100 text-zinc-900 text-sm font-medium focus:border-[#3b82f6] outline-none resize-none transition-all placeholder:text-zinc-300"
+                placeholder="Il testo del piano apparirà qui dopo l'estrazione..."
+                className="w-full h-48 p-4 rounded-2xl bg-zinc-50 border-2 border-zinc-100 text-zinc-900 text-sm font-medium focus:border-[#3b82f6] outline-none resize-none transition-all"
               />
             </div>
 
             <div className="flex gap-3">
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="flex-1 py-4 rounded-2xl bg-zinc-100 text-zinc-500 font-bold hover:bg-zinc-200 transition-all"
-              >
-                Annulla
-              </button>
+              <button onClick={() => setIsOpen(false)} className="flex-1 py-4 rounded-2xl bg-zinc-100 text-zinc-500 font-bold hover:bg-zinc-200 transition-all">Annulla</button>
               <button 
                 onClick={handleImport}
                 disabled={loading || !text.trim() || isExtracting}

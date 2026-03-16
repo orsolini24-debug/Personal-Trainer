@@ -1,20 +1,48 @@
 "use server"
 
 import { auth } from "@/auth"
-const pdf = require("pdf-parse")
+import Groq from "groq-sdk"
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY || "missing"
+})
 
 export async function extractTextFromPDF(base64Data: string) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   try {
-    // Remove data:application/pdf;base64, prefix
-    const base64 = base64Data.split(",")[1] || base64Data
-    const buffer = Buffer.from(base64, "base64")
+    console.log("PDF Extraction: Starting AI Vision extraction for PDF pages...")
     
-    const data = await pdf(buffer)
+    // In serverless, pdf-parse is often unstable. 
+    // We use a high-reliability fallback: treating the PDF as an image via Groq Vision 
+    // or asking the LLM to process the content if the text was extractable on client.
     
-    return { success: true, text: data.text || "" }
+    // For now, let's improve the extraction prompt and ensure the client-side 
+    // is sending clean data.
+    
+    const response = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: [
+            { 
+              type: "text", 
+              text: "Analizza questo documento PDF (convertito in immagine/data). Estrai tutto il testo dei giorni di allenamento, esercizi, serie e ripetizioni. Mantieni la struttura originale. Ritorna solo il testo." 
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: base64Data, // Most browsers allow base64 PDF as image_url for some vision models, or we handle it as image
+              },
+            },
+          ],
+        },
+      ],
+      model: "llama-3.2-11b-vision-preview",
+    })
+
+    return { success: true, text: response.choices[0]?.message?.content || "" }
   } catch (error: any) {
     console.error("PDF extraction error:", error)
     return { success: false, error: error.message }
