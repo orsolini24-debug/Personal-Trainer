@@ -67,7 +67,7 @@ export default async function PlanPage() {
         </div>
         {!onboardingCompleted ? null : (
           <div className="flex items-center gap-3">
-            {!activeMeso && !draftMeso && <AIPanButton label="Nuova Programmazione" />}
+            <AIPanButton label="Nuova Programmazione" />
             <PlanImportButton />
             <a href="#archive" className="p-3 rounded-2xl bg-foreground/5 text-muted hover:text-primary transition-all border border-subtle group" title="Vai all'Archivio">
               <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
