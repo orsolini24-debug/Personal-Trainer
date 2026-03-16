@@ -51,7 +51,6 @@ export async function completeOnboarding(data: OnboardingData) {
       trainingYears: data.trainingYears,
       strengthRefs: data.strengthRefs,
       primaryGoal: data.primaryGoal,
-      secondarySports: data.secondarySports,
       mainSports: data.mainSports as SportType[],
       sportLevels: data.sportLevels,
       targetEvent: data.targetEvent ?? null,
@@ -60,8 +59,6 @@ export async function completeOnboarding(data: OnboardingData) {
       equipmentLevel: data.equipmentLevel,
       preferredSplit: data.preferredSplit,
       injuriesList: data.injuriesList,
-      dietaryRestrictions: data.dietaryRestrictions,
-      supplementsUsed: data.supplementsUsed,
       onboardingCompleted: true,
     },
     create: {
@@ -74,7 +71,6 @@ export async function completeOnboarding(data: OnboardingData) {
       trainingYears: data.trainingYears,
       strengthRefs: data.strengthRefs,
       primaryGoal: data.primaryGoal,
-      secondarySports: data.secondarySports,
       mainSports: data.mainSports as SportType[],
       sportLevels: data.sportLevels,
       targetEvent: data.targetEvent ?? null,
@@ -83,8 +79,6 @@ export async function completeOnboarding(data: OnboardingData) {
       equipmentLevel: data.equipmentLevel,
       preferredSplit: data.preferredSplit,
       injuriesList: data.injuriesList,
-      dietaryRestrictions: data.dietaryRestrictions,
-      supplementsUsed: data.supplementsUsed,
       onboardingCompleted: true,
     },
   })
@@ -233,8 +227,8 @@ Schema esatto:
 
     // Disattiva mesocicli precedenti
     await prisma.mesocycle.updateMany({
-      where: { userId },
-      data: { isActive: false },
+      where: { userId, status: 'ACTIVE' },
+      data: { status: 'ARCHIVED' },
     })
 
     const meso = await prisma.mesocycle.create({
@@ -250,7 +244,7 @@ Schema esatto:
           weeklyProgression: plan.weeklyProgression,
           nutrition: plan.nutrition,
         },
-        isActive: true,
+        status: 'ACTIVE',
       },
     })
 

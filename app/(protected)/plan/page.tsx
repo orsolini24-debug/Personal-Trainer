@@ -3,17 +3,30 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { format, addDays, startOfWeek } from "date-fns"
 import { it } from "date-fns/locale"
-import { Calendar as CalendarIcon, CheckCircle2, Flag, Milestone, Target, Dumbbell, Sparkles } from "lucide-react"
+import { 
+  Calendar as CalendarIcon, CheckCircle2, Flag, 
+  Milestone, Target, Dumbbell, Sparkles, Archive,
+  ArrowRight, Info, AlertTriangle, PlayCircle,
+  Utensils, Zap, BookOpen, Settings2
+} from "lucide-react"
 import AIPanButton from "./AIPanButton"
+import ProposalSelector from "./ProposalSelector"
+import { MesoStatus } from "@prisma/client"
 
 export default async function PlanPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
   const userId = session.user.id
 
-  // Fetch active mesocycle
+  // 1. Fetch Draft (Proposal)
+  const draftMeso = await prisma.mesocycle.findFirst({
+    where: { userId, status: MesoStatus.DRAFT },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  // 2. Fetch Active Mesocycle
   const activeMeso = await prisma.mesocycle.findFirst({
-    where: { userId, isActive: true },
+    where: { userId, status: MesoStatus.ACTIVE },
     include: {
       workoutPlans: {
         include: {
@@ -26,171 +39,201 @@ export default async function PlanPage() {
     orderBy: { startDate: 'desc' }
   })
 
-  // Fetch past mesocycles
-  const pastMesos = await prisma.mesocycle.findMany({
-    where: { userId, isActive: false },
+  // 3. Fetch Archive
+  const archivedMesos = await prisma.mesocycle.findMany({
+    where: { userId, status: { in: [MesoStatus.ARCHIVED, MesoStatus.COMPLETED] } },
     orderBy: { endDate: 'desc' },
-    take: 3
+    take: 5
   })
 
-  // Weekly Calendar (mock data for the week)
-  const today = new Date()
-  const start = startOfWeek(today, { weekStartsOn: 1 })
-  const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(start, i))
-  
-  const weekSessions = await prisma.workoutSession.findMany({
-    where: {
-      userId,
-      date: { gte: start, lt: addDays(start, 7) }
-    }
-  })
-
-  const getDayPlan = (date: Date) => {
-    const s = weekSessions.find(s => new Date(s.date).getDate() === date.getDate())
-    if (s) return { type: s.type, done: true }
-    return null
+  // ── RENDER PROPOSALS (Selection State) ──
+  if (draftMeso && draftMeso.aiProposals) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 pb-20">
+        <ProposalSelector mesoId={draftMeso.id} proposals={draftMeso.aiProposals as any} />
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
-      <div className="flex justify-between items-end">
+    <div className="max-w-5xl mx-auto space-y-10 pb-24 px-4 animate-in fade-in duration-700">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#f1f5f9]">Plan Manager</h1>
-          <p className="text-[#64748b] mt-1">Pianificazione e roadmap obiettivi.</p>
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#3b82f6] mb-1">Centro di Preparazione</p>
+          <h1 className="text-4xl font-black tracking-tight text-[#f1f5f9]">Plan Manager</h1>
         </div>
-        {!activeMeso && <AIPanButton />}
+        <div className="flex gap-3">
+          <AIPanButton label={activeMeso ? "Aggiorna Piano" : "Nuova Programmazione"} />
+          <button className="p-3 rounded-2xl bg-white/5 text-[#64748b] hover:text-[#f1f5f9] transition-all border border-white/5 group" title="Archivio">
+            <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </button>
+        </div>
       </div>
 
-      {/* Mesociclo Attivo & KPI */}
+      {/* ── ACTIVE MESOCYCLE ── */}
       {activeMeso ? (
-        <section className="bg-[#111118] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-            <Target className="w-48 h-48" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="px-3 py-1 bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20 rounded-full text-xs font-bold uppercase tracking-wider">
-                Attivo
-              </span>
-              <h2 className="text-2xl font-bold text-[#f1f5f9]">{activeMeso.name}</h2>
-            </div>
-            
-            <p className="text-[#64748b] mb-6 max-w-2xl">{activeMeso.objectives}</p>
-
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[#f1f5f9] mb-4 flex items-center gap-2">
-              <Flag className="w-4 h-4 text-[#3b82f6]" /> Piano di Allenamento
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeMeso.workoutPlans[0]?.planDays.map(pd => (
-                <div key={pd.id} className="bg-[#0a0a0f] p-4 rounded-xl border border-white/5">
-                  <p className="text-[#3b82f6] font-bold text-xs uppercase tracking-widest mb-1">Sessione {pd.dayLabel}</p>
-                  <p className="font-bold text-[#f1f5f9] mb-3 text-sm">{pd.focus}</p>
-                  <div className="space-y-1">
-                    {pd.planExercises.slice(0, 3).map(pe => (
-                      <p key={pe.id} className="text-[10px] text-[#64748b] truncate">• {pe.name}</p>
-                    ))}
-                    {pd.planExercises.length > 3 && <p className="text-[10px] text-[#64748b]">... e altri {pd.planExercises.length - 3}</p>}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Main Plan Card */}
+          <div className="lg:col-span-8 space-y-6">
+            <section className="bg-[#111118] rounded-[2.5rem] p-8 border border-white/5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
+                <Target className="w-64 h-64" />
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-[#3b82f6]/10 text-[#3b82f6] flex items-center justify-center shadow-lg border border-[#3b82f6]/20">
+                      <PlayCircle className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] text-[10px] font-black uppercase tracking-widest border border-[#3b82f6]/20">
+                        In Corso
+                      </span>
+                      <h2 className="text-3xl font-black text-[#f1f5f9] mt-1">{activeMeso.name}</h2>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase text-[#64748b] tracking-widest mb-1">Timeline</p>
+                    <p className="text-sm font-bold text-[#f1f5f9]">{format(new Date(activeMeso.startDate), "dd MMM")} — {activeMeso.endDate ? format(new Date(activeMeso.endDate), "dd MMM") : '4 sett.'}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                
+                <div className="bg-[#0a0a0f] p-6 rounded-3xl border border-white/5 mb-8">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-[#3b82f6] flex items-center gap-2">
+                      <Info className="w-4 h-4" /> Focus Tecnico
+                    </h3>
+                    <button className="text-[10px] font-bold text-[#64748b] hover:text-[#f1f5f9] flex items-center gap-1">
+                      <Settings2 className="w-3 h-3" /> Modifica
+                    </button>
+                  </div>
+                  <p className="text-[#94a3b8] text-sm leading-relaxed italic">{activeMeso.objectives}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeMeso.workoutPlans[0]?.planDays.map(pd => (
+                    <div key={pd.id} className="bg-[#0a0a0f] p-5 rounded-[2rem] border border-white/5 hover:border-[#3b82f6]/30 transition-all group/card">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black text-[#3b82f6] group-hover/card:bg-[#3b82f6] group-hover/card:text-white transition-all">
+                          {pd.dayLabel}
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-[#64748b] opacity-0 group-hover/card:opacity-100 transition-all" />
+                      </div>
+                      <p className="font-black text-[#f1f5f9] mb-1">{pd.focus}</p>
+                      <p className="text-[10px] text-[#64748b] uppercase font-bold tracking-tighter mb-4">{pd.planExercises.length} Esercizi</p>
+                      <div className="space-y-1.5 opacity-60 group-hover/card:opacity-100 transition-opacity">
+                        {pd.planExercises.slice(0, 3).map(pe => (
+                          <p key={pe.id} className="text-[10px] text-[#94a3b8] truncate flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-[#3b82f6]" /> {pe.name}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
           </div>
-        </section>
+
+          {/* Side Content: Nutrition & KPIs */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Nutritional Strategy Section */}
+            <section className="bg-[#111118] rounded-[2.5rem] p-6 border border-white/5 group hover:border-[#10b981]/30 transition-all">
+              <h2 className="text-lg font-black text-[#f1f5f9] mb-6 flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#10b981]/10 text-[#10b981]">
+                  <Utensils className="w-4 h-4" />
+                </div>
+                Piano Alimentare
+              </h2>
+              
+              <div className="space-y-6">
+                <div className="p-4 rounded-2xl bg-[#0a0a0f] border border-white/5">
+                  <p className="text-[10px] font-black text-[#64748b] uppercase tracking-widest mb-2">Target Proteico</p>
+                  <p className="text-2xl font-black text-[#f1f5f9]">160g <span className="text-sm font-medium opacity-50">/ giorno</span></p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-2xl bg-[#0a0a0f] border border-white/5">
+                    <p className="text-[10px] font-black text-[#3b82f6] uppercase mb-1">Allenamento</p>
+                    <p className="text-lg font-black text-[#f1f5f9]">2500 <span className="text-[10px] opacity-50">kcal</span></p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-[#0a0a0f] border border-white/5">
+                    <p className="text-[10px] font-black text-[#f59e0b] uppercase mb-1">Riposo</p>
+                    <p className="text-lg font-black text-[#f1f5f9]">2000 <span className="text-[10px] opacity-50">kcal</span></p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-white/10 text-xs text-[#94a3b8] italic leading-relaxed">
+                  "Priorità a carboidrati complessi pre-match e idratazione elettrolitica durante le sessioni outdoor."
+                </div>
+              </div>
+            </section>
+
+            {/* Performance Roadmap */}
+            <section className="bg-[#111118] rounded-[2.5rem] p-6 border border-white/5">
+              <h2 className="text-lg font-black text-[#f1f5f9] mb-6 flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#f59e0b]/10 text-[#f59e0b]">
+                  <Milestone className="w-4 h-4" />
+                </div>
+                Roadmap
+              </h2>
+              <div className="relative pl-6 border-l-2 border-white/5 space-y-8">
+                <div className="relative">
+                  <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-[#10b981] ring-8 ring-[#111118]"></div>
+                  <p className="text-[10px] text-[#10b981] font-black uppercase mb-1">Sett 1-2</p>
+                  <p className="text-sm font-bold text-[#f1f5f9]">Adattamento & Tecnica</p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-[#3b82f6] ring-8 ring-[#111118] animate-pulse"></div>
+                  <p className="text-[10px] text-[#3b82f6] font-black uppercase mb-1">Sett 3</p>
+                  <p className="text-sm font-bold text-[#f1f5f9]">Peak Volume</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       ) : (
-        <section className="bg-[#111118] rounded-2xl p-8 border border-white/5 text-center border-dashed">
-          <Sparkles className="w-12 h-12 text-[#3b82f6] mx-auto mb-4 animate-pulse" />
-          <h2 className="text-xl font-bold text-[#f1f5f9] mb-2">Nessun Mesociclo Attivo</h2>
-          <p className="text-[#64748b] mb-6">Usa l'AI per generare un piano personalizzato basato sul tuo profilo.</p>
+        <section className="bg-[#111118] rounded-[3rem] p-12 border border-white/5 text-center border-dashed group hover:border-[#3b82f6]/30 transition-all duration-700">
+          <div className="w-20 h-20 rounded-3xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+            <Sparkles className="w-10 h-10 animate-pulse" />
+          </div>
+          <h2 className="text-3xl font-black text-[#f1f5f9] mb-3">Nessuna Programmazione Attiva</h2>
+          <p className="text-[#64748b] max-w-sm mx-auto mb-8 leading-relaxed font-medium">L'AI genererà 3 proposte strategiche basate sui tuoi sport primari e i tuoi obiettivi di performance.</p>
           <AIPanButton />
         </section>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-7 space-y-6">
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-lg font-bold mb-6 text-[#f1f5f9] flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-[#8b5cf6]" /> Settimana Corrente
-            </h2>
-            <div className="space-y-3">
-              {weekDays.map((date, idx) => {
-                const plan = getDayPlan(date)
-                const isToday = date.getDate() === today.getDate()
-                
-                return (
-                  <div key={idx} className={`flex items-center gap-4 p-3 rounded-xl border ${isToday ? 'bg-[#3b82f6]/5 border-[#3b82f6]/30' : 'bg-[#0a0a0f] border-white/5'}`}>
-                    <div className="w-12 text-center shrink-0">
-                      <p className="text-xs text-[#64748b] uppercase font-bold">{format(date, "EEE", { locale: it })}</p>
-                      <p className={`text-lg font-bold ${isToday ? 'text-[#3b82f6]' : 'text-[#f1f5f9]'}`}>{format(date, "dd")}</p>
-                    </div>
-                    <div className="flex-1 flex items-center justify-between">
-                      {plan ? (
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${plan.done ? 'bg-[#10b981] text-white' : 'bg-white/10 text-white'}`}>
-                            {plan.type === 'OUTDOOR' ? 'O' : plan.type}
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm text-[#f1f5f9]">
-                              {plan.type === 'OUTDOOR' ? 'Corsa / Bici' : `Sessione ${plan.type}`}
-                            </p>
-                            {plan.done && <p className="text-[10px] text-[#10b981] flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Completata</p>}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[#64748b] text-xs">
-                            -
-                          </div>
-                          <p className="text-[#64748b] text-sm">Riposo</p>
-                        </div>
-                      )}
-                    </div>
+      {/* ── ARCHIVE & HISTORY ── */}
+      <div className="pt-10 border-t border-white/5">
+        <h2 className="text-xl font-black text-[#f1f5f9] mb-6 flex items-center gap-3">
+          <Archive className="w-5 h-5 text-[#64748b]" /> Archivio Mesocicli
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {archivedMesos.length === 0 ? (
+            <div className="col-span-full p-12 rounded-[2rem] bg-[#111118] border border-white/5 text-center flex flex-col items-center justify-center">
+              <BookOpen className="w-10 h-10 text-[#64748b] opacity-20 mb-4" />
+              <p className="text-[#64748b] font-medium text-sm">Il tuo storico dei progressi apparirà qui.</p>
+            </div>
+          ) : (
+            archivedMesos.map(m => (
+              <div key={m.id} className="p-6 bg-[#111118] rounded-[2rem] border border-white/5 flex justify-between items-center group hover:bg-white/[0.02] transition-all cursor-pointer">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[#64748b] shrink-0 group-hover:bg-[#3b82f6]/10 group-hover:text-[#3b82f6] transition-all">
+                    <Archive className="w-6 h-6" />
                   </div>
-                )
-              })}
-            </div>
-          </section>
-        </div>
-
-        <div className="lg:col-span-5 space-y-8">
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-lg font-bold mb-6 text-[#f1f5f9] flex items-center gap-2">
-              <Milestone className="w-5 h-5 text-[#f59e0b]" /> Roadmap 2026
-            </h2>
-            <div className="relative pl-4 border-l-2 border-white/10 space-y-6">
-              <div className="relative">
-                <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-[#10b981] ring-4 ring-[#111118]"></div>
-                <p className="text-xs text-[#10b981] font-bold uppercase tracking-wider mb-1">Aprile</p>
-                <p className="text-sm font-medium text-[#f1f5f9]">Obiettivi Forza</p>
-              </div>
-              <div className="relative">
-                <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-[#3b82f6] ring-4 ring-[#111118] animate-pulse"></div>
-                <p className="text-xs text-[#3b82f6] font-bold uppercase tracking-wider mb-1">Luglio</p>
-                <p className="text-sm font-medium text-[#f1f5f9]">Peak Performance</p>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-[#111118] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-lg font-bold mb-4 text-[#f1f5f9] flex items-center gap-2">
-              <Dumbbell className="w-5 h-5 text-[#64748b]" /> Storico Mesocicli
-            </h2>
-            <div className="space-y-3">
-              {pastMesos.length === 0 ? (
-                <p className="text-sm text-[#64748b]">Nessun ciclo passato.</p>
-              ) : (
-                pastMesos.map(m => (
-                  <div key={m.id} className="p-3 bg-[#0a0a0f] rounded-xl border border-white/5 flex justify-between items-center group hover:border-white/10 transition-colors cursor-pointer">
-                    <div>
-                      <p className="text-sm font-medium text-[#f1f5f9] group-hover:text-[#3b82f6] transition-colors">{m.name}</p>
-                      <p className="text-xs text-[#64748b] mt-0.5">{m.startDate ? format(new Date(m.startDate), "MMM yyyy", { locale: it }) : '-'}</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 bg-white/5 rounded text-[#64748b]">Concluso</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-[#f1f5f9] truncate">{m.name}</p>
+                    <p className="text-[10px] text-[#64748b] font-bold uppercase tracking-widest mt-0.5">{format(new Date(m.startDate), "MMM yyyy", { locale: it })}</p>
                   </div>
-                ))
-              )}
-            </div>
-          </section>
+                </div>
+                <ArrowRight className="w-4 h-4 text-[#64748b] group-hover:translate-x-1 transition-transform shrink-0" />
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

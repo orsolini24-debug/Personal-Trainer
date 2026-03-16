@@ -19,7 +19,7 @@ export default async function CoachPage() {
       select: { hrv: true, rhr: true, sleepScore: true, recoveryScore: true },
     }),
     prisma.mesocycle.findFirst({
-      where: { userId: session.user.id, isActive: true },
+      where: { userId: session.user.id, status: 'ACTIVE' },
       select: { name: true, objectives: true, startDate: true, endDate: true },
     }),
   ])

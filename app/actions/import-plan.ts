@@ -133,7 +133,7 @@ export async function importMesociclo1() {
       name: MESO_NAME,
       startDate: MESO_START,
       endDate: MESO_END,
-      isActive: true,
+      status: 'ACTIVE',
       objectives: 'Rientro sicuro, riabilitazione bicipite femorale, riattivazione full-body. CTL target 35-40 TSS/d. VO2max target 49+.',
       kpi: {
         stacco:  { baseline: '100 kg×5', target: '130 kg×5' },

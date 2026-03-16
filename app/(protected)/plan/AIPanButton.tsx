@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Sparkles } from "lucide-react"
-import { generateAIPlan } from "@/app/actions/ai-plan"
+import { Sparkles, Loader2 } from "lucide-react"
+import { generateAITripleProposal } from "@/app/actions/deep-onboarding"
 import { useRouter } from "next/navigation"
 
 export default function AIPanButton() {
@@ -10,13 +10,12 @@ export default function AIPanButton() {
   const router = useRouter()
 
   const handleGenerate = async () => {
-    if (!confirm("L'AI genererà un nuovo mesociclo basato sul tuo profilo. Procedere?")) return
+    if (!confirm("L'AI analizzerà il tuo profilo per generare 3 proposte strategiche. Procedere?")) return
     setLoading(true)
-    const res = await generateAIPlan()
+    const res = await generateAITripleProposal()
     setLoading(false)
     
     if (res.success) {
-      alert("Piano generato con successo!")
       router.refresh()
     } else {
       alert("Errore: " + res.error)
@@ -27,10 +26,10 @@ export default function AIPanButton() {
     <button 
       onClick={handleGenerate}
       disabled={loading}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] disabled:opacity-50"
+      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_25px_rgba(59,130,246,0.3)] disabled:opacity-50 active:scale-95"
     >
-      <Sparkles className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-      {loading ? "Generazione..." : "Genera Piano AI"}
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 animate-pulse" />}
+      {loading ? "Analisi Atleta..." : "Genera Strategie AI"}
     </button>
   )
 }

@@ -2,437 +2,317 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { completeOnboarding, type OnboardingData } from '@/app/actions/onboarding'
-import { ChevronRight, ChevronLeft, Check, Loader2, Brain } from 'lucide-react'
+import { completeDeepOnboarding, type DeepOnboardingData } from '@/app/actions/deep-onboarding'
+import {
+  User, Dumbbell, Target, Calendar, Shield,
+  ChevronRight, ChevronLeft, Check, Loader2, Trophy,
+  Activity, Scale, PieChart, Utensils, ClipboardList,
+  Flame, HeartPulse, Clock, Zap, Star, AlertCircle, FastForward
+} from 'lucide-react'
+import { SportType } from '@prisma/client'
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const GOALS = [
-  { value: 'HYPERTROPHY',        label: 'Ipertrofia',             desc: 'Aumentare massa muscolare' },
-  { value: 'STRENGTH',           label: 'Forza massimale',        desc: 'Aumentare i carichi massimali' },
-  { value: 'WEIGHT_LOSS',        label: 'Perdita peso',           desc: 'Ridurre il grasso corporeo' },
-  { value: 'RECOMP',             label: 'Ricomposizione',         desc: 'Perdere grasso e costruire muscolo insieme' },
-  { value: 'PERFORMANCE',        label: 'Performance sportiva',   desc: 'Migliorare in uno sport specifico' },
-  { value: 'RETURN_FROM_INJURY', label: 'Rientro da infortunio', desc: 'Recupero sicuro e progressivo' },
+const STEPS = [
+  { id: 1, label: 'Bio & Corpo', icon: User },
+  { id: 2, label: 'Sport DNA', icon: Trophy },
+  { id: 3, label: 'Performance', icon: Activity },
+  { id: 4, label: 'Stato Attuale', icon: ClipboardList },
+  { id: 5, label: 'Nutrizione', icon: Utensils },
+  { id: 6, label: 'Routine & Logistica', icon: Clock },
 ]
 
 const SPORT_OPTIONS = [
-  { id: 'SOCCER',     label: 'Calcio',      icon: '⚽' },
-  { id: 'PADEL',      label: 'Padel',       icon: '🎾' },
-  { id: 'TENNIS',     label: 'Tennis',      icon: '🏸' },
-  { id: 'RUNNING',    label: 'Corsa',       icon: '🏃' },
-  { id: 'SWIMMING',   label: 'Nuoto',       icon: '🏊' },
-  { id: 'CYCLING',    label: 'Ciclismo',    icon: '🚴' },
-  { id: 'CROSSFIT',   label: 'CrossFit',    icon: '🏋️' },
-  { id: 'HYROX',      label: 'Hyrox',       icon: '🔥' },
-  { id: 'COMBAT',     label: 'Boxe/MMA',    icon: '🥊' },
-  { id: 'BASKETBALL', label: 'Basket',      icon: '🏀' },
-  { id: 'VOLLEYBALL', label: 'Pallavolo',   icon: '🏐' },
-  { id: 'OTHER',      label: 'Altro sport', icon: '🎯' },
+  { value: 'PALESTRA', label: 'Palestra / Bodybuilding', icon: '🏋️' },
+  { value: 'CALISTHENICS', label: 'Calisthenics', icon: '🤸' },
+  { value: 'CROSSFIT', label: 'CrossFit', icon: '🔥' },
+  { value: 'HYROX', label: 'Hyrox', icon: '⏱️' },
+  { value: 'RUNNING', label: 'Corsa', icon: '🏃' },
+  { value: 'PADEL', label: 'Padel', icon: '🎾' },
+  { value: 'SOCCER', label: 'Calcio', icon: '⚽' },
+  { value: 'COMBAT', label: 'Boxe / MMA', icon: '🥊' },
+  { value: 'CYCLING', label: 'Ciclismo', icon: '🚴' },
+  { value: 'SWIMMING', label: 'Nuoto', icon: '🏊' },
+  { value: 'SKIING', label: 'Sci', icon: '⛷️' },
+  { value: 'HOCKEY', label: 'Hockey', icon: '🏒' },
+  { value: 'BASEBALL', label: 'Baseball', icon: '⚾' },
 ]
 
-const EQUIPMENT = [
-  { value: 'FULL_GYM',        label: 'Palestra completa', desc: 'Bilanciere, macchine, cavi, manubri' },
-  { value: 'HOME_GYM',        label: 'Home gym',          desc: 'Manubri, kettlebell, elastici, sbarra' },
-  { value: 'BODYWEIGHT_ONLY', label: 'Solo corpo libero', desc: 'Nessun attrezzo specifico' },
-]
-
-const SPLITS = [
-  { value: 'UPPER_LOWER',    label: 'Upper / Lower',          desc: '4 sessioni — parte alta + bassa' },
-  { value: 'PUSH_PULL_LEGS', label: 'Push / Pull / Legs',     desc: '6 sessioni — classico PPL' },
-  { value: 'FULL_BODY',      label: 'Full Body',              desc: '3 sessioni — tutto il corpo' },
-  { value: 'CUSTOM',         label: 'Lascia decidere al coach', desc: "L'AI sceglie il miglior split per te" },
-]
-
-const DIETS = ['Vegetariano', 'Vegano', 'Senza lattosio', 'Senza glutine', 'Halal', 'Kosher']
-const SUPPS = ['Creatina', 'Proteine in polvere', 'Caffeina / pre-workout', 'BCAA', 'Omega-3', 'Vitamina D', 'Magnesio', 'Beta-alanina']
-
-const INITIAL: OnboardingData = {
+const INITIAL: DeepOnboardingData = {
   biologicalSex: '', ageYears: 25, weightKg: 75, heightCm: 175,
+  hasProfessionalData: false,
+  primarySport: 'PALESTRA', mainSports: [], sportLevels: {},
   experienceLevel: '', trainingYears: 1, strengthRefs: {},
-  primaryGoal: '', secondarySports: [], mainSports: [], sportLevels: {}, targetEvent: '',
-  availableDays: 4, sessionDuration: 60, equipmentLevel: '', preferredSplit: 'CUSTOM',
-  injuriesList: [], dietaryRestrictions: [], supplementsUsed: [],
+  primaryGoal: '', isFollowingPlan: false,
+  dietaryType: 'OMNIVORE', eatingRoutine: { mealsPerDay: 4, snacks: true, intermittentFasting: false },
+  favoriteFoods: [], dislikedFoods: [], allergies: [], dailyRoutine: '',
+  availableDays: 4, sessionDuration: 60, equipmentLevel: 'FULL_GYM',
+  preferredSplit: 'CUSTOM', injuriesList: []
 }
-
-// ── Small UI helpers ──────────────────────────────────────────────────────────
-
-function Sel({ label, desc, active, onClick }: { label: string; desc?: string; active: boolean; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick}
-      className="w-full text-left p-3 rounded-2xl border transition-all"
-      style={{
-        background: active ? 'rgba(59,130,246,0.1)' : '#0a0a0f',
-        border: `2px solid ${active ? '#3b82f6' : 'rgba(255,255,255,0.05)'}`,
-        color: active ? '#3b82f6' : '#94a3b8',
-      }}>
-      <p className="font-bold text-sm">{label}</p>
-      {desc && <p className="text-xs mt-0.5" style={{ color: active ? '#60a5fa' : '#64748b' }}>{desc}</p>}
-    </button>
-  )
-}
-
-function NumStepper({ label, value, onChange, min, max, unit }: { label: string; value: number; onChange: (v: number) => void; min: number; max: number; unit: string }) {
-  return (
-    <div>
-      <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>{label}</p>
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={() => onChange(Math.max(min, value - 1))}
-          className="w-10 h-10 rounded-xl font-bold text-xl flex items-center justify-center"
-          style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>−</button>
-        <div className="flex-1 h-10 rounded-xl flex items-center justify-center font-black"
-          style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <span style={{ color: '#f1f5f9' }}>{value}</span>
-          <span className="text-xs ml-1" style={{ color: '#64748b' }}>{unit}</span>
-        </div>
-        <button type="button" onClick={() => onChange(Math.min(max, value + 1))}
-          className="w-10 h-10 rounded-xl font-bold text-xl flex items-center justify-center"
-          style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>+</button>
-      </div>
-    </div>
-  )
-}
-
-function Chips({ options, selected, onChange }: { options: string[]; selected: string[]; onChange: (v: string[]) => void }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map(o => {
-        const on = selected.includes(o)
-        return (
-          <button key={o} type="button" onClick={() => onChange(on ? selected.filter(s => s !== o) : [...selected, o])}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold transition"
-            style={{
-              background: on ? 'rgba(59,130,246,0.15)' : '#0a0a0f',
-              border: `1px solid ${on ? '#3b82f6' : 'rgba(255,255,255,0.08)'}`,
-              color: on ? '#3b82f6' : '#64748b',
-            }}>
-            {o}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-function TextList({ label, value, onChange, placeholder }: { label: string; value: string[]; onChange: (v: string[]) => void; placeholder: string }) {
-  const [txt, setTxt] = useState('')
-  const add = () => { if (!txt.trim()) return; onChange([...value, txt.trim()]); setTxt('') }
-  return (
-    <div>
-      <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>{label}</p>
-      <div className="flex gap-2 mb-2">
-        <input value={txt} onChange={e => setTxt(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
-          placeholder={placeholder}
-          className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
-          style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9' }} />
-        <button type="button" onClick={add}
-          className="px-4 py-2 rounded-xl text-sm font-bold"
-          style={{ background: '#3b82f6', color: '#fff' }}>+</button>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {value.map((v, i) => (
-          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
-            {v}
-            <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="opacity-60 hover:opacity-100 ml-0.5">×</button>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Wizard ────────────────────────────────────────────────────────────────────
 
 export default function OnboardingWizard({ userName }: { userName?: string }) {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [data, setData] = useState<OnboardingData>(INITIAL)
+  const [data, setData] = useState<DeepOnboardingData>(INITIAL)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
-  const set = <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) =>
-    setData(d => ({ ...d, [k]: v }))
+  const set = <K extends keyof DeepOnboardingData>(k: K, v: DeepOnboardingData[K]) => setData(d => ({ ...d, [k]: v }))
 
-  const setRef = (k: keyof typeof data.strengthRefs, v: number) =>
-    setData(d => ({ ...d, strengthRefs: { ...d.strengthRefs, [k]: v || undefined } }))
-
-  const toggleSport = (id: string) => {
-    if (data.mainSports.includes(id)) {
-      const lvls = { ...data.sportLevels }; delete lvls[id]
-      setData(d => ({ ...d, mainSports: d.mainSports.filter(s => s !== id), sportLevels: lvls }))
+  const handleComplete = async () => {
+    setLoading(true)
+    const res = await completeDeepOnboarding(data)
+    setLoading(false)
+    if (res.success) {
+      router.push('/plan')
+      router.refresh()
     } else {
-      setData(d => ({ ...d, mainSports: [...d.mainSports, id], sportLevels: { ...d.sportLevels, [id]: 'AMATEUR' } }))
+      alert("Errore: " + res.error)
     }
   }
 
-  const canAdvance = () => {
-    if (step === 1) return !!data.biologicalSex && data.ageYears > 0 && data.weightKg > 0 && data.heightCm > 0
-    if (step === 2) return !!data.experienceLevel
-    if (step === 3) return !!data.primaryGoal
-    if (step === 4) return true // sport DNA opzionale
-    if (step === 5) return data.availableDays > 0 && !!data.equipmentLevel && !!data.preferredSplit
-    return true
-  }
+  const handleNext = () => setStep(s => s + 1)
+  const handlePrev = () => setStep(s => s - 1)
 
-  const finish = async () => {
-    setLoading(true); setError('')
-    try {
-      const res = await completeOnboarding(data)
-      if ('error' in res && res.error) { setError(String(res.error)); return }
-      router.push('/plan')
-      router.refresh()
-    } catch { setError('Errore imprevisto. Riprova.') }
-    finally { setLoading(false) }
-  }
+  // ── RENDER STEPS ─────────────────────────────────────────────────────────
 
-  const TOTAL = 6
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 absolute inset-0 z-[100]"
-      style={{ background: '#05050f', overflowY: 'auto' }}>
-      <div className="w-full max-w-lg py-8">
-
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>PE</div>
-          <div>
-            <p className="font-black text-sm" style={{ color: '#f1f5f9' }}>Performance Ecosystem</p>
-            <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: '#475569' }}>Setup Profilo</p>
+  const Step1Bio = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3">
+        <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500"><Scale className="w-6 h-6" /></div>
+        <h2 className="text-2xl font-black text-[#f1f5f9]">Bio & Composizione</h2>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {['MALE', 'FEMALE'].map(s => (
+          <button key={s} onClick={() => set('biologicalSex', s)} className={`p-4 rounded-2xl border font-bold transition-all ${data.biologicalSex === s ? 'bg-[#3b82f6]/10 border-[#3b82f6] text-[#3b82f6]' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>
+            {s === 'MALE' ? 'Uomo' : 'Donna'}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-[#64748b]">Peso (kg)</label>
+          <input type="number" step="0.1" value={data.weightKg} onChange={e=>set('weightKg', parseFloat(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-[#64748b]">Età</label>
+          <input type="number" value={data.ageYears} onChange={e=>set('ageYears', parseInt(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
+        </div>
+      </div>
+      <div className="p-5 rounded-3xl bg-[#0a0a0f] border border-white/5 space-y-4">
+        <div className="flex justify-between items-center">
+          <p className="text-sm font-bold text-[#f1f5f9]">Dati Professionali?</p>
+          <button onClick={() => set('hasProfessionalData', !data.hasProfessionalData)} className={`text-[10px] px-3 py-1.5 rounded-full font-bold uppercase transition-all ${data.hasProfessionalData ? 'bg-green-500/20 text-green-500 border border-green-500/30' : 'bg-white/5 text-[#64748b] border border-white/5'}`}>
+            {data.hasProfessionalData ? 'Sì, ho dati BIA/Visita' : 'No, sono stime'}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-[#64748b]">Massa Grassa %</label>
+            <input type="number" value={data.bodyFatPct || ''} onChange={e=>set('bodyFatPct', parseFloat(e.target.value))} placeholder="es. 15" className="w-full p-3 rounded-xl bg-white/5 border border-white/5 text-[#f1f5f9] outline-none" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-[#64748b]">Massa Magra (kg)</label>
+            <input type="number" value={data.leanMassKg || ''} onChange={e=>set('leanMassKg', parseFloat(e.target.value))} placeholder="es. 62" className="w-full p-3 rounded-xl bg-white/5 border border-white/5 text-[#f1f5f9] outline-none" />
           </div>
         </div>
+      </div>
+    </div>
+  )
 
-        {/* Progress */}
-        <div className="flex items-center gap-1 mb-6">
-          {Array.from({ length: TOTAL }, (_, i) => i + 1).map((s, i) => (
-            <div key={s} className="flex items-center gap-1 flex-1">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all"
-                style={{
-                  background: step > s ? '#10b981' : step === s ? '#3b82f6' : '#111118',
-                  border: `2px solid ${step >= s ? (step > s ? '#10b981' : '#3b82f6') : 'rgba(255,255,255,0.08)'}`,
-                }}>
-                {step > s
-                  ? <Check className="w-3.5 h-3.5 text-white" />
-                  : <span className="text-[10px] font-black" style={{ color: step === s ? '#fff' : '#475569' }}>{s}</span>}
-              </div>
-              {i < TOTAL - 1 && <div className="flex-1 h-0.5 rounded-full" style={{ background: step > s ? '#10b981' : 'rgba(255,255,255,0.05)' }} />}
+  const Step2Sport = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3">
+        <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500"><Trophy className="w-6 h-6" /></div>
+        <h2 className="text-2xl font-black text-[#f1f5f9]">Sport DNA</h2>
+      </div>
+      <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+        {SPORT_OPTIONS.map(s => (
+          <button key={s.value} onClick={() => set('primarySport', s.value as SportType)} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${data.primarySport === s.value ? 'bg-[#f59e0b]/10 border-[#f59e0b] text-[#f59e0b]' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>
+            <span className="text-2xl">{s.icon}</span>
+            <span className="text-[10px] font-black uppercase text-center">{s.label}</span>
+          </button>
+        ))}
+      </div>
+      
+      {data.primarySport === 'RUNNING' && (
+        <div className="p-5 rounded-3xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 space-y-4">
+          <p className="text-xs font-black text-[#3b82f6] uppercase tracking-widest">Metrica Corsa</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[#64748b]">Ritmo Medio (min/km)</label>
+              <input type="text" value={data.runningData?.avgPace || ''} onChange={e=>set('runningData', {...data.runningData, avgPace: e.target.value})} placeholder="es. 4:50" className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[#64748b]">Distanza Max (km)</label>
+              <input type="number" value={data.runningData?.maxDistance || ''} onChange={e=>set('runningData', {...data.runningData, maxDistance: parseFloat(e.target.value)})} placeholder="es. 21" className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none" />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const Step3Experience = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3">
+        <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500"><Activity className="w-6 h-6" /></div>
+        <h2 className="text-2xl font-black text-[#f1f5f9]">Esperienza & Forza</h2>
+      </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-2">
+          {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map(l => (
+            <button key={l} onClick={() => set('experienceLevel', l)} className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${data.experienceLevel === l ? 'bg-purple-500/20 border-purple-500 text-purple-500' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>{l}</button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {[{ k: 'squat1RM' as const, l: 'Squat' }, { k: 'bench1RM' as const, l: 'Panca' }, { k: 'deadlift1RM' as const, l: 'Stacco' }, { k: 'ohp1RM' as const, l: 'Military' }].map(({ k, l }) => (
+            <div key={k} className="space-y-1">
+              <label className="text-[10px] font-bold text-[#64748b] uppercase">{l} Max (kg)</label>
+              <input type="number" value={data.strengthRefs[k] || ''} onChange={e => set('strengthRefs', { ...data.strengthRefs, [k]: parseInt(e.target.value) || undefined })} className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
 
-        {/* Card */}
-        <div className="rounded-3xl p-6 space-y-5" style={{ background: '#111118', border: '1px solid rgba(255,255,255,0.05)' }}>
-
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: '#3b82f6' }}>
-              Step {step} di {TOTAL}
-            </p>
-            <h2 className="text-xl font-black" style={{ color: '#f1f5f9' }}>
-              {step === 1 && `Ciao${userName ? ` ${userName}` : ''}! Parlami di te`}
-              {step === 2 && 'La tua esperienza'}
-              {step === 3 && 'Cosa vuoi raggiungere?'}
-              {step === 4 && 'Il tuo Sport DNA'}
-              {step === 5 && 'Organizzazione allenamento'}
-              {step === 6 && 'Salute e alimentazione'}
-            </h2>
-            <p className="text-xs mt-1" style={{ color: '#64748b' }}>
-              {step === 1 && 'Questi dati permettono di calcolare il tuo metabolismo e personalizzare ogni aspetto del piano'}
-              {step === 2 && 'Volume, selezione esercizi e progressione saranno calibrati sulla tua forza attuale'}
-              {step === 3 && 'Ogni esercizio, macro e progressione saranno orientati a questo obiettivo'}
-              {step === 4 && 'Gli sport che pratichi influenzano il volume, il recupero e la selezione degli esercizi (opzionale)'}
-              {step === 5 && 'Il piano si adatta alle tue possibilità reali, non a quelle ideali'}
-              {step === 6 && 'Infortuni e restrizioni alimentari cambiano radicalmente la programmazione'}
-            </p>
+  const Step4Status = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3">
+        <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500"><ClipboardList className="w-6 h-6" /></div>
+        <h2 className="text-2xl font-black text-[#f1f5f9]">Stato Attuale</h2>
+      </div>
+      <div className="space-y-4">
+        <div className="p-5 rounded-3xl bg-[#0a0a0f] border border-white/5 space-y-3">
+          <p className="text-sm font-bold text-[#f1f5f9]">Stai seguendo un piano ora?</p>
+          <div className="flex gap-2">
+            <button onClick={() => set('isFollowingPlan', true)} className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${data.isFollowingPlan ? 'bg-[#6366f1]/20 border-[#6366f1] text-[#6366f1]' : 'bg-white/5 border-transparent text-[#64748b]'}`}>Sì</button>
+            <button onClick={() => set('isFollowingPlan', false)} className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${!data.isFollowingPlan ? 'bg-white/10 border-white/20 text-[#f1f5f9]' : 'bg-white/5 border-transparent text-[#64748b]'}`}>No</button>
           </div>
-
-          {/* ── STEP 1: Anagrafica ── */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Sesso biologico</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Sel label="Uomo" active={data.biologicalSex === 'MALE'} onClick={() => set('biologicalSex', 'MALE')} />
-                  <Sel label="Donna" active={data.biologicalSex === 'FEMALE'} onClick={() => set('biologicalSex', 'FEMALE')} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <NumStepper label="Età" value={data.ageYears} onChange={v => set('ageYears', v)} min={14} max={80} unit="anni" />
-                <NumStepper label="Peso" value={data.weightKg} onChange={v => set('weightKg', v)} min={40} max={200} unit="kg" />
-              </div>
-              <NumStepper label="Altezza" value={data.heightCm} onChange={v => set('heightCm', v)} min={140} max={220} unit="cm" />
-            </div>
+          {data.isFollowingPlan && (
+            <textarea value={data.currentPlanText} onChange={e=>set('currentPlanText', e.target.value)} placeholder="Incolla il tuo piano attuale qui (testo o elenco esercizi)..." rows={4} className="w-full p-3 rounded-xl bg-white/5 border border-white/5 text-[#f1f5f9] outline-none text-[10px] resize-none" />
           )}
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-[#64748b]">Gara / Evento Target (opzionale)</label>
+          <input type="text" value={data.targetEvent || ''} onChange={e=>set('targetEvent', e.target.value)} placeholder="es. Maratona di Milano, Torneo Padel..." className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-sm font-medium" />
+        </div>
+      </div>
+    </div>
+  )
 
-          {/* ── STEP 2: Esperienza ── */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Sel label="Principiante" desc="Meno di 1 anno, o primo approccio strutturato" active={data.experienceLevel === 'BEGINNER'} onClick={() => set('experienceLevel', 'BEGINNER')} />
-                <Sel label="Intermedio" desc="1–4 anni con progressi regolari" active={data.experienceLevel === 'INTERMEDIATE'} onClick={() => set('experienceLevel', 'INTERMEDIATE')} />
-                <Sel label="Avanzato" desc="4+ anni, vicino al potenziale genetico" active={data.experienceLevel === 'ADVANCED'} onClick={() => set('experienceLevel', 'ADVANCED')} />
-              </div>
-              <NumStepper label="Anni di allenamento" value={data.trainingYears} onChange={v => set('trainingYears', v)} min={0} max={40} unit="anni" />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Stima 1RM (lascia 0 se non sai)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { k: 'squat1RM' as const, l: 'Squat' },
-                    { k: 'bench1RM' as const, l: 'Panca' },
-                    { k: 'deadlift1RM' as const, l: 'Stacco' },
-                    { k: 'ohp1RM' as const, l: 'Military Press' },
-                  ].map(({ k, l }) => (
-                    <div key={k}>
-                      <p className="text-[10px] font-bold mb-1" style={{ color: '#475569' }}>{l} (kg)</p>
-                      <input type="number" min={0} max={500} value={data.strengthRefs[k] ?? ''}
-                        onChange={e => setRef(k, Number(e.target.value))} placeholder="0"
-                        className="w-full px-3 py-2 rounded-xl text-sm font-bold outline-none"
-                        style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9' }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 3: Obiettivi ── */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                {GOALS.map(g => (
-                  <Sel key={g.value} label={g.label} desc={g.desc} active={data.primaryGoal === g.value} onClick={() => set('primaryGoal', g.value)} />
+  const Step5Nutrition = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3">
+        <div className="p-3 rounded-2xl bg-green-500/10 text-green-500"><Utensils className="w-6 h-6" /></div>
+        <h2 className="text-2xl font-black text-[#f1f5f9]">Nutrizione & Gusti</h2>
+      </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-2">
+          {['OMNIVORE', 'VEGETARIAN', 'VEGAN', 'KETO'].map(t => (
+            <button key={t} onClick={() => set('dietaryType', t)} className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${data.dietaryType === t ? 'bg-green-500/20 border-green-500 text-green-500' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>{t}</button>
+          ))}
+        </div>
+        <div className="space-y-3">
+          <div className="p-4 rounded-2xl bg-[#0a0a0f] border border-white/5">
+            <label className="text-[10px] font-bold text-[#64748b] uppercase mb-2 block">Routine Pasti</label>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#f1f5f9]">Quanti pasti al giorno?</span>
+              <div className="flex gap-2">
+                {[3, 4, 5, 6].map(n => (
+                  <button key={n} onClick={() => set('eatingRoutine', {...data.eatingRoutine, mealsPerDay: n})} className={`w-8 h-8 rounded-lg text-xs font-bold ${data.eatingRoutine.mealsPerDay === n ? 'bg-green-500 text-white' : 'bg-white/5 text-[#64748b]'}`}>{n}</button>
                 ))}
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: '#64748b' }}>Evento / gara target (opzionale)</p>
-                <input type="text" value={data.targetEvent ?? ''} onChange={e => set('targetEvent', e.target.value)}
-                  placeholder="es. Hyrox Milano, Maratona Roma, Gara regionale..."
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)', color: '#f1f5f9' }} />
-              </div>
             </div>
-          )}
+          </div>
+          <textarea placeholder="Cibi Preferiti (es. Salmone, Avocado, Pasta)" onBlur={e=>set('favoriteFoods', e.target.value.split(',').map(s=>s.trim()))} className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-xs" />
+          <textarea placeholder="Cibi da Evitare / Allergie" onBlur={e=>set('dislikedFoods', e.target.value.split(',').map(s=>s.trim()))} className="w-full p-3 rounded-xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-xs" />
+        </div>
+      </div>
+    </div>
+  )
 
-          {/* ── STEP 4: Sport DNA ── */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-                {SPORT_OPTIONS.map(sport => {
-                  const sel = data.mainSports.includes(sport.id)
-                  return (
-                    <div key={sport.id} className="space-y-1">
-                      <button type="button" onClick={() => toggleSport(sport.id)}
-                        className="w-full flex items-center gap-2 p-3 rounded-2xl border transition-all text-left"
-                        style={{
-                          background: sel ? 'rgba(16,185,129,0.1)' : '#0a0a0f',
-                          border: `2px solid ${sel ? '#10b981' : 'rgba(255,255,255,0.05)'}`,
-                          color: sel ? '#10b981' : '#64748b',
-                        }}>
-                        <span className="text-lg">{sport.icon}</span>
-                        <span className="font-bold text-sm">{sport.label}</span>
-                      </button>
-                      {sel && (
-                        <select value={data.sportLevels[sport.id] ?? 'AMATEUR'}
-                          onChange={e => setData(d => ({ ...d, sportLevels: { ...d.sportLevels, [sport.id]: e.target.value } }))}
-                          className="w-full rounded-lg p-1.5 text-[10px] font-bold outline-none"
-                          style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9' }}>
-                          <option value="AMATEUR">Amatoriale</option>
-                          <option value="INTERMEDIATE">Intermedio</option>
-                          <option value="COMPETITIVE">Agonista</option>
-                          <option value="PRO">Professionista</option>
-                        </select>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-              {data.mainSports.length === 0 && (
-                <p className="text-xs text-center" style={{ color: '#475569' }}>
-                  Nessuno sport? Nessun problema — puoi saltare questo step.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* ── STEP 5: Logistica ── */}
-          {step === 5 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <NumStepper label="Giorni/settimana" value={data.availableDays} onChange={v => set('availableDays', v)} min={2} max={7} unit="gg" />
-                <NumStepper label="Durata sessione" value={data.sessionDuration} onChange={v => set('sessionDuration', v)} min={30} max={180} unit="min" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Attrezzatura disponibile</p>
-                <div className="space-y-2">
-                  {EQUIPMENT.map(e => <Sel key={e.value} label={e.label} desc={e.desc} active={data.equipmentLevel === e.value} onClick={() => set('equipmentLevel', e.value)} />)}
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Split preferito</p>
-                <div className="space-y-2">
-                  {SPLITS.map(s => <Sel key={s.value} label={s.label} desc={s.desc} active={data.preferredSplit === s.value} onClick={() => set('preferredSplit', s.value)} />)}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── STEP 6: Salute e alimentazione ── */}
-          {step === 6 && (
-            <div className="space-y-4">
-              <TextList label="Infortuni / limitazioni fisiche" value={data.injuriesList}
-                onChange={v => set('injuriesList', v)} placeholder="es. Ernia L4-L5, ginocchio SX, spalla dx..." />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Restrizioni alimentari</p>
-                <Chips options={DIETS} selected={data.dietaryRestrictions} onChange={v => set('dietaryRestrictions', v)} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Supplementi già in uso</p>
-                <Chips options={SUPPS} selected={data.supplementsUsed} onChange={v => set('supplementsUsed', v)} />
-              </div>
-              <div className="p-3 rounded-2xl text-xs" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                <p className="font-black mb-1" style={{ color: '#3b82f6' }}>
-                  <Brain className="w-3 h-3 inline mr-1" />
-                  Cosa succede ora
-                </p>
-                <p style={{ color: '#94a3b8' }}>
-                  Il coach AI analizzerà il tuo profilo e genererà un mesociclo di 4 settimane completo: esercizi, progressioni settimana per settimana, target nutrizionali giornalieri e protocollo supplementi.
-                </p>
-              </div>
-              {error && <p className="text-sm font-bold" style={{ color: '#ef4444' }}>{error}</p>}
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex gap-2 pt-2">
-            {step > 1 && (
-              <button type="button" onClick={() => setStep(s => s - 1)}
-                className="flex items-center gap-1.5 px-4 py-3 rounded-2xl font-bold text-sm"
-                style={{ background: '#0a0a0f', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
-                <ChevronLeft className="w-4 h-4" />
-                Indietro
-              </button>
-            )}
-            <button type="button" disabled={!canAdvance() || loading}
-              onClick={() => step < TOTAL ? setStep(s => s + 1) : finish()}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-black text-sm transition"
-              style={{
-                background: canAdvance() && !loading ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'rgba(255,255,255,0.05)',
-                color: canAdvance() && !loading ? '#fff' : '#475569',
-                boxShadow: canAdvance() && !loading ? '0 0 20px rgba(59,130,246,0.3)' : 'none',
-              }}>
-              {loading
-                ? <><Loader2 className="w-4 h-4 animate-spin" />Il coach sta costruendo il piano…</>
-                : step === TOTAL
-                  ? <><Brain className="w-4 h-4" />Genera il mio piano AI</>
-                  : <>Continua<ChevronRight className="w-4 h-4" /></>}
-            </button>
+  const Step6Routine = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3">
+        <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500"><Clock className="w-6 h-6" /></div>
+        <h2 className="text-2xl font-black text-[#f1f5f9]">Logistica & Allenamento</h2>
+      </div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-[#64748b] uppercase">Giorni/Sett</label>
+            <input type="number" value={data.availableDays} onChange={e=>set('availableDays', parseInt(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-[#64748b] uppercase">Durata (min)</label>
+            <input type="number" value={data.sessionDuration} onChange={e=>set('sessionDuration', parseInt(e.target.value))} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none font-bold" />
           </div>
         </div>
+        <div className="grid grid-cols-1 gap-2">
+          {[
+            { v: 'FULL_GYM', l: 'Palestra Completa' },
+            { v: 'HOME_GYM', l: 'Home Gym (Manubri/Panca)' },
+            { v: 'BODYWEIGHT_ONLY', l: 'Corpo Libero' }
+          ].map(opt => (
+            <button key={opt.v} onClick={() => set('equipmentLevel', opt.v)} className={`p-4 rounded-2xl border text-left font-bold transition-all ${data.equipmentLevel === opt.v ? 'bg-indigo-500/10 border-indigo-500 text-indigo-500' : 'bg-[#0a0a0f] border-white/5 text-[#64748b]'}`}>{opt.l}</button>
+          ))}
+        </div>
+        <textarea value={data.dailyRoutine} onChange={e=>set('dailyRoutine', e.target.value)} placeholder="Descrivi brevemente la tua giornata tipo (es. Lavoro sedentario, cammino molto...)" rows={3} className="w-full p-4 rounded-2xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] outline-none text-xs resize-none" />
+      </div>
+    </div>
+  )
 
-        <p className="text-center text-xs mt-4" style={{ color: '#334155' }}>
-          Puoi aggiornare questi dati in qualsiasi momento dalle impostazioni
-        </p>
+  const canProceed = () => {
+    if (step === 1) return data.biologicalSex && data.weightKg > 0 && data.ageYears > 0
+    if (step === 2) return !!data.primarySport
+    if (step === 3) return !!data.experienceLevel
+    if (step === 5) return !!data.dietaryType
+    if (step === 6) return data.availableDays > 0 && !!data.equipmentLevel
+    return true
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#05050f] p-4 absolute inset-0 z-[100] font-sans selection:bg-[#3b82f6]/30">
+      <div className="w-full max-w-lg bg-[#111118] p-8 md:p-10 rounded-[3.5rem] border border-white/5 shadow-2xl relative overflow-hidden">
+        
+        {/* Deep Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#0a0a0f] flex">
+          {STEPS.map(s => (
+            <div key={s.id} className={`h-full flex-1 transition-all duration-700 ${step >= s.id ? 'bg-gradient-to-r from-[#3b82f6] to-[#6366f1]' : 'bg-transparent'}`} />
+          ))}
+        </div>
+
+        <div className="mb-10 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3b82f6] to-[#6366f1] flex items-center justify-center font-black text-white text-[10px] shadow-lg">PE</div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#64748b]">Athlete Intake</span>
+          </div>
+          <span className="text-[10px] font-black text-[#3b82f6] bg-[#3b82f6]/10 px-2 py-1 rounded-md">{Math.round((step/STEPS.length)*100)}%</span>
+        </div>
+
+        <div className="min-h-[420px]">
+          {step === 1 && <Step1Bio />}
+          {step === 2 && <Step2Sport />}
+          {step === 3 && <Step3Experience />}
+          {step === 4 && <Step4Status />}
+          {step === 5 && <Step5Nutrition />}
+          {step === 6 && <Step6Routine />}
+        </div>
+
+        <div className="flex gap-3 mt-10">
+          {step > 1 && (
+            <button onClick={handlePrev} className="px-6 py-4 rounded-3xl bg-[#0a0a0f] border border-white/5 text-[#f1f5f9] hover:bg-white/5 transition-all">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          <button 
+            onClick={() => step < STEPS.length ? handleNext() : handleComplete()}
+            disabled={!canProceed() || loading}
+            className="flex-1 py-4 rounded-[2rem] bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white font-black flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(59,130,246,0.3)] disabled:opacity-20 active:scale-95 transition-all"
+          >
+            {step === STEPS.length ? (loading ? 'Configurazione...' : 'Inizia Trasformazione') : 'Continua'}
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   )

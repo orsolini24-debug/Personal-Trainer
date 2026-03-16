@@ -40,36 +40,53 @@ model UserProfile {
   userId           String   @unique
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Step 1 – Anagrafica
+  // Step 1 – Bio & Body Comp
   biologicalSex    String?  // "MALE", "FEMALE"
   ageYears         Int?
   weightKg         Float?
   heightCm         Int?
+  bodyFatPct       Float?   // Massa grassa %
+  leanMassKg       Float?   // Massa magra kg
+  bodyMeasurements Json?    // { waist, hips, chest, arm, thigh }
+  hasProfessionalData Boolean @default(false) // Se i dati vengono da BIA/Nutrizionista
 
-  // Step 2 – Esperienza e forza
+  // Step 2 – Sport DNA (Universal)
+  primarySport     SportType @default(PALESTRA)
+  mainSports       SportType[]
+  sportLevels      Json?    // { SOCCER: "AMATEUR", RUNNING: "COMPETITIVE" }
+  
+  // Sport Specific Metrics
+  runningData      Json?    // { avgPace, maxDistance, pb5k, pb10k, pbHalf }
+  cyclingData      Json?    // { avgPower, ftp, maxDistance }
+  combatData       Json?    // { yearsExperience, style, weightClass }
+  technicalSportData Json?  // { level, frequency, specificGoals }
+
   experienceLevel  String?  // "BEGINNER", "INTERMEDIATE", "ADVANCED"
   trainingYears    Int?
   strengthRefs     Json?    // { squat1RM, bench1RM, deadlift1RM, ohp1RM }
 
-  // Step 3 – Obiettivi e sport
-  primaryGoal      String?  // "HYPERTROPHY","STRENGTH","WEIGHT_LOSS","RECOMP","PERFORMANCE","RETURN_FROM_INJURY"
-  secondarySports  String[] // ["RUNNING","HYROX","CLIMBING","CROSSFIT","CYCLING"]
-  mainSports       SportType[]
-  sportLevels      Json?    // { SOCCER: "AMATEUR", PADEL: "INTERMEDIATE" }
-  targetEvent      String?  // es. "Hyrox Milano Giugno 2026"
+  // Step 3 – Goals & Current Status
+  primaryGoal      String?  
+  isFollowingPlan  Boolean  @default(false)
+  currentPlanFile  String?  // URL a file caricato (PDF/XLS)
+  currentPlanText  String?  @db.Text
+  targetEvent      String?  
 
-  // Step 4 – Logistica
-  availableDays    Int?     // Days per week
-  sessionDuration  Int?     // Minutes
-  equipmentLevel   String?  // "FULL_GYM","HOME_GYM","BODYWEIGHT_ONLY"
-  preferredSplit   String?  // "UPPER_LOWER","PUSH_PULL_LEGS","FULL_BODY","CUSTOM"
+  // Step 4 – Nutrition & Habits
+  dietaryType      String?  // "OMNIVORE", "VEGETARIAN", "VEGAN", "KETO", etc.
+  eatingRoutine    Json?    // { mealsPerDay: 4, snacks: true, intermittentFasting: false }
+  favoriteFoods    String[]
+  dislikedFoods    String[]
+  allergies        String[]
+  dailyRoutine     String?  @db.Text // Descrizione della giornata tipo (lavoro sedentario, etc.)
 
-  // Step 5 – Salute e alimentazione
+  // Step 5 – Logistics
+  availableDays    Int?     
+  sessionDuration  Int?     
+  equipmentLevel   String?  
+  preferredSplit   String?  
+
   injuriesList         String[]
-  dietaryRestrictions  String[]
-  supplementsUsed      String[]
-
-  // Meta
   onboardingCompleted  Boolean  @default(false)
   updatedAt            DateTime @updatedAt
 }
@@ -85,7 +102,9 @@ model Mesocycle {
   endDate     DateTime?
   objectives  String?
   kpi         Json?
-  isActive    Boolean  @default(true)
+  status      MesoStatus @default(ACTIVE)
+  aiProposals Json?      // Memorizza le 3 opzioni generate dall'AI
+  chosenOption Int?      // Quale delle 3 è stata scelta
   createdAt   DateTime @default(now())
 
   sessions     WorkoutSession[]
@@ -403,19 +422,87 @@ enum SessionType {
   OTHER
 }
 
+enum MesoStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+}
+
 enum SportType {
+  PALESTRA
   SOCCER
   PADEL
   TENNIS
-  SWIMMING
-  CYCLING
-  COMBAT
   BASKETBALL
-  RUNNING
   VOLLEYBALL
   GYMNASTICS
   CROSSFIT
   HYROX
+  HOCKEY
+  BASEBALL
+  AMERICAN_FOOTBALL
+  RUGBY
+  CRICKET
+  HANDBALL
+  LACROSS
+  
+  // Running & Athletics
+  RUNNING
+  TRAIL_RUNNING
+  SPRINTING
+  MARATHON
+  TRIATHLON
+  OBSTACLE_RACING
+  
+  // Mountain & Outdoor
+  SKIING
+  SKI_TOURING
+  SNOWBOARDING
+  MOUNTAINEERING
+  CLIMBING
+  TREKKING
+  MTB
+  GRAVEL_BIKING
+  CYCLING
+  
+  // Water Sports
+  SWIMMING
+  OPEN_WATER_SWIMMING
+  WATER_POLO
+  ROWING
+  KAYAKING
+  SURFING
+  WINDSURFING
+  KITESURFING
+  SAILING
+  DIVING
+  SUP
+  
+  // Combat Sports
+  COMBAT
+  BOXING
+  MUAY_THAI
+  KICKBOXING
+  MMA
+  BJJ
+  JUDO
+  KARATE
+  TAEKWONDO
+  WRESTLING
+  FENCING
+  
+  // Others
+  YOGA
+  PILATES
+  GOLF
+  BADMINTON
+  SQUASH
+  SKATING
+  ARCHERY
+  EQUESTRIAN
+  DANCING
+  CALISTHENICS
   OTHER
 }
 
