@@ -8,12 +8,14 @@ import ExerciseList from "./exercise-list"
 import DistrictStressForm from "./district-stress"
 import CloseSessionForm from "./close-session"
 
-export default async function SessionDetailPage({ params }: { params: { id: string } }) {
+export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await auth()
   if (!sessionUser?.user?.id) redirect("/login")
 
+  const { id } = await params
+
   const session = await prisma.workoutSession.findUnique({
-    where: { id: params.id, userId: sessionUser.user.id },
+    where: { id, userId: sessionUser.user.id },
     include: {
       exercises: { orderBy: { orderIndex: 'asc' } },
       districtStress: true

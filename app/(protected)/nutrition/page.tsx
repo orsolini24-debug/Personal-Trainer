@@ -6,12 +6,13 @@ import NutritionClient from "./nutrition-client"
 export default async function NutritionPage({
   searchParams,
 }: {
-  searchParams: { date?: string }
+  searchParams: Promise<{ date?: string }>
 }) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const dateParam = searchParams.date || new Date().toISOString().split('T')[0]
+  const params = await searchParams
+  const dateParam = params.date || new Date().toISOString().split('T')[0]
   const date = new Date(dateParam)
   
   const result = await getOrCreateNutritionDay(date)

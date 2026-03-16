@@ -7,12 +7,14 @@ import { ChevronLeft, Calendar, Info, Dumbbell, Target } from "lucide-react"
 import Link from "next/link"
 import MesoDetailClient from "./MesoDetailClient"
 
-export default async function MesoDetailPage({ params }: { params: { id: string } }) {
+export default async function MesoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
+  const { id } = await params
+
   const meso = await prisma.mesocycle.findUnique({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
     include: {
       workoutPlans: {
         include: {
