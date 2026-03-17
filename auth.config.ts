@@ -26,7 +26,6 @@ export const authConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        // @ts-ignore
         token.onboardingCompleted = user.onboardingCompleted
       }
       return token
@@ -34,7 +33,6 @@ export const authConfig = {
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id as string
-        // @ts-ignore
         session.user.onboardingCompleted = token.onboardingCompleted as boolean
       }
       return session

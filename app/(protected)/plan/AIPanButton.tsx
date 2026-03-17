@@ -5,7 +5,11 @@ import { Sparkles, Loader2 } from "lucide-react"
 import { generateAITripleProposal } from "@/app/actions/deep-onboarding"
 import { useRouter } from "next/navigation"
 
-export default function AIPanButton({ label }: { label?: string }) {
+interface AIPanButtonProps {
+  label?: string
+}
+
+export default function AIPanButton({ label }: AIPanButtonProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -14,7 +18,7 @@ export default function AIPanButton({ label }: { label?: string }) {
     setLoading(true)
     const res = await generateAITripleProposal()
     setLoading(false)
-    
+
     if (res.success) {
       router.refresh()
     } else {
@@ -23,10 +27,10 @@ export default function AIPanButton({ label }: { label?: string }) {
   }
 
   return (
-    <button 
+    <button
       onClick={handleGenerate}
       disabled={loading}
-      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_25px_rgba(59,130,246,0.3)] disabled:opacity-50 active:scale-95"
+      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent to-accent2 text-white rounded-2xl font-black text-sm transition-all shadow-[0_0_25px_rgba(59,130,246,0.3)] disabled:opacity-50 active:scale-95 hover:brightness-110"
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 animate-pulse" />}
       {loading ? "Analisi Atleta..." : (label || "Genera Strategie AI")}

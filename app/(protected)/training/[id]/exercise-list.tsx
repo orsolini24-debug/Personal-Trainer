@@ -42,21 +42,21 @@ function TimerComponent() {
   }
 
   return (
-    <div className="bg-surface p-4 rounded-xl border border-subtle mb-6 flex items-center gap-4">
-      <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+    <div className="bg-surface p-4 rounded-xl border border-border mb-6 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center shrink-0">
         <Timer className="w-5 h-5" />
       </div>
       {!isActive ? (
         <div className="flex items-center gap-2 flex-1">
-          <input type="number" value={inputMinutes} onChange={e=>setInputMinutes(e.target.value)} className="w-12 p-1 bg-base border border-default rounded text-center text-sm focus:outline-none focus:border-blue-500" placeholder="m" />
-          <span>:</span>
-          <input type="number" value={inputSeconds} onChange={e=>setInputSeconds(e.target.value)} className="w-12 p-1 bg-base border border-default rounded text-center text-sm focus:outline-none focus:border-blue-500" placeholder="s" />
-          <button onClick={startTimer} className="ml-auto px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors">Start</button>
+          <input type="number" value={inputMinutes} onChange={e=>setInputMinutes(e.target.value)} className="w-12 p-1 bg-base border border-border rounded text-center text-sm focus:outline-none focus:border-accent" placeholder="m" />
+          <span className="text-muted">:</span>
+          <input type="number" value={inputSeconds} onChange={e=>setInputSeconds(e.target.value)} className="w-12 p-1 bg-base border border-border rounded text-center text-sm focus:outline-none focus:border-accent" placeholder="s" />
+          <button onClick={startTimer} className="ml-auto px-4 py-1.5 bg-accent hover:opacity-90 text-white rounded text-sm font-medium transition-all">Start</button>
         </div>
       ) : (
         <div className="flex items-center justify-between flex-1">
-          <span className="text-2xl font-mono font-bold text-blue-500">{formatTime(seconds)}</span>
-          <button onClick={() => setIsActive(false)} className="px-4 py-1.5 bg-red-500/20 text-red-500 hover:bg-red-500/30 rounded text-sm font-medium transition-colors">Stop</button>
+          <span className="text-2xl font-mono font-bold text-accent">{formatTime(seconds)}</span>
+          <button onClick={() => setIsActive(false)} className="px-4 py-1.5 bg-negative/20 text-negative hover:bg-negative/30 rounded text-sm font-medium transition-colors">Stop</button>
         </div>
       )}
     </div>
@@ -66,14 +66,14 @@ function TimerComponent() {
 export default function ExerciseList({ sessionId, initialExercises }: { sessionId: string, initialExercises: Exercise[] }) {
   const [exercises, setExercises] = useState(initialExercises)
   const [loading, setLoading] = useState(false)
-  
+
   // Form state
   const [name, setName] = useState("")
   const [sets, setSets] = useState("")
   const [reps, setReps] = useState("")
   const [loadKg, setLoadKg] = useState("")
   const [rir, setRir] = useState("")
-  
+
   // Chart state
   const [chartExName, setChartExName] = useState<string | null>(null)
   const [chartData, setChartData] = useState<any[]>([])
@@ -123,21 +123,21 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
       {/* Lista */}
       <div className="space-y-3">
         {exercises.map((ex, idx) => (
-          <div key={ex.id} className="flex items-center justify-between p-4 bg-base rounded-xl border border-subtle hover:border-default transition-colors">
+          <div key={ex.id} className="flex items-center justify-between p-4 bg-base rounded-xl border border-border-subtle hover:border-border transition-colors">
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-primary">{idx + 1}. {ex.name}</span>
-                <button onClick={() => openChart(ex.name)} className="p-1 text-muted hover:text-[#3b82f6] transition-colors" title="Vedi progressione">
+                <button onClick={() => openChart(ex.name)} className="p-1 text-muted hover:text-accent transition-colors" title="Vedi progressione">
                   <Activity className="w-4 h-4" />
                 </button>
               </div>
               <div className="text-sm text-muted mt-1.5 flex gap-4">
-                {ex.sets && ex.reps && <span className="bg-white/5 px-2 py-0.5 rounded">{ex.sets}x{ex.reps}</span>}
-                {ex.loadKg != null && <span className="bg-[#3b82f6]/10 text-[#3b82f6] px-2 py-0.5 rounded font-medium">{ex.loadKg} kg</span>}
-                {ex.rir != null && <span className="bg-white/5 px-2 py-0.5 rounded">RIR {ex.rir}</span>}
+                {ex.sets && ex.reps && <span className="bg-elevated px-2 py-0.5 rounded">{ex.sets}x{ex.reps}</span>}
+                {ex.loadKg != null && <span className="bg-accent/10 text-accent px-2 py-0.5 rounded font-medium">{ex.loadKg} kg</span>}
+                {ex.rir != null && <span className="bg-elevated px-2 py-0.5 rounded">RIR {ex.rir}</span>}
               </div>
             </div>
-            <button onClick={() => handleDelete(ex.id)} className="text-red-500/70 p-2 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all ml-2">
+            <button onClick={() => handleDelete(ex.id)} className="text-negative/70 p-2 hover:text-negative hover:bg-negative/10 rounded-lg transition-all ml-2">
               <Trash2 className="h-5 w-5" />
             </button>
           </div>
@@ -146,7 +146,7 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
       </div>
 
       {/* Form Aggiungi */}
-      <form onSubmit={handleAdd} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end bg-surface p-5 rounded-xl border border-subtle">
+      <form onSubmit={handleAdd} className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end bg-surface p-5 rounded-xl border border-border">
         <div className="col-span-2">
           <label className="block text-xs font-medium text-primary mb-1.5">Esercizio *</label>
           <ExerciseAutocomplete
@@ -157,72 +157,167 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
         </div>
         <div>
           <label className="block text-xs font-medium text-primary mb-1.5">Serie</label>
-          <input type="number" value={sets} onChange={e => setSets(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 4" />
+          <input type="number" value={sets} onChange={e => setSets(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-base text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30" placeholder="es. 4" />
         </div>
         <div>
           <label className="block text-xs font-medium text-primary mb-1.5">Reps</label>
-          <input type="text" value={reps} onChange={e => setReps(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 8-10" />
+          <input type="text" value={reps} onChange={e => setReps(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-base text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30" placeholder="es. 8-10" />
         </div>
         <div>
           <label className="block text-xs font-medium text-primary mb-1.5">Kg</label>
-          <input type="number" step="0.5" value={loadKg} onChange={e => setLoadKg(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 100" />
+          <input type="number" step="0.5" value={loadKg} onChange={e => setLoadKg(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-base text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30" placeholder="es. 100" />
         </div>
         <div>
           <label className="block text-xs font-medium text-primary mb-1.5">RIR (0-4)</label>
-          <input type="number" value={rir} onChange={e => setRir(e.target.value)} className="w-full px-3 py-2 text-sm border border-default rounded-lg bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50" placeholder="es. 2" />
+          <input type="number" value={rir} onChange={e => setRir(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-base text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30" placeholder="es. 2" />
         </div>
         <div className="col-span-2 md:col-span-6 mt-2">
-          <button type="submit" disabled={loading || !name} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] hover:from-[#2563eb] hover:to-[#4f46e5] text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+          <button type="submit" disabled={loading || !name} className="w-full flex items-center justify-center gap-2 py-2.5 bg-accent hover:opacity-90 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-all shadow-[0_0_15px_var(--accent-glow,rgba(0,0,0,0))]">
             <Plus className="h-4 w-4" /> Aggiungi Esercizio
           </button>
         </div>
       </form>
 
-      {/* Chart Modal */}
+      {/* Chart Modal — Progressione esercizio */}
       {chartExName && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-surface border border-default rounded-2xl p-6 w-full max-w-lg relative shadow-2xl">
-            <button onClick={() => setChartExName(null)} className="absolute top-4 right-4 text-muted hover:text-primary">
+          <div className="w-full max-w-lg relative shadow-2xl rounded-2xl p-6"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+            <button onClick={() => setChartExName(null)}
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: 'var(--fg-muted)' }}>
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-xl font-bold mb-6 text-primary">Progressione: <span className="text-[#3b82f6]">{chartExName}</span></h3>
-            
-            {chartData.length < 2 ? (
-              <p className="text-muted py-8 text-center">Dati insufficienti per questo esercizio (min 2 sessioni).</p>
-            ) : (
-              <div className="h-48 relative mb-4">
-                {/* SVG Line Chart */}
-                <svg viewBox="0 0 100 50" preserveAspectRatio="none" className="w-full h-full overflow-visible">
-                  {(() => {
-                    const max = Math.max(...chartData.map(d => d.loadKg))
-                    const min = Math.min(...chartData.map(d => d.loadKg))
-                    const range = max - min || 1
-                    
-                    const points = chartData.map((d, i) => {
-                      const x = (i / (chartData.length - 1)) * 100
-                      const y = 50 - (((d.loadKg - min) / range) * 50)
-                      return `${x},${y}`
-                    }).join(" ")
 
-                    return (
-                      <>
-                        <polyline fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={points} />
-                        {chartData.map((d, i) => {
-                          const x = (i / (chartData.length - 1)) * 100
-                          const y = 50 - (((d.loadKg - min) / range) * 50)
-                          return (
-                            <g key={i}>
-                              <circle cx={x} cy={y} r="2" fill="#6366f1" />
-                              {i === chartData.length - 1 && <text x={x} y={y - 4} fontSize="4" fill="#f1f5f9" textAnchor="middle">{d.loadKg}kg</text>}
-                            </g>
-                          )
-                        })}
-                      </>
-                    )
-                  })()}
-                </svg>
-              </div>
-            )}
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--accent)' }}>
+              Progressione
+            </p>
+            <h3 className="text-xl font-black mb-4" style={{ color: 'var(--fg-primary)' }}>
+              {chartExName}
+            </h3>
+
+            {chartData.length < 2 ? (
+              <p className="py-8 text-center text-sm" style={{ color: 'var(--fg-muted)' }}>
+                Dati insufficienti — servono almeno 2 sessioni con questo esercizio.
+              </p>
+            ) : (() => {
+              // Raggruppa per data sessione → prendi il peso massimo per sessione
+              const sessionMap: Record<string, { dateLabel: string; maxKg: number; isoDate: string }> = {}
+              for (const d of chartData as any[]) {
+                const isoDate = new Date(d.session.date).toISOString().slice(0, 10)
+                const dateLabel = new Date(d.session.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+                if (!sessionMap[isoDate]) {
+                  sessionMap[isoDate] = { dateLabel, maxKg: d.loadKg, isoDate }
+                } else if (d.loadKg > sessionMap[isoDate].maxKg) {
+                  sessionMap[isoDate].maxKg = d.loadKg
+                }
+              }
+              const sessions = Object.values(sessionMap).sort((a, b) => a.isoDate.localeCompare(b.isoDate))
+
+              const maxKg = Math.max(...sessions.map(s => s.maxKg))
+              const minKg = Math.min(...sessions.map(s => s.maxKg))
+              const range = maxKg - minKg || 1
+
+              // Trend badge
+              const last = sessions[sessions.length - 1].maxKg
+              const prev = sessions[sessions.length - 2].maxKg
+              const delta = parseFloat((last - prev).toFixed(1))
+              const trendIcon = delta > 0 ? '↑' : delta < 0 ? '↓' : '→'
+              const trendColor = delta > 0 ? 'var(--positive)' : delta < 0 ? 'var(--negative)' : 'var(--warning)'
+              const trendLabel = delta !== 0 ? `${delta > 0 ? '+' : ''}${delta} kg` : 'Stabile'
+
+              // Coordinate SVG
+              const W = 300, H = 70, PAD_X = 20, PAD_Y = 12
+              const pts = sessions.map((s, i) => ({
+                x: PAD_X + (i / (sessions.length - 1)) * (W - PAD_X * 2),
+                y: PAD_Y + (1 - (s.maxKg - minKg) / range) * (H - PAD_Y * 2),
+                ...s
+              }))
+              const polyline = pts.map(p => `${p.x},${p.y}`).join(' ')
+
+              return (
+                <div>
+                  {/* KPI row */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div>
+                      <p className="text-3xl font-black" style={{ color: 'var(--fg-primary)' }}>{last} <span className="text-lg font-medium" style={{ color: 'var(--fg-muted)' }}>kg</span></p>
+                      <p className="text-xs" style={{ color: 'var(--fg-subtle)' }}>ultima sessione</p>
+                    </div>
+                    <span className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold"
+                      style={{
+                        background: `color-mix(in srgb, ${trendColor} 12%, transparent)`,
+                        color: trendColor,
+                        border: `1px solid color-mix(in srgb, ${trendColor} 25%, transparent)`
+                      }}>
+                      {trendIcon} {trendLabel} vs precedente
+                    </span>
+                    <span className="ml-auto text-xs" style={{ color: 'var(--fg-subtle)' }}>
+                      Max: <strong style={{ color: 'var(--fg-primary)' }}>{maxKg} kg</strong>
+                    </span>
+                  </div>
+
+                  {/* SVG chart */}
+                  <div className="rounded-xl overflow-hidden"
+                    style={{ background: 'var(--bg-base)', border: '1px solid var(--border-subtle)' }}>
+                    <svg viewBox={`0 0 ${W} ${H + 22}`} className="w-full" style={{ height: '160px' }}>
+                      <defs>
+                        <linearGradient id="exGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.20" />
+                          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Griglia orizzontale */}
+                      {[0, 0.5, 1].map(pct => {
+                        const y = PAD_Y + (1 - pct) * (H - PAD_Y * 2)
+                        const val = (minKg + pct * range).toFixed(0)
+                        return (
+                          <g key={pct}>
+                            <line x1={PAD_X} y1={y} x2={W - PAD_X} y2={y}
+                              stroke="var(--border-subtle)" strokeWidth="0.5" strokeDasharray="3,4" />
+                            <text x={PAD_X - 3} y={y + 3} fontSize="6" fill="var(--fg-subtle)" textAnchor="end">{val}</text>
+                          </g>
+                        )
+                      })}
+
+                      {/* Area fill */}
+                      <polygon
+                        fill="url(#exGrad)"
+                        points={`${pts[0].x},${H} ${polyline} ${pts[pts.length - 1].x},${H}`}
+                      />
+
+                      {/* Linea principale */}
+                      <polyline fill="none" stroke="var(--accent)" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round" points={polyline} />
+
+                      {/* Punti + etichette */}
+                      {pts.map((p, i) => {
+                        const isLast = i === pts.length - 1
+                        return (
+                          <g key={i}>
+                            <circle cx={p.x} cy={p.y} r={isLast ? 4 : 2.5}
+                              fill={isLast ? 'var(--accent)' : 'var(--bg-base)'}
+                              stroke="var(--accent)" strokeWidth="1.5" />
+                            {isLast && (
+                              <text x={p.x} y={p.y - 8} fontSize="7" fill="var(--accent)"
+                                textAnchor="middle" fontWeight="bold">{p.maxKg}kg</text>
+                            )}
+                            {/* Data sull'asse X */}
+                            <text x={p.x} y={H + 18} fontSize="5.5" fill="var(--fg-subtle)" textAnchor="middle">
+                              {p.dateLabel}
+                            </text>
+                          </g>
+                        )
+                      })}
+                    </svg>
+                  </div>
+
+                  <p className="text-xs mt-2 text-center" style={{ color: 'var(--fg-subtle)' }}>
+                    Peso massimo per sessione · {sessions.length} sessioni totali
+                  </p>
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

@@ -94,67 +94,93 @@ export default function PlanImportButton() {
 
   return (
     <>
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
-        className="p-3 rounded-2xl bg-foreground/5 text-muted hover:text-[#3b82f6] transition-all border border-subtle group"
+        className="p-3 rounded-2xl transition-all border group"
+        style={{
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-default)',
+          color: 'var(--fg-muted)',
+        }}
         title="Importa Piano Esistente"
       >
-        <UploadCloud className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        <UploadCloud className="w-5 h-5 group-hover:scale-110 transition-transform" style={{ color: 'var(--accent)' }} />
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="w-full max-w-xl bg-white border border-zinc-200 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div
+            className="w-full max-w-xl rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-xl)' }}
+          >
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-[#3b82f6]/10 text-[#3b82f6]">
+                <div className="p-2 rounded-xl" style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
                   <FileText className="w-5 h-5" />
                 </div>
-                <h3 className="text-xl font-black text-zinc-900">Importa Piano</h3>
+                <h3 className="text-xl font-black" style={{ color: 'var(--fg-primary)' }}>Importa Piano</h3>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-zinc-900">
+              <button onClick={() => setIsOpen(false)} style={{ color: 'var(--fg-muted)' }}>
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <button 
+              <button
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isExtracting}
-                className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed border-zinc-200 hover:border-[#3b82f6] hover:bg-blue-50 transition-all group"
+                className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed transition-all group"
+                style={{ borderColor: 'var(--border-default)', color: 'var(--fg-muted)' }}
               >
-                {isExtracting ? <Loader2 className="w-8 h-8 animate-spin text-[#3b82f6] mb-2" /> : <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-[#3b82f6] mb-2" />}
-                <span className="text-xs font-black text-zinc-500 group-hover:text-[#3b82f6] uppercase tracking-widest">Carica Foto</span>
+                {isExtracting
+                  ? <Loader2 className="w-8 h-8 animate-spin mb-2" style={{ color: 'var(--accent)' }} />
+                  : <ImageIcon className="w-8 h-8 mb-2" style={{ color: 'var(--fg-subtle)' }} />
+                }
+                <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--fg-muted)' }}>Carica Foto</span>
                 <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => pdfInputRef.current?.click()}
                 disabled={isExtracting}
-                className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed border-zinc-200 hover:border-[#3b82f6] hover:bg-blue-50 transition-all group"
+                className="flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-dashed transition-all group"
+                style={{ borderColor: 'var(--border-default)', color: 'var(--fg-muted)' }}
               >
-                {isExtracting ? <Loader2 className="w-8 h-8 animate-spin text-[#3b82f6] mb-2" /> : <FileType className="w-8 h-8 text-zinc-400 group-hover:text-[#3b82f6] mb-2" />}
-                <span className="text-xs font-black text-zinc-500 group-hover:text-[#3b82f6] uppercase tracking-widest">Carica PDF</span>
+                {isExtracting
+                  ? <Loader2 className="w-8 h-8 animate-spin mb-2" style={{ color: 'var(--accent)' }} />
+                  : <FileType className="w-8 h-8 mb-2" style={{ color: 'var(--fg-subtle)' }} />
+                }
+                <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--fg-muted)' }}>Carica PDF</span>
                 <input type="file" ref={pdfInputRef} onChange={handlePdfChange} accept="application/pdf" className="hidden" />
               </button>
             </div>
 
             <div className="space-y-2 mb-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Contenuto Analizzato</label>
+              <label className="text-[10px] font-black uppercase tracking-widest ml-1" style={{ color: 'var(--fg-subtle)' }}>Contenuto Analizzato</label>
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 placeholder="Il testo del piano apparirà qui dopo l'estrazione..."
-                className="w-full h-48 p-4 rounded-2xl bg-zinc-50 border-2 border-zinc-100 text-zinc-900 text-sm font-medium focus:border-[#3b82f6] outline-none resize-none transition-all"
+                className="w-full h-48 p-4 rounded-2xl text-sm font-medium outline-none resize-none transition-all"
+                style={{
+                  background: 'var(--bg-input)',
+                  border: '2px solid var(--border-default)',
+                  color: 'var(--fg-primary)',
+                }}
               />
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setIsOpen(false)} className="flex-1 py-4 rounded-2xl bg-zinc-100 text-zinc-500 font-bold hover:bg-zinc-200 transition-all">Annulla</button>
-              <button 
+              <button
+                onClick={() => setIsOpen(false)}
+                className="flex-1 py-4 rounded-2xl font-bold transition-all"
+                style={{ background: 'var(--bg-elevated)', color: 'var(--fg-muted)', border: '1px solid var(--border-default)' }}
+              >Annulla</button>
+              <button
                 onClick={handleImport}
                 disabled={loading || !text.trim() || isExtracting}
-                className="flex-[2] py-4 rounded-2xl bg-[#3b82f6] text-white font-black flex items-center justify-center gap-2 shadow-xl disabled:opacity-20 transition-all"
+                className="flex-[2] py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-xl disabled:opacity-20 transition-all"
+                style={{ background: 'var(--accent)', color: 'var(--accent-on)' }}
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                 {loading ? "Analisi AI..." : "Conferma e Importa"}

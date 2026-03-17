@@ -133,9 +133,9 @@ export default function ThemeToggle() {
               onClick={() => toggleVariant('light')}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all"
               style={{
-                background: !isAuto && variant === 'light' ? '#ffffff' : 'var(--bg-input)',
-                color: !isAuto && variant === 'light' ? '#000000' : 'var(--fg-muted)',
-                border: `1px solid ${!isAuto && variant === 'light' ? '#ffffff' : 'var(--border-default)'}`,
+                background: !isAuto && variant === 'light' ? 'var(--fg-primary)' : 'var(--bg-input)',
+                color: !isAuto && variant === 'light' ? 'var(--bg-base)' : 'var(--fg-muted)',
+                border: `1px solid ${!isAuto && variant === 'light' ? 'var(--border-strong)' : 'var(--border-default)'}`,
                 letterSpacing: '0.1em',
               }}
             >
@@ -145,9 +145,9 @@ export default function ThemeToggle() {
               onClick={() => toggleVariant('dark')}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all"
               style={{
-                background: !isAuto && variant === 'dark' ? '#000000' : 'var(--bg-input)',
-                color: !isAuto && variant === 'dark' ? '#ffffff' : 'var(--fg-muted)',
-                border: `1px solid ${!isAuto && variant === 'dark' ? '#333' : 'var(--border-default)'}`,
+                background: !isAuto && variant === 'dark' ? 'var(--bg-base)' : 'var(--bg-input)',
+                color: !isAuto && variant === 'dark' ? 'var(--fg-primary)' : 'var(--fg-muted)',
+                border: `1px solid ${!isAuto && variant === 'dark' ? 'var(--border-strong)' : 'var(--border-default)'}`,
                 letterSpacing: '0.1em',
               }}
             >

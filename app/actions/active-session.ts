@@ -104,6 +104,7 @@ export async function logSet(params: {
   repsActual: number | null
   rirActual: number | null
   isWarmup: boolean
+  feelingScore?: number | null
 }) {
   const session = await auth()
   if (!session?.user?.id) return { error: 'Non autenticato' }
@@ -121,6 +122,7 @@ export async function logSet(params: {
       repsActual: params.repsActual,
       rirActual: params.rirActual,
       isWarmup: params.isWarmup,
+      feelingScore: params.feelingScore ?? null,
     },
     create: {
       activeSessionId: params.activeSessionId,
@@ -130,6 +132,7 @@ export async function logSet(params: {
       repsActual: params.repsActual,
       rirActual: params.rirActual,
       isWarmup: params.isWarmup,
+      feelingScore: params.feelingScore ?? null,
     },
   })
 

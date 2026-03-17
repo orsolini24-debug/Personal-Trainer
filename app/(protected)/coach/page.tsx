@@ -1,14 +1,14 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import ChatClient from "./chat-client"
+import CoachTabs from "./coach-tabs"
 import { Brain, Zap, Shield, Dumbbell } from "lucide-react"
 
 export default async function CoachPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const [activeInjuries, latestSync, activeMeso] = await Promise.all([
+  const [activeInjuries, latestSync, activeMeso, aiReports] = await Promise.all([
     prisma.injury.findMany({
       where: { userId: session.user.id, status: { not: 'RESOLVED' } },
       select: { district: true, description: true },
@@ -22,7 +22,19 @@ export default async function CoachPage() {
       where: { userId: session.user.id, status: 'ACTIVE' },
       select: { name: true, objectives: true, startDate: true, endDate: true },
     }),
+    prisma.aIReport.findMany({
+      where: { userId: session.user.id, type: 'WEEKLY' },
+      orderBy: { date: 'desc' },
+      take: 4,
+      select: { id: true, date: true, content: true },
+    }),
   ])
+
+  const serializedReports = aiReports.map(r => ({
+    id: r.id,
+    date: r.date.toISOString(),
+    content: r.content,
+  }))
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-4" style={{ height: 'calc(100dvh - 5rem)' }}>
@@ -63,7 +75,7 @@ export default async function CoachPage() {
             style={{
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-default)',
-              color: latestSync.recoveryScore > 66 ? '#10b981' : latestSync.recoveryScore > 33 ? '#f59e0b' : '#ef4444',
+              color: latestSync.recoveryScore > 66 ? 'var(--positive)' : latestSync.recoveryScore > 33 ? 'var(--warning)' : 'var(--negative)',
             }}
           >
             <Zap className="w-3 h-3" />
@@ -72,8 +84,7 @@ export default async function CoachPage() {
         )}
         {activeInjuries.length > 0 && (
           <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
-            style={{ background: '#ef444412', border: '1px solid #ef444430', color: '#ef4444' }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-negative/10 border border-negative/20 text-negative"
           >
             <Shield className="w-3 h-3" />
             {activeInjuries.length} infortun{activeInjuries.length === 1 ? 'io' : 'i'} attiv{activeInjuries.length === 1 ? 'o' : 'i'}
@@ -81,13 +92,14 @@ export default async function CoachPage() {
         )}
       </div>
 
-      {/* Chat */}
+      {/* Tab: Chat | Report — gestite lato client */}
       <div
         className="flex-1 rounded-2xl overflow-hidden flex flex-col min-h-0"
         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
       >
-        <ChatClient />
+        <CoachTabs reports={serializedReports} />
       </div>
     </div>
   )
 }
+

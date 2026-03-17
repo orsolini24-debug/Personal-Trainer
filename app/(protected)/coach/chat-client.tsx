@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Send, Brain, User, Trash2, ChevronRight } from "lucide-react"
 
 type Message = { role: "user" | "assistant", content: string }
@@ -38,21 +39,29 @@ function renderMarkdown(text: string) {
 }
 
 export default function ChatClient() {
+  const { data: session } = useSession()
+  const storageKey = `coach_chat_${session?.user?.id ?? ''}`
+
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // Load messages when user session is available
   useEffect(() => {
-    const saved = localStorage.getItem("coach_chat_v2")
-    if (saved) setMessages(JSON.parse(saved))
-  }, [])
+    if (!session?.user?.id) return
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved) setMessages(JSON.parse(saved))
+    } catch { /* corrupt storage — start fresh */ }
+  }, [session?.user?.id])
 
   useEffect(() => {
-    localStorage.setItem("coach_chat_v2", JSON.stringify(messages))
+    if (!session?.user?.id) return
+    localStorage.setItem(storageKey, JSON.stringify(messages))
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  }, [messages, session?.user?.id])
 
   const send = async (text: string) => {
     if (!text.trim() || loading) return
@@ -215,7 +224,7 @@ export default function ChatClient() {
           {messages.length > 0 && (
             <button
               type="button"
-              onClick={() => { setMessages([]); localStorage.removeItem("coach_chat_v2") }}
+              onClick={() => { setMessages([]); localStorage.removeItem(storageKey) }}
               className="p-2.5 rounded-xl transition shrink-0"
               style={{ color: 'var(--fg-subtle)', background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
               title="Nuova conversazione"

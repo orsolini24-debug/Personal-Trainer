@@ -98,7 +98,7 @@ function PlateCalculator({
       <div className="fixed inset-x-0 bottom-0 z-50 bg-surface border-t border-default rounded-t-[2rem] p-6 shadow-2xl animate-slide-up">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-primary flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[#3b82f6]" /> Calcolatore Dischi
+            <Layers className="w-5 h-5 text-accent" /> Calcolatore Dischi
           </h3>
           <button onClick={onClose} className="text-muted hover:text-primary p-1">
             <X className="w-6 h-6" />
@@ -116,7 +116,7 @@ function PlateCalculator({
               <Plus className="w-5 h-5" />
             </button>
           </div>
-          {remaining > 0 && <p className="text-xs text-[#f59e0b] mt-2">Impossibile ottenere peso esatto (mancano {remaining * 2}kg)</p>}
+          {remaining > 0 && <p className="text-xs text-warning mt-2">Impossibile ottenere peso esatto (mancano {remaining * 2}kg)</p>}
         </div>
 
         <div className="bg-base p-4 rounded-xl border border-subtle mb-6">
@@ -129,8 +129,8 @@ function PlateCalculator({
                 <div key={idx} className="flex flex-col items-center">
                   <div className="w-8 flex items-end justify-center gap-0.5" style={{ height: '80px' }}>
                     {Array.from({ length: p.count }).map((_, i) => (
-                      <div key={i} className="w-3 bg-[#3b82f6] rounded-sm border border-white/20" 
-                        style={{ height: `${Math.max(20, p.weight * 3)}px` }}></div>
+                      <div key={i} className="w-3 rounded-sm border border-white/20"
+                        style={{ background: 'var(--accent)', height: `${Math.max(20, p.weight * 3)}px` }}></div>
                     ))}
                   </div>
                   <span className="text-xs font-bold text-primary mt-2">{p.weight}</span>
@@ -143,7 +143,7 @@ function PlateCalculator({
 
         <button 
           onClick={() => { onApply(targetWeight); onClose() }}
-          className="w-full py-4 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-transform active:scale-95"
+          className="w-full py-4 bg-gradient-to-r from-accent to-accent2 text-white rounded-xl font-bold text-lg transition-transform active:scale-95"
         >
           Usa questo peso
         </button>
@@ -237,6 +237,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
   const [reps, setReps] = useState('')
   const [rir, setRir] = useState('')
   const [isWarmup, setIsWarmup] = useState(false)
+  const [feeling, setFeeling] = useState<number>(3)
 
   // Sessione finita
   const [showFinish, setShowFinish] = useState(false)
@@ -297,10 +298,21 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
         if (prev <= 1) {
           clearInterval(restTimerRef.current!)
           setIsResting(false)
-          // Play sound
+          // Play beep via Web Audio API (no external URL dependency)
           if (typeof window !== 'undefined') {
-             const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg")
-             audio.play().catch(e => console.error("Audio play failed:", e))
+            try {
+              const ctx = new AudioContext()
+              const osc = ctx.createOscillator()
+              const gain = ctx.createGain()
+              osc.connect(gain)
+              gain.connect(ctx.destination)
+              osc.frequency.value = 880
+              osc.type = 'sine'
+              gain.gain.setValueAtTime(0.3, ctx.currentTime)
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
+              osc.start(ctx.currentTime)
+              osc.stop(ctx.currentTime + 0.4)
+            } catch { /* audio non disponibile */ }
           }
           return 0
         }
@@ -349,6 +361,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       repsActual: newSet.repsActual,
       rirActual: newSet.rirActual,
       isWarmup: newSet.isWarmup,
+      feelingScore: isWarmup ? null : feeling,
     })
 
     // Avvia rest timer (solo se non warm-up)
@@ -357,7 +370,8 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
     // Reset inputs but keep weight
     setReps('')
     setIsWarmup(false)
-  }, [ex, done, totalDone, weight, reps, rir, isWarmup, quickMode, data.activeSessionId, startRest])
+    setFeeling(3)
+  }, [ex, done, totalDone, weight, reps, rir, isWarmup, feeling, quickMode, data.activeSessionId, startRest])
 
   // Copia da precedente
   const fillFromPrevious = () => {
@@ -419,7 +433,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
   }
 
   const sessionColors: Record<string, string> = {
-    A: '#10b981', B: '#3b82f6', C: '#8b5cf6', D: '#f59e0b', V1: '#ef4444', V2: '#94a3b8'
+    A: 'var(--positive)', B: 'var(--accent)', C: 'var(--accent2)', D: 'var(--warning)', V1: 'var(--negative)', V2: 'var(--fg-muted)'
   }
   const accent = sessionColors[data.sessionType] ?? 'var(--accent)'
   const prevBest = ex?.previousSets.find(s => s.setNumber === totalDone + 1) ?? ex?.previousSets[0]
@@ -501,7 +515,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
 
       {/* ── Top bar ── */}
       <div
-        className="shrink-0 flex items-center justify-between px-4 py-3 bg-[#0d0d1a]"
+        className="shrink-0 flex items-center justify-between px-4 py-3 bg-base"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <button onClick={handleAbandon} className="p-2 rounded-xl text-muted hover:bg-white/5">
@@ -512,7 +526,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
           <span className="text-lg font-black tabular-nums tracking-wider text-primary">
             {fmt(elapsedSecs)}
           </span>
-          <span className="text-[10px] font-bold uppercase text-[#3b82f6] tracking-widest flex items-center gap-1">
+          <span className="text-[10px] font-bold uppercase text-accent tracking-widest flex items-center gap-1">
             Vol: {totalVolume.toLocaleString()} kg
           </span>
         </div>
@@ -520,7 +534,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
         <button
           onClick={() => setShowFinish(true)}
           className="px-4 py-2 rounded-xl text-xs font-black text-white transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-          style={{ background: '#10b981' }}
+          style={{ background: 'var(--positive)' }}
         >
           Fine
         </button>
@@ -529,12 +543,12 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       {/* Quick Mode Toggle */}
       <div className="bg-elevated px-4 py-2 flex justify-between items-center border-b border-subtle">
         <div className="flex items-center gap-2">
-          <FastForward className={`w-4 h-4 ${quickMode ? 'text-[#f59e0b]' : 'text-muted'}`} />
+          <FastForward className={`w-4 h-4 ${quickMode ? 'text-warning' : 'text-muted'}`} />
           <span className="text-xs font-bold text-primary">Modalità Rapida</span>
         </div>
         <button 
           onClick={() => setQuickMode(!quickMode)}
-          className={`w-10 h-6 rounded-full p-1 transition-colors ${quickMode ? 'bg-[#f59e0b]' : 'bg-[#0a0a18] border border-default'}`}
+          className={`w-10 h-6 rounded-full p-1 transition-colors ${quickMode ? 'bg-warning' : 'bg-input border border-default'}`}
         >
           <div className={`w-4 h-4 rounded-full bg-white transition-transform ${quickMode ? 'translate-x-4' : 'translate-x-0'}`} />
         </button>
@@ -610,8 +624,8 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
 
         {/* Note piano */}
         {ex.planNotes && (
-          <div className="px-4 py-3 rounded-xl text-sm leading-relaxed flex items-start gap-3 bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-primary">
-            <AlertTriangle className="w-5 h-5 shrink-0 text-[#f59e0b]" />
+          <div className="px-4 py-3 rounded-xl text-sm leading-relaxed flex items-start gap-3 bg-warning/10 border border-warning/20 text-primary">
+            <AlertTriangle className="w-5 h-5 shrink-0 text-warning" />
             <p>{ex.planNotes}</p>
           </div>
         )}
@@ -643,13 +657,13 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
 
             if (logged) {
               return (
-                <div key={setNum} className="grid grid-cols-12 gap-2 items-center px-3 py-4 rounded-2xl bg-[#10b981]/10 border border-[#10b981]/20">
-                  <span className="col-span-2 text-sm font-black text-center text-[#10b981]">{setNum}</span>
+                <div key={setNum} className="grid grid-cols-12 gap-2 items-center px-3 py-4 rounded-2xl bg-positive/10 border border-positive/20">
+                  <span className="col-span-2 text-sm font-black text-center text-positive">{setNum}</span>
                   <span className="col-span-3 text-lg font-black text-center text-primary">{logged.weightKg}</span>
                   <span className="col-span-3 text-lg font-black text-center text-primary">{logged.repsActual}</span>
                   {!quickMode && <span className="col-span-2 text-sm font-bold text-center text-muted">{logged.rirActual ?? '-'}</span>}
                   <div className={`flex justify-center ${quickMode ? 'col-span-4' : 'col-span-2'}`}>
-                    <Check className="w-5 h-5 text-[#10b981]" />
+                    <Check className="w-5 h-5 text-positive" />
                   </div>
                 </div>
               )
@@ -661,7 +675,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                   <div className="grid grid-cols-12 gap-2 items-center p-3 rounded-2xl bg-surface border border-default shadow-lg">
                     <div className="col-span-2 flex flex-col items-center">
                       <span className="text-xs font-black text-primary bg-white/10 w-6 h-6 rounded-full flex items-center justify-center mb-1">{setNum}</span>
-                      {isWarmup && <span className="text-[9px] text-[#f59e0b] font-bold">WARM</span>}
+                      {isWarmup && <span className="text-[9px] text-warning font-bold">WARM</span>}
                     </div>
                     
                     {/* Active Inputs */}
@@ -710,7 +724,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                     )}
 
                     <div className={`flex justify-center gap-1 ${quickMode ? 'col-span-4' : 'col-span-2'}`}>
-                      <button 
+                      <button
                         onClick={fillFromPrevious}
                         disabled={!prevBest}
                         className="w-10 h-12 flex items-center justify-center bg-white/5 rounded-xl disabled:opacity-30 text-primary text-xl font-black"
@@ -719,6 +733,28 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                       </button>
                     </div>
                   </div>
+
+                  {/* Feeling Selector */}
+                  {!isWarmup && (
+                    <div className="flex gap-1 items-center mt-3 px-1">
+                      <span className="text-[10px] text-muted font-bold uppercase tracking-wider mr-1">Feeling:</span>
+                      {[1,2,3,4,5].map(score => (
+                        <button
+                          key={score}
+                          onClick={() => setFeeling(score)}
+                          className="w-8 h-8 rounded-lg text-sm transition-all"
+                          style={{
+                            background: feeling === score ? 'var(--accent)' : 'var(--bg-elevated)',
+                            border: `1px solid ${feeling === score ? 'var(--accent)' : 'var(--border-default)'}`,
+                            color: feeling === score ? 'white' : 'var(--fg-muted)',
+                          }}
+                        >
+                          {['😣','😤','😐','😊','🔥'][score-1]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Previous stat hint */}
                   {prevBest && (
                     <p className="text-[10px] text-center text-muted mt-1">
@@ -737,7 +773,7 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
                 <span className="col-span-3 text-sm font-bold text-center text-muted">{prev?.repsActual ?? '-'}</span>
                 {!quickMode && <span className="col-span-2 text-sm font-bold text-center text-muted">-</span>}
                 <div className={`flex justify-center ${quickMode ? 'col-span-4' : 'col-span-2'}`}>
-                  <div className="w-4 h-4 rounded-full border border-[#64748b]"></div>
+                  <div className="w-4 h-4 rounded-full border border-muted/40"></div>
                 </div>
               </div>
             )
@@ -747,11 +783,11 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       </div>
 
       {/* ── Fixed Bottom Actions ── */}
-      <div className="shrink-0 p-4 bg-[#0d0d1a] border-t border-subtle space-y-3 pb-safe">
+      <div className="shrink-0 p-4 bg-base border-t border-subtle space-y-3 pb-safe">
         <div className="flex gap-3">
           <button
             onClick={() => setIsWarmup(v => !v)}
-            className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${isWarmup ? 'bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30' : 'bg-elevated text-muted border border-subtle'}`}
+            className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${isWarmup ? 'bg-warning/20 text-warning border border-warning/30' : 'bg-elevated text-muted border border-subtle'}`}
           >
             + Warm-up
           </button>

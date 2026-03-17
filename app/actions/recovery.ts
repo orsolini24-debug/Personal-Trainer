@@ -4,11 +4,58 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { Ecosystem, DataSource } from "@prisma/client"
+import Groq from "groq-sdk"
 
 async function getUserId() {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Non autorizzato")
   return session.user.id
+}
+
+export async function parseWearableText(text: string) {
+  try {
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "missing" })
+    const prompt = `
+      Estrai i seguenti valori dal testo (se presenti): hrv, rhr, recoveryScore (0-100), sleepMin, sleepScore, ctl, atl, tsb.
+      Il testo può essere in italiano, inglese o altre lingue, e provenire da app come Suunto, Garmin, Apple Health, WHOOP.
+      
+      IMPORTANTE:
+      - sleepMin deve essere il totale dei minuti di sonno (se trovi "7h 30m" converti in 450).
+      - hrv è solitamente in ms.
+      - rhr è in bpm.
+      - recoveryScore è una percentuale o un valore 0-100.
+      - ctl, atl, tsb sono valori numerici (possono essere negativi, specialmente tsb).
+      
+      Rispondi SOLO con un JSON valido:
+      {
+        "hrv": number | null,
+        "rhr": number | null,
+        "recoveryScore": number | null,
+        "sleepMin": number | null,
+        "sleepScore": number | null,
+        "ctl": number | null,
+        "atl": number | null,
+        "tsb": number | null
+      }
+      
+      Testo da analizzare:
+      """
+      ${text}
+      """
+    `
+
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
+    })
+
+    const result = JSON.parse(completion.choices[0].message.content || "{}")
+    return { success: true, data: result }
+  } catch (error: any) {
+    console.error("Parse Error:", error)
+    return { success: false, error: error.message }
+  }
 }
 
 export async function saveRecoveryLog(data: {

@@ -1,17 +1,8 @@
 import { prisma } from "@/lib/prisma"
 
 export async function getUserContext(userId: string) {
-  const [
-    userProfile,
-    recentSessions,
-    recentNutrition,
-    latestSync,
-    activeInjuries,
-    latestBiometric,
-    activeMesocycle,
-    plannedToday,
-    districtStressWeek,
-  ] = await Promise.all([
+  // Promise.allSettled: se un fetch fallisce, gli altri continuano
+  const results = await Promise.allSettled([
     // Profilo utente
     prisma.userProfile.findUnique({
       where: { userId }
@@ -85,9 +76,24 @@ export async function getUserContext(userId: string) {
     }),
   ])
 
+  // Unwrap allSettled results con fallback null
+  const unwrap = <T,>(r: PromiseSettledResult<T>): T | null =>
+    r.status === 'fulfilled' ? r.value : null
+
+  const [r0, r1, r2, r3, r4, r5, r6, r7, r8] = results
+  const userProfile       = unwrap(r0)
+  const recentSessions    = unwrap(r1) ?? []
+  const recentNutrition   = unwrap(r2) ?? []
+  const latestSync        = unwrap(r3)
+  const activeInjuries    = unwrap(r4) ?? []
+  const latestBiometric   = unwrap(r5)
+  const activeMesocycle   = unwrap(r6)
+  const plannedToday      = unwrap(r7)
+  const districtStressWeek = unwrap(r8) ?? []
+
   // Aggrega stress per distretto
   const stressByDistrict: Record<string, number> = {}
-  for (const ds of districtStressWeek) {
+  for (const ds of districtStressWeek ?? []) {
     stressByDistrict[ds.district] = (stressByDistrict[ds.district] ?? 0) + ds.intensity
   }
 

@@ -32,7 +32,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         icon: <Dumbbell size={18} />,
-        color: '#3b82f6',
+        color: 'var(--accent)',
         title: 'Come usare il Training Log',
         href: '/training',
         desc: 'Registra ogni sessione con esercizi, carichi, RIR e RPE. Il sistema calcola automaticamente il Training Load e tiene traccia del volume per ogni distretto muscolare.',
@@ -47,10 +47,10 @@ const SECTIONS: Section[] = [
             name: 'RIR — Reps In Reserve',
             what: 'Indica quante ripetizioni extra avresti potuto fare prima del cedimento. È una misura dell\'intensità relativa dell\'esercizio. Più basso è il RIR, più vicino al cedimento stai lavorando.',
             values: [
-              { range: 'RIR 0', meaning: 'Cedimento tecnico — ultima ripetizione possibile. Alta risposta ormonale ma rischio maggiore di infortunio e recupero lungo.', color: '#ef4444' },
-              { range: 'RIR 1–2', meaning: 'Zona ipertrofia ottimale. Stimolo elevato con gestione del recupero ancora sostenibile.', color: '#f59e0b' },
-              { range: 'RIR 3–4', meaning: 'Zona forza/tecnica. Usato nei periodi di accumulo o per esercizi tecnici come Squat e Stacco.', color: '#10b981' },
-              { range: 'RIR 5+', meaning: 'Lavoro leggero, deload o riscaldamento. Poco stimolo ipertrofico.', color: '#64748b' },
+              { range: 'RIR 0', meaning: 'Cedimento tecnico — ultima ripetizione possibile. Alta risposta ormonale ma rischio maggiore di infortunio e recupero lungo.', color: 'var(--negative)' },
+              { range: 'RIR 1–2', meaning: 'Zona ipertrofia ottimale. Stimolo elevato con gestione del recupero ancora sostenibile.', color: 'var(--warning)' },
+              { range: 'RIR 3–4', meaning: 'Zona forza/tecnica. Usato nei periodi di accumulo o per esercizi tecnici come Squat e Stacco.', color: 'var(--positive)' },
+              { range: 'RIR 5+', meaning: 'Lavoro leggero, deload o riscaldamento. Poco stimolo ipertrofico.', color: 'var(--fg-subtle)' },
             ],
             howToRead: 'Annota il RIR a fine serie mentre l\'impressione è fresca. Con l\'esperienza diventa uno strumento preciso quanto i % di 1RM.',
           },
@@ -58,10 +58,10 @@ const SECTIONS: Section[] = [
             name: 'RPE — Rate of Perceived Exertion',
             what: 'Scala di percezione dello sforzo globale della sessione (1–10). Sviluppata da Mike Tuchscherer per il powerlifting, è oggi usata in tutti gli sport di forza. Correla direttamente con il carico effettivo sul sistema nervoso centrale.',
             values: [
-              { range: 'RPE 6–7', meaning: 'Sessione leggera. Recupero rapido, adatto a deload o giorni di volume basso.', color: '#10b981' },
-              { range: 'RPE 7–8', meaning: 'Intensità moderata. Zona di lavoro ottimale per la maggior parte delle sessioni di un mesociclo di accumulo.', color: '#3b82f6' },
-              { range: 'RPE 8–9', meaning: 'Sessione intensa. Richiede 48–72h di recupero completo. Tipico delle fasi di intensificazione.', color: '#f59e0b' },
-              { range: 'RPE 9–10', meaning: 'Massimale o quasi. Usare raramente — picchi di performance, test di 1RM, gare.', color: '#ef4444' },
+              { range: 'RPE 6–7', meaning: 'Sessione leggera. Recupero rapido, adatto a deload o giorni di volume basso.', color: 'var(--positive)' },
+              { range: 'RPE 7–8', meaning: 'Intensità moderata. Zona di lavoro ottimale per la maggior parte delle sessioni di un mesociclo di accumulo.', color: 'var(--accent)' },
+              { range: 'RPE 8–9', meaning: 'Sessione intensa. Richiede 48–72h di recupero completo. Tipico delle fasi di intensificazione.', color: 'var(--warning)' },
+              { range: 'RPE 9–10', meaning: 'Massimale o quasi. Usare raramente — picchi di performance, test di 1RM, gare.', color: 'var(--negative)' },
             ],
           },
           {
@@ -77,10 +77,10 @@ const SECTIONS: Section[] = [
             name: 'Distretto muscolare & Tensione percepita',
             what: 'Dopo ogni sessione indica (0–10) quanto ogni distretto muscolare è stato sollecitato. Questi dati alimentano la matrice di recupero nel modulo Recovery, permettendo di vedere quali muscoli sono ancora affaticati nei giorni successivi.',
             values: [
-              { range: '0–2', meaning: 'Non coinvolto o minimo. Muscolo fresco, disponibile per carichi elevati.', color: '#10b981' },
-              { range: '3–5', meaning: 'Lavoro moderato. Leggero affaticamento, recupero in 24–36h.', color: '#3b82f6' },
-              { range: '6–8', meaning: 'Stimolo elevato. DOMS probabile, recupero 48–72h.', color: '#f59e0b' },
-              { range: '9–10', meaning: 'Massimale. Evita di ricaricare questo distretto per 72–96h.', color: '#ef4444' },
+              { range: '0–2', meaning: 'Non coinvolto o minimo. Muscolo fresco, disponibile per carichi elevati.', color: 'var(--positive)' },
+              { range: '3–5', meaning: 'Lavoro moderato. Leggero affaticamento, recupero in 24–36h.', color: 'var(--accent)' },
+              { range: '6–8', meaning: 'Stimolo elevato. DOMS probabile, recupero 48–72h.', color: 'var(--warning)' },
+              { range: '9–10', meaning: 'Massimale. Evita di ricaricare questo distretto per 72–96h.', color: 'var(--negative)' },
             ],
           },
         ],
@@ -92,7 +92,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         icon: <Utensils size={18} />,
-        color: '#f59e0b',
+        color: 'var(--warning)',
         title: 'Come usare Nutrition Log',
         href: '/nutrition',
         desc: 'Traccia ogni pasto con calorie e macronutrienti. Il sistema differenzia i target tra giorni di allenamento e giorni di riposo per ottimizzare composizione corporea e performance.',
@@ -107,19 +107,19 @@ const SECTIONS: Section[] = [
             name: 'Calorie & TDEE',
             what: 'Le calorie totali giornaliere (kcal) determinano se sei in surplus (guadagno massa), mantenimento o deficit (perdita grasso). Il TDEE (Total Daily Energy Expenditure) è la tua spesa energetica totale e varia in base a BMR, attività fisica e NEAT.',
             values: [
-              { range: 'Deficit −300/−500 kcal', meaning: 'Perdita grasso ottimale. Preserva la massa muscolare se le proteine sono adeguate.', color: '#3b82f6' },
-              { range: 'Mantenimento ±100 kcal', meaning: 'Ricomposizione corporea o fasi di picco performance senza variazioni di peso.', color: '#10b981' },
-              { range: 'Surplus +200/+400 kcal', meaning: 'Lean bulk. Crescita muscolare con accumulo minimo di grasso.', color: '#f59e0b' },
-              { range: 'Surplus +500 kcal+', meaning: 'Bulk aggressivo. Crescita rapida ma con accumulo significativo di grasso.', color: '#ef4444' },
+              { range: 'Deficit −300/−500 kcal', meaning: 'Perdita grasso ottimale. Preserva la massa muscolare se le proteine sono adeguate.', color: 'var(--accent)' },
+              { range: 'Mantenimento ±100 kcal', meaning: 'Ricomposizione corporea o fasi di picco performance senza variazioni di peso.', color: 'var(--positive)' },
+              { range: 'Surplus +200/+400 kcal', meaning: 'Lean bulk. Crescita muscolare con accumulo minimo di grasso.', color: 'var(--warning)' },
+              { range: 'Surplus +500 kcal+', meaning: 'Bulk aggressivo. Crescita rapida ma con accumulo significativo di grasso.', color: 'var(--negative)' },
             ],
           },
           {
             name: 'Proteine',
             what: 'I macronutrienti più importanti per un atleta. Le proteine costruiscono e riparano il tessuto muscolare (sintesi proteica muscolare, MPS). La distribuzione durante il giorno conta quasi quanto il totale giornaliero.',
             values: [
-              { range: '1.6–2.2 g/kg peso corporeo', meaning: 'Range ottimale per la maggior parte degli atleti di forza. La soglia alta è utile in deficit calorico per preservare la massa magra.', color: '#10b981' },
-              { range: '2.2–3.0 g/kg', meaning: 'Utile in fasi di deficit aggressivo o per atleti drug-free con alto volume di training.', color: '#3b82f6' },
-              { range: '< 1.6 g/kg', meaning: 'Insufficiente per supportare l\'ipertrofia. Rischio di perdita di massa magra.', color: '#ef4444' },
+              { range: '1.6–2.2 g/kg peso corporeo', meaning: 'Range ottimale per la maggior parte degli atleti di forza. La soglia alta è utile in deficit calorico per preservare la massa magra.', color: 'var(--positive)' },
+              { range: '2.2–3.0 g/kg', meaning: 'Utile in fasi di deficit aggressivo o per atleti drug-free con alto volume di training.', color: 'var(--accent)' },
+              { range: '< 1.6 g/kg', meaning: 'Insufficiente per supportare l\'ipertrofia. Rischio di perdita di massa magra.', color: 'var(--negative)' },
             ],
             tips: [
               'Distribuisci le proteine in 4–5 pasti da almeno 30–40g per massimizzare la MPS.',
@@ -130,17 +130,17 @@ const SECTIONS: Section[] = [
             name: 'Carboidrati',
             what: 'Il carburante principale per gli allenamenti ad alta intensità. Il glicogeno muscolare (stoccato dai carboidrati) è la fonte energetica primaria per sollevamento pesi e sprint. Un basso intake di carbo riduce la performance prima di ridurre la massa grassa.',
             values: [
-              { range: '3–5 g/kg (training day)', meaning: 'Adeguato per sessioni di forza di media intensità.', color: '#10b981' },
-              { range: '5–7 g/kg (training day pesante)', meaning: 'Supporta sessioni ad alto volume o doppi allenamenti.', color: '#3b82f6' },
-              { range: '1–3 g/kg (rest day)', meaning: 'Riduzione strategica nei giorni di riposo per ottimizzare la composizione corporea.', color: '#f59e0b' },
+              { range: '3–5 g/kg (training day)', meaning: 'Adeguato per sessioni di forza di media intensità.', color: 'var(--positive)' },
+              { range: '5–7 g/kg (training day pesante)', meaning: 'Supporta sessioni ad alto volume o doppi allenamenti.', color: 'var(--accent)' },
+              { range: '1–3 g/kg (rest day)', meaning: 'Riduzione strategica nei giorni di riposo per ottimizzare la composizione corporea.', color: 'var(--warning)' },
             ],
           },
           {
             name: 'Grassi',
             what: 'Essenziali per la produzione ormonale (testosterone, GH, cortisolo) e l\'assorbimento delle vitamine liposolubili (A, D, E, K). Non scendere mai sotto il minimo fisiologico, anche in deficit calorico.',
             values: [
-              { range: '0.8–1.2 g/kg', meaning: 'Range funzionale. Supporta la salute ormonale senza eccedere in calorie.', color: '#10b981' },
-              { range: '< 0.5 g/kg', meaning: 'Insufficiente. Rischio di calo del testosterone e compromissione del recupero ormonale.', color: '#ef4444' },
+              { range: '0.8–1.2 g/kg', meaning: 'Range funzionale. Supporta la salute ormonale senza eccedere in calorie.', color: 'var(--positive)' },
+              { range: '< 0.5 g/kg', meaning: 'Insufficiente. Rischio di calo del testosterone e compromissione del recupero ormonale.', color: 'var(--negative)' },
             ],
           },
         ],
@@ -152,7 +152,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         icon: <HeartPulse size={18} />,
-        color: '#10b981',
+        color: 'var(--positive)',
         title: 'Come usare Recovery Dashboard',
         href: '/recovery',
         desc: 'Ogni mattina inserisci i dati dalla tua app fitness (Suunto, Garmin, Polar, Oura). Il sistema elabora un semaforo di prontezza e una matrice muscolare per guidare le tue decisioni di allenamento.',
@@ -167,10 +167,10 @@ const SECTIONS: Section[] = [
             name: 'HRV — Heart Rate Variability',
             what: 'La variabilità della frequenza cardiaca misura le fluttuazioni millisecondo per millisecondo tra un battito e l\'altro. Un HRV alto indica che il sistema nervoso autonomo è ben bilanciato e il corpo è pronto allo stress. È il migliore indicatore oggettivo di recupero disponibile senza laboratorio.',
             values: [
-              { range: 'HRV molto alto (> baseline +20%)', meaning: 'Sistema nervoso parasimpatico dominante. Condizione ottimale: puoi allenarti a piena intensità.', color: '#10b981' },
-              { range: 'HRV nella norma (±10% baseline)', meaning: 'Recupero nella norma. Allenamento regolare pianificato.', color: '#3b82f6' },
-              { range: 'HRV basso (−10/−20% baseline)', meaning: 'Leggero stress fisiologico. Riduci volume o intensità del 20–30%.', color: '#f59e0b' },
-              { range: 'HRV molto basso (< −20% baseline)', meaning: 'Sistema nervoso stressato: malattia, overtraining o stress emotivo elevato. Riposo o recupero attivo.', color: '#ef4444' },
+              { range: 'HRV molto alto (> baseline +20%)', meaning: 'Sistema nervoso parasimpatico dominante. Condizione ottimale: puoi allenarti a piena intensità.', color: 'var(--positive)' },
+              { range: 'HRV nella norma (±10% baseline)', meaning: 'Recupero nella norma. Allenamento regolare pianificato.', color: 'var(--accent)' },
+              { range: 'HRV basso (−10/−20% baseline)', meaning: 'Leggero stress fisiologico. Riduci volume o intensità del 20–30%.', color: 'var(--warning)' },
+              { range: 'HRV molto basso (< −20% baseline)', meaning: 'Sistema nervoso stressato: malattia, overtraining o stress emotivo elevato. Riposo o recupero attivo.', color: 'var(--negative)' },
             ],
             howToRead: 'L\'HRV assoluto varia enormemente tra individui (range 20–200ms). Quello che conta è il tuo trend personale. Il sistema usa la tua media mobile a 7 giorni come baseline. Misura sempre la mattina, stessa posizione, stessa durata (es. 3 minuti supino).',
             tips: [
@@ -183,10 +183,10 @@ const SECTIONS: Section[] = [
             name: 'RHR — Resting Heart Rate',
             what: 'La frequenza cardiaca a riposo (battiti al minuto misurati al mattino prima di alzarsi). Un RHR elevato rispetto alla tua baseline segnala stress fisiologico, infezione, disidratazione o recupero incompleto. Atleticamente correlato con il VO2max: più sei allenato, più è basso.',
             values: [
-              { range: '< 40 bpm', meaning: 'Atleta élite ben allenato. Normale per atleti endurance di alto livello.', color: '#10b981' },
-              { range: '40–55 bpm', meaning: 'Ottimo. Associato a buona capacità aerobica e recupero efficiente.', color: '#3b82f6' },
-              { range: '55–70 bpm', meaning: 'Nella media. Accettabile per atleti amatori o in fase di costruzione.', color: '#f59e0b' },
-              { range: '> baseline +5–8 bpm', meaning: 'Segnale di allerta: possibile affaticamento, malattia in arrivo o recupero incompleto. Riduci il carico.', color: '#ef4444' },
+              { range: '< 40 bpm', meaning: 'Atleta élite ben allenato. Normale per atleti endurance di alto livello.', color: 'var(--positive)' },
+              { range: '40–55 bpm', meaning: 'Ottimo. Associato a buona capacità aerobica e recupero efficiente.', color: 'var(--accent)' },
+              { range: '55–70 bpm', meaning: 'Nella media. Accettabile per atleti amatori o in fase di costruzione.', color: 'var(--warning)' },
+              { range: '> baseline +5–8 bpm', meaning: 'Segnale di allerta: possibile affaticamento, malattia in arrivo o recupero incompleto. Riduci il carico.', color: 'var(--negative)' },
             ],
             tips: [
               'Monitora le variazioni rispetto alla tua baseline, non i valori assoluti.',
@@ -197,10 +197,10 @@ const SECTIONS: Section[] = [
             name: 'Recovery Score (0–100)',
             what: 'Indice composito calcolato dalle app fitness (Suunto, Garmin, Polar, Oura) che combina HRV, RHR, qualità del sonno e a volte parametri aggiuntivi. Ogni brand usa un algoritmo proprietario, ma il significato è analogo: misura quanto sei recuperato rispetto al tuo stato ottimale.',
             values: [
-              { range: '75–100', meaning: 'Recupero ottimale. Corpo pronto per allenamenti ad alta intensità.', color: '#10b981' },
-              { range: '50–74', meaning: 'Recupero parziale. Allenamento a intensità moderata consigliato.', color: '#3b82f6' },
-              { range: '25–49', meaning: 'Recupero insufficiente. Preferisci sessioni leggere o recupero attivo.', color: '#f59e0b' },
-              { range: '0–24', meaning: 'Recupero critico. Riposo completo o mobilità leggera. Non aggiungere stress.', color: '#ef4444' },
+              { range: '75–100', meaning: 'Recupero ottimale. Corpo pronto per allenamenti ad alta intensità.', color: 'var(--positive)' },
+              { range: '50–74', meaning: 'Recupero parziale. Allenamento a intensità moderata consigliato.', color: 'var(--accent)' },
+              { range: '25–49', meaning: 'Recupero insufficiente. Preferisci sessioni leggere o recupero attivo.', color: 'var(--warning)' },
+              { range: '0–24', meaning: 'Recupero critico. Riposo completo o mobilità leggera. Non aggiungere stress.', color: 'var(--negative)' },
             ],
           },
           {
@@ -221,10 +221,10 @@ const SECTIONS: Section[] = [
             name: 'TSB — Training Stress Balance',
             what: 'La "forma" o "prontezza" attuale. Si calcola come TSB = CTL − ATL. Un TSB positivo indica più fitness che affaticamento (pronto a performare); negativo indica più affaticamento che fitness (recupero necessario). Questo è il numero da guardare prima di una gara o di un test di forza.',
             values: [
-              { range: 'TSB > +15', meaning: 'Forma ottimale. Picco di performance. Ideale prima di gare o test massimali.', color: '#10b981' },
-              { range: 'TSB 0 / +15', meaning: 'Buona prontezza. Puoi esprimere il meglio del tuo fitness attuale.', color: '#3b82f6' },
-              { range: 'TSB −10 / 0', meaning: 'Leggero affaticamento. Allenamento produttivo ma non al massimo della performance.', color: '#f59e0b' },
-              { range: 'TSB < −30', meaning: 'Affaticamento eccessivo. Rischio di overtraining. Riduci il carico immediatamente.', color: '#ef4444' },
+              { range: 'TSB > +15', meaning: 'Forma ottimale. Picco di performance. Ideale prima di gare o test massimali.', color: 'var(--positive)' },
+              { range: 'TSB 0 / +15', meaning: 'Buona prontezza. Puoi esprimere il meglio del tuo fitness attuale.', color: 'var(--accent)' },
+              { range: 'TSB −10 / 0', meaning: 'Leggero affaticamento. Allenamento produttivo ma non al massimo della performance.', color: 'var(--warning)' },
+              { range: 'TSB < −30', meaning: 'Affaticamento eccessivo. Rischio di overtraining. Riduci il carico immediatamente.', color: 'var(--negative)' },
             ],
             howToRead: 'La maggior parte degli atleti di endurance lavora con TSB tra −10 e +5 durante l\'accumulo e cerca TSB +10/+20 per le gare. Nello sport di forza i valori sono simili ma le scale variano in base al metodo di calcolo.',
           },
@@ -232,10 +232,10 @@ const SECTIONS: Section[] = [
             name: 'ACWR — Acute:Chronic Workload Ratio',
             what: 'Il rapporto tra il carico acuto (ultima settimana) e il carico cronico (ultime 4 settimane). È il principale indicatore di rischio infortuni secondo la ricerca scientifica. Un ACWR troppo alto significa che hai aumentato il carico troppo rapidamente rispetto a quanto il tuo corpo è abituato.',
             values: [
-              { range: 'ACWR 0.8–1.3', meaning: 'Zona sicura ("sweet spot"). Carico ben bilanciato con il fitness accumulato.', color: '#10b981' },
-              { range: 'ACWR 1.3–1.5', meaning: 'Zona di attenzione. Rischio di infortuni moderatamente aumentato.', color: '#f59e0b' },
-              { range: 'ACWR > 1.5', meaning: 'Zona rossa. Rischio infortuni significativamente aumentato. Riduci immediatamente il carico acuto.', color: '#ef4444' },
-              { range: 'ACWR < 0.8', meaning: 'Sottoallenato o in deload. Forma in calo, ma rischio infortuni basso.', color: '#64748b' },
+              { range: 'ACWR 0.8–1.3', meaning: 'Zona sicura ("sweet spot"). Carico ben bilanciato con il fitness accumulato.', color: 'var(--positive)' },
+              { range: 'ACWR 1.3–1.5', meaning: 'Zona di attenzione. Rischio di infortuni moderatamente aumentato.', color: 'var(--warning)' },
+              { range: 'ACWR > 1.5', meaning: 'Zona rossa. Rischio infortuni significativamente aumentato. Riduci immediatamente il carico acuto.', color: 'var(--negative)' },
+              { range: 'ACWR < 0.8', meaning: 'Sottoallenato o in deload. Forma in calo, ma rischio infortuni basso.', color: 'var(--fg-subtle)' },
             ],
             tips: [
               'Fonte: Gabbett (2016) — "The training-injury prevention paradox", British Journal of Sports Medicine.',
@@ -246,9 +246,9 @@ const SECTIONS: Section[] = [
             name: 'Sleep Score & Qualità del Sonno',
             what: 'Il sonno è il principale fattore di recupero. Durante il sonno profondo (NREM fase 3–4) si verifica il picco di secrezione del GH (ormone della crescita), la riparazione muscolare e il consolidamento della memoria motoria. La qualità del sonno impatta HRV, RHR e performance cognitiva.',
             values: [
-              { range: '7–9 ore + score alto', meaning: 'Recupero ottimale. Massima sintesi proteica notturna e riparazione tissutale.', color: '#10b981' },
-              { range: '6–7 ore', meaning: 'Sufficiente ma non ottimale. Performance cognitiva e fisica leggermente ridotta.', color: '#f59e0b' },
-              { range: '< 6 ore', meaning: 'Privazione del sonno. HRV basso, cortisolo elevato, ridotta toleranza al dolore. Non allenarti ad alta intensità.', color: '#ef4444' },
+              { range: '7–9 ore + score alto', meaning: 'Recupero ottimale. Massima sintesi proteica notturna e riparazione tissutale.', color: 'var(--positive)' },
+              { range: '6–7 ore', meaning: 'Sufficiente ma non ottimale. Performance cognitiva e fisica leggermente ridotta.', color: 'var(--warning)' },
+              { range: '< 6 ore', meaning: 'Privazione del sonno. HRV basso, cortisolo elevato, ridotta toleranza al dolore. Non allenarti ad alta intensità.', color: 'var(--negative)' },
             ],
             tips: [
               'La privazione del sonno riduce il testosterone del 10–15% già dopo 5 notti da 5 ore.',
@@ -265,7 +265,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         icon: <Bot size={18} />,
-        color: '#6366f1',
+        color: 'var(--accent2)',
         title: 'Come usare AI Coach',
         href: '/coach',
         desc: 'Il coach AI ha accesso in tempo reale a tutte le tue sessioni, macro, recovery score e metriche corporee. Puoi chiedergli analisi, consigli e programmazione personalizzata.',
@@ -297,7 +297,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         icon: <Scale size={18} />,
-        color: '#ec4899',
+        color: 'var(--text-accent2, var(--accent2))',
         title: 'Body Metrics',
         href: '/body',
         desc: 'Traccia composizione corporea nel tempo. Il grafico mostra trend di peso, % grasso e misure per valutare la risposta al training e alla dieta.',
@@ -321,17 +321,17 @@ const SECTIONS: Section[] = [
             name: 'Body Fat % (% Grasso Corporeo)',
             what: 'La percentuale di grasso sul peso totale. I metodi di misurazione variano in accuratezza: plicometria (±3%), DEXA (±1–2%), impedenziometria (±3–5%). Quello che conta è la tendenza nel tempo con lo stesso metodo.',
             values: [
-              { range: '6–12% (uomini)', meaning: 'Atleta competitivo in forma da gara. Non sostenibile a lungo termine.', color: '#3b82f6' },
-              { range: '12–18% (uomini)', meaning: 'Fisico atletico. Ottimale per performance e salute a lungo termine.', color: '#10b981' },
-              { range: '18–25% (uomini)', meaning: 'Nella media. Buona base di partenza per un programma di ricomposizione.', color: '#f59e0b' },
-              { range: '14–20% (donne)', meaning: 'Atletico. Range ottimale per la salute ormonale femminile.', color: '#10b981' },
+              { range: '6–12% (uomini)', meaning: 'Atleta competitivo in forma da gara. Non sostenibile a lungo termine.', color: 'var(--accent)' },
+              { range: '12–18% (uomini)', meaning: 'Fisico atletico. Ottimale per performance e salute a lungo termine.', color: 'var(--positive)' },
+              { range: '18–25% (uomini)', meaning: 'Nella media. Buona base di partenza per un programma di ricomposizione.', color: 'var(--warning)' },
+              { range: '14–20% (donne)', meaning: 'Atletico. Range ottimale per la salute ormonale femminile.', color: 'var(--positive)' },
             ],
           },
         ],
       },
       {
         icon: <CalendarDays size={18} />,
-        color: '#8b5cf6',
+        color: 'var(--accent2)',
         title: 'Plan Manager',
         href: '/plan',
         desc: 'Gestisci il mesociclo attivo, monitora i KPI di forza e pianifica obiettivi con timeline e milestone.',
@@ -346,10 +346,10 @@ const SECTIONS: Section[] = [
             name: 'Struttura del Mesociclo',
             what: 'Un mesociclo è un blocco di allenamento di 4–8 settimane con un obiettivo specifico. Si articola in microcicli (settimane) che tipicamente seguono la sequenza: Accumulo → Intensificazione → Realizzazione → Deload.',
             values: [
-              { range: 'Accumulo (sett. 1–3)', meaning: 'Volume alto, intensità moderata. Costruisci la base. RPE 7–8, RIR 2–4.', color: '#3b82f6' },
-              { range: 'Intensificazione (sett. 4–5)', meaning: 'Volume moderato, intensità alta. Aumenti i carichi. RPE 8–9, RIR 1–2.', color: '#f59e0b' },
-              { range: 'Realizzazione / Peak (sett. 6)', meaning: 'Volume basso, intensità massima. Test o gara. RPE 9–10.', color: '#ef4444' },
-              { range: 'Deload (sett. 7)', meaning: 'Volume ridotto al 40–50%. Recupero attivo. TSB sale, sei pronto per il ciclo successivo.', color: '#10b981' },
+              { range: 'Accumulo (sett. 1–3)', meaning: 'Volume alto, intensità moderata. Costruisci la base. RPE 7–8, RIR 2–4.', color: 'var(--accent)' },
+              { range: 'Intensificazione (sett. 4–5)', meaning: 'Volume moderato, intensità alta. Aumenti i carichi. RPE 8–9, RIR 1–2.', color: 'var(--warning)' },
+              { range: 'Realizzazione / Peak (sett. 6)', meaning: 'Volume basso, intensità massima. Test o gara. RPE 9–10.', color: 'var(--negative)' },
+              { range: 'Deload (sett. 7)', meaning: 'Volume ridotto al 40–50%. Recupero attivo. TSB sale, sei pronto per il ciclo successivo.', color: 'var(--positive)' },
             ],
           },
         ],

@@ -43,24 +43,24 @@ export default function RecoveryHistory({ history }: { history: any[] }) {
       {/* Charts */}
       {chartData.length >= 2 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-base p-4 rounded-xl border border-subtle">
+          <div className="bg-base p-4 rounded-xl border border-border-subtle">
             <h3 className="text-xs text-muted mb-2 uppercase tracking-wider font-semibold">Trend HRV</h3>
             <div className="h-20 w-full relative">
               {hrvPoints ? (
-                <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-full overflow-visible">
-                  <polyline fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={hrvPoints} />
+                <svg viewBox="0 0 100 40" className="w-full h-full overflow-visible">
+                  <polyline fill="none" stroke="var(--accent2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={hrvPoints} />
                 </svg>
               ) : <p className="text-xs text-muted">Dati insufficienti</p>}
             </div>
           </div>
-          <div className="bg-base p-4 rounded-xl border border-subtle">
+          <div className="bg-base p-4 rounded-xl border border-border-subtle">
             <h3 className="text-xs text-muted mb-2 uppercase tracking-wider font-semibold">Trend TSB (Forma)</h3>
             <div className="h-20 w-full relative">
               {tsbPoints ? (
-                <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                <svg viewBox="0 0 100 40" className="w-full h-full overflow-visible">
                   {/* Zero line */}
-                  <line x1="0" y1="20" x2="100" y2="20" stroke="#ef4444" strokeWidth="0.5" strokeDasharray="2,2" opacity="0.5" />
-                  <polyline fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={tsbPoints} />
+                  <line x1="0" y1="20" x2="100" y2="20" stroke="var(--negative)" strokeWidth="0.5" strokeDasharray="2,2" opacity="0.5" />
+                  <polyline fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={tsbPoints} />
                 </svg>
               ) : <p className="text-xs text-muted">Dati insufficienti</p>}
             </div>
@@ -71,7 +71,7 @@ export default function RecoveryHistory({ history }: { history: any[] }) {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="text-xs text-muted uppercase tracking-wider bg-base border-b border-subtle">
+          <thead className="text-xs text-muted uppercase tracking-wider bg-base border-b border-border-subtle">
             <tr>
               <th className="px-4 py-3 font-semibold rounded-tl-lg">Data</th>
               <th className="px-4 py-3 font-semibold">Score</th>
@@ -90,12 +90,12 @@ export default function RecoveryHistory({ history }: { history: any[] }) {
               return (
                 <tr key={log.id} className="hover:bg-foreground/5 transition-colors">
                   <td className="px-4 py-3 font-medium text-primary">{format(new Date(log.date), "dd/MM")}</td>
-                  <td className={`px-4 py-3 font-semibold ${isGoodScore ? 'text-[#10b981]' : (isBadScore ? 'text-[#ef4444]' : 'text-[#f59e0b]')}`}>
+                  <td className={`px-4 py-3 font-semibold ${isGoodScore ? 'text-positive' : (isBadScore ? 'text-negative' : 'text-warning')}`}>
                     {log.recoveryScore || '-'}
                   </td>
                   <td className="px-4 py-3 text-primary">{log.hrv || '-'}</td>
                   <td className="px-4 py-3 text-primary">{log.rhr || '-'}</td>
-                  <td className={`px-4 py-3 font-semibold ${isGoodTsb ? 'text-[#10b981]' : (isBadTsb ? 'text-[#ef4444]' : 'text-[#f59e0b]')}`}>
+                  <td className={`px-4 py-3 font-semibold ${isGoodTsb ? 'text-positive' : (isBadTsb ? 'text-negative' : 'text-warning')}`}>
                     {log.tsb || '-'}
                   </td>
                 </tr>

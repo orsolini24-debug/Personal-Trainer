@@ -51,10 +51,13 @@ export default function RegisterPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-base">
         <div className="bg-surface/40 backdrop-blur-xl p-10 rounded-[3rem] border border-default shadow-2xl max-w-md w-full text-center space-y-6">
-          <CheckCircle className="mx-auto text-[#10b981]" size={48} />
+          <CheckCircle className="mx-auto" size={48} style={{ color: 'var(--positive)' }} />
           <h2 className="text-2xl font-bold text-primary">Account creato!</h2>
           <p className="text-muted">Ora puoi accedere con le tue credenziali.</p>
-          <Link href="/login" className="block w-full bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white py-4 rounded-2xl font-bold text-center hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all hover:-translate-y-0.5">
+          <Link
+            href="/login"
+            className="btn-primary block w-full py-4 rounded-2xl font-bold text-center transition-all hover:-translate-y-0.5"
+          >
             Vai al Login
           </Link>
         </div>
@@ -64,16 +67,19 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden relative bg-base">
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#3b82f6]/10 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#6366f1]/10 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] animate-pulse" style={{ background: 'var(--accent-dim)' }} />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] animate-pulse" style={{ background: 'var(--accent2-dim)' }} />
 
       <div className="w-full max-w-md z-10 space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex p-4 bg-gradient-to-br from-[#3b82f6] to-[#6366f1] rounded-[2rem] shadow-[0_0_30px_rgba(99,102,241,0.4)] mb-4">
-            <Dumbbell size={32} className="text-white" />
+          <div
+            className="inline-flex p-4 rounded-[2rem] mb-4"
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent2))', boxShadow: '0 0 30px var(--glow-accent)' }}
+          >
+            <Dumbbell size={32} style={{ color: 'var(--accent-on)' }} />
           </div>
           <h1 className="text-5xl font-black text-primary tracking-tighter">
-            Performance<span className="text-[#3b82f6]">.</span>
+            Performance<span style={{ color: 'var(--accent)' }}>.</span>
           </h1>
           <p className="text-muted font-medium tracking-wide uppercase text-[10px]">
             Crea il tuo account gratuito
@@ -81,7 +87,10 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-surface/40 backdrop-blur-xl p-10 rounded-[3rem] border border-default shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-50" />
+          <div
+            className="absolute top-0 left-0 w-full h-1 opacity-50"
+            style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }}
+          />
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
@@ -89,7 +98,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="text" name="name" required placeholder="Giorgio"
-                  className="w-full pl-12 pr-4 py-4 bg-base border border-default rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50" />
+                  className="input-field w-full pl-12 pr-4 py-4 rounded-2xl font-medium" />
               </div>
             </div>
 
@@ -98,7 +107,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="email" name="email" required placeholder="tu@email.com"
-                  className="w-full pl-12 pr-4 py-4 bg-base border border-default rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50" />
+                  className="input-field w-full pl-12 pr-4 py-4 rounded-2xl font-medium" />
               </div>
             </div>
 
@@ -107,7 +116,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="password" name="password" required minLength={8} placeholder="Minimo 8 caratteri"
-                  className="w-full pl-12 pr-4 py-4 bg-base border border-default rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50" />
+                  className="input-field w-full pl-12 pr-4 py-4 rounded-2xl font-medium" />
               </div>
             </div>
 
@@ -116,20 +125,26 @@ export default function RegisterPage() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input type="password" name="confirmPassword" required placeholder="Ripeti la password"
-                  className={`w-full pl-12 pr-4 py-4 bg-base border rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#3b82f6] text-primary transition-all font-medium placeholder:text-muted/50 ${passwordError ? 'border-[#ef4444]' : 'border-default'}`} />
+                  className="input-field w-full pl-12 pr-4 py-4 rounded-2xl font-medium"
+                  style={passwordError ? { borderColor: 'var(--negative)' } : {}}
+                />
               </div>
-              {passwordError && <p className="text-[11px] text-[#ef4444] font-bold ml-1">{passwordError}</p>}
+              {passwordError && <p className="text-[11px] font-bold ml-1" style={{ color: 'var(--negative)' }}>{passwordError}</p>}
             </div>
 
             {error && (
-              <div className="p-4 bg-[#ef4444]/10 border border-[#ef4444]/20 rounded-2xl flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-[#ef4444] shrink-0" />
-                <p className="text-xs text-[#ef4444] font-bold">{error}</p>
+              <div
+                className="p-4 rounded-2xl flex items-center gap-3"
+                style={{ background: 'var(--negative-dim)', border: '1px solid var(--negative)' }}
+              >
+                <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: 'var(--negative)' }} />
+                <p className="text-xs font-bold" style={{ color: 'var(--negative)' }}>{error}</p>
               </div>
             )}
 
             <button type="submit" disabled={loading}
-              className="group relative w-full bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white py-4 px-6 rounded-2xl font-bold text-sm transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-1 disabled:opacity-50 flex items-center justify-center gap-2 overflow-hidden">
+              className="btn-primary group relative w-full py-4 px-6 rounded-2xl font-bold text-sm transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 flex items-center justify-center gap-2 overflow-hidden"
+            >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 <><span>Crea Account</span><ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></>
@@ -140,7 +155,7 @@ export default function RegisterPage() {
           <div className="mt-6 pt-6 border-t border-subtle text-center">
             <p className="text-xs text-muted font-medium">
               Hai già un account?{' '}
-              <Link href="/login" className="text-[#3b82f6] font-bold hover:underline">Accedi</Link>
+              <Link href="/login" className="font-bold hover:underline text-accent">Accedi</Link>
             </p>
           </div>
         </div>

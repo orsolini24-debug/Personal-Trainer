@@ -78,7 +78,7 @@ export default function CloseSessionForm({ sessionId, initialData }: { sessionId
             min="1" max="10"
             value={rpe}
             onChange={e => setRpe(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-default bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
+            className="w-full px-4 py-3 rounded-xl border border-border bg-base text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
           />
         </div>
         <div>
@@ -87,7 +87,7 @@ export default function CloseSessionForm({ sessionId, initialData }: { sessionId
             type="number"
             value={duration}
             onChange={e => setDuration(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-default bg-base text-primary focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
+            className="w-full px-4 py-3 rounded-xl border border-border bg-base text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
           />
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function CloseSessionForm({ sessionId, initialData }: { sessionId
             <button
               type="button"
               onClick={toggleRecording}
-              className={`p-1.5 rounded-full ${isRecording ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-white/5 text-muted hover:text-primary'}`}
+              className={`p-1.5 rounded-full ${isRecording ? 'bg-negative/20 text-negative animate-pulse' : 'bg-elevated text-muted hover:text-primary'}`}
             >
               {isRecording ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
             </button>
@@ -108,14 +108,14 @@ export default function CloseSessionForm({ sessionId, initialData }: { sessionId
           value={notes}
           onChange={e => setNotes(e.target.value)}
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-default bg-base text-primary resize-none focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50"
+          className="w-full px-4 py-3 rounded-xl border border-border bg-base text-primary resize-none focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
           placeholder="Come ti sei sentito? Premi il microfono per dettare."
         />
       </div>
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 px-4 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50"
+        className="w-full py-3 px-4 bg-positive hover:opacity-90 text-white rounded-xl font-medium transition-all disabled:opacity-50"
       >
         {loading ? "Salvataggio..." : "Salva & Chiudi Sessione"}
       </button>

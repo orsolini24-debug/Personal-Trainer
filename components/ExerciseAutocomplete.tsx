@@ -137,7 +137,7 @@ export default function ExerciseAutocomplete({ value, onChange, onSelect, placeh
                       {ex.nameIt || ex.name}
                     </p>
                     <div className="flex items-center gap-2">
-                      {ex.nameIt && <span className="text-[9px] text-[#64748b] truncate italic">({ex.name})</span>}
+                      {ex.nameIt && <span className="text-[9px] truncate italic" style={{ color: 'var(--fg-subtle)' }}>({ex.name})</span>}
                       {ex.primaryMuscles.length > 0 && (
                         <p className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--accent)' }}>
                           {ex.primaryMuscles[0]}

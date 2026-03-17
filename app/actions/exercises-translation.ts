@@ -33,9 +33,12 @@ ${JSON.stringify(exercisesList)}`
     })
 
     const response = JSON.parse(completion.choices[0]?.message?.content || "{}")
-    const translatedArray = response.exercises || response.translations || Object.values(response)[0]
+    const translatedArray = Array.isArray(response)
+      ? response
+      : (response.exercises || response.translations || response.items || response.data ||
+         Object.values(response).find((v): v is unknown[] => Array.isArray(v)))
 
-    if (!Array.isArray(translatedArray)) {
+    if (!Array.isArray(translatedArray) || translatedArray.length === 0) {
         console.log("Response is not an array:", response)
         throw new Error("Formato risposta AI non valido")
     }

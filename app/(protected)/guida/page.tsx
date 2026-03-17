@@ -3,7 +3,7 @@ import { Dumbbell, Utensils, HeartPulse, Bot, Scale, CalendarDays, ChevronRight,
 const modules = [
   {
     icon: Dumbbell,
-    color: "#3b82f6",
+    color: "var(--accent)",
     title: "Training Log",
     path: "/training",
     desc: "Registra ogni sessione di allenamento.",
@@ -17,7 +17,7 @@ const modules = [
   },
   {
     icon: Utensils,
-    color: "#f59e0b",
+    color: "var(--warning)",
     title: "Nutrition Log",
     path: "/nutrition",
     desc: "Traccia ogni pasto con il minimo sforzo.",
@@ -31,7 +31,7 @@ const modules = [
   },
   {
     icon: HeartPulse,
-    color: "#10b981",
+    color: "var(--positive)",
     title: "Recovery Dashboard",
     path: "/recovery",
     desc: "Monitora il recupero giornaliero da screenshot.",
@@ -45,7 +45,7 @@ const modules = [
   },
   {
     icon: Bot,
-    color: "#6366f1",
+    color: "var(--accent2)",
     title: "AI Coach",
     path: "/coach",
     desc: "Il tuo PT personale conosce tutti i tuoi dati.",
@@ -59,7 +59,7 @@ const modules = [
   },
   {
     icon: Scale,
-    color: "#ec4899",
+    color: "var(--accent2)",
     title: "Body Metrics",
     path: "/body",
     desc: "Traccia la composizione corporea nel tempo.",
@@ -72,7 +72,7 @@ const modules = [
   },
   {
     icon: CalendarDays,
-    color: "#8b5cf6",
+    color: "var(--accent2)",
     title: "Plan Manager",
     path: "/plan",
     desc: "Gestisci il mesociclo e tieni traccia dei KPI.",

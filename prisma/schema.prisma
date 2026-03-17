@@ -31,6 +31,8 @@ model User {
   workoutPlans     WorkoutPlan[]
   plannedSessions  PlannedSession[]
   activeSession    ActiveSession?
+  goals            AthleteGoal[]
+  mealTemplates    MealTemplate[]
 }
 
 model UserProfile {
@@ -90,6 +92,24 @@ model UserProfile {
   updatedAt            DateTime @updatedAt
 }
 
+model AthleteGoal {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         GoalType
+  sport        SportType?
+  description  String    @db.Text
+  targetValue  Float?
+  currentValue Float?
+  targetDate   DateTime?
+  unit         String?   // "kg", "min/km", "%", "kg/bw", etc.
+  priority     Int       @default(1)
+  isActive     Boolean   @default(true)
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
 // ─── TRAINING ────────────────────────────────────────────────────────────────
 
 model Mesocycle {
@@ -102,8 +122,10 @@ model Mesocycle {
   objectives  String?
   kpi         Json?
   status      MesoStatus @default(ACTIVE)
-  aiProposals Json?      // Memorizza le 3 opzioni generate dall'AI
-  chosenOption Int?      // Quale delle 3 è stata scelta
+  aiProposals  Json?      // Memorizza le 3 opzioni generate dall'AI
+  chosenOption Int?       // Quale delle 3 è stata scelta
+  generatedFor Json?      // Goals snapshot used to generate this meso
+  planType     String?    @default("FULL") // "FULL", "TRAINING_ONLY", "NUTRITION_ONLY"
   createdAt   DateTime @default(now())
 
   sessions     WorkoutSession[]
@@ -236,8 +258,10 @@ model PlannedSession {
   planDay          PlanDay       @relation(fields: [planDayId], references: [id])
   scheduledDate    DateTime      @db.Date
   status           PlannedStatus @default(PENDING)
-  workoutSessionId String?       @unique
-  workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
+  workoutSessionId       String?       @unique
+  workoutSession         WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
+  skipReason             String?
+  substituteForPlanDayId String?
 
   @@unique([userId, scheduledDate])
 }
@@ -269,6 +293,8 @@ model SetLog {
   repsActual      Int?
   rirActual       Int?
   isWarmup        Boolean       @default(false)
+  feelingScore    Int?          // 1=poor, 2=hard, 3=ok, 4=good, 5=great
+  perceivedLoad   Float?        // RPE this set
   completedAt     DateTime      @default(now())
 
   @@unique([activeSessionId, exerciseId, setNumber])
@@ -342,6 +368,18 @@ model FoodItem {
   carbsG     Float?
   fatG       Float?
   source     FoodSource @default(MANUAL)
+}
+
+model MealTemplate {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  mealType     MealType
+  items        Json     // Array di { name, quantityG, kcal, proteinG, carbsG, fatG }
+  totalKcal    Int
+  totalProtein Float
+  createdAt    DateTime @default(now())
 }
 
 // ─── BIOMETRIA ───────────────────────────────────────────────────────────────
@@ -624,4 +662,20 @@ enum Ecosystem {
 enum DataSource {
   MANUAL
   AI_PARSED
+}
+
+enum GoalType {
+  STRENGTH
+  HYPERTROPHY
+  ENDURANCE
+  WEIGHT_LOSS
+  WEIGHT_GAIN
+  BODY_RECOMPOSITION
+  SPORT_PERFORMANCE
+  RACE_PREP
+  MOBILITY
+  INJURY_PREVENTION
+  NUTRITION_ONLY
+  TRAINING_ONLY
+  CUSTOM
 }

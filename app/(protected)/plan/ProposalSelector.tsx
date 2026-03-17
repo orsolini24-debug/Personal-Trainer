@@ -1,9 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, ArrowRight, Shield, Zap, Sparkles, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { Check, ArrowRight, Zap, Loader2 } from 'lucide-react'
 import { selectProposal } from '@/app/actions/deep-onboarding'
 import { useRouter } from 'next/navigation'
+
+interface MesocycleData {
+  [key: string]: unknown
+}
 
 interface Proposal {
   id: number
@@ -12,10 +16,15 @@ interface Proposal {
   pros: string[]
   cons: string[]
   isRecommended: boolean
-  mesocycle: any
+  mesocycle: MesocycleData
 }
 
-export default function ProposalSelector({ mesoId, proposals }: { mesoId: string, proposals: Proposal[] }) {
+interface ProposalSelectorProps {
+  mesoId: string
+  proposals: Proposal[]
+}
+
+export default function ProposalSelector({ mesoId, proposals }: ProposalSelectorProps) {
   const [selected, setSelected] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -41,44 +50,44 @@ export default function ProposalSelector({ mesoId, proposals }: { mesoId: string
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {proposals.map((p) => (
-          <div 
+          <div
             key={p.id}
             onClick={() => setSelected(p.id)}
-            className={`relative p-6 rounded-[2.5rem] border transition-all duration-500 cursor-pointer group flex flex-col h-full ${selected === p.id ? 'bg-[#3b82f6]/5 border-[#3b82f6] shadow-[0_0_40px_rgba(59,130,246,0.15)]' : 'bg-surface border-subtle hover:border-white/20'}`}
+            className={`relative p-6 rounded-[2.5rem] border transition-all duration-500 cursor-pointer group flex flex-col h-full ${selected === p.id ? 'bg-accent/5 border-accent shadow-[0_0_40px_rgba(59,130,246,0.15)]' : 'bg-surface border-border hover:border-border-subtle'}`}
           >
             {p.isRecommended && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-accent to-accent2 text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
                 Consigliato
               </div>
             )}
 
             <div className="mb-6">
-              <h3 className={`text-xl font-black mb-2 transition-colors ${selected === p.id ? 'text-[#3b82f6]' : 'text-primary'}`}>{p.name}</h3>
+              <h3 className={`text-xl font-black mb-2 transition-colors ${selected === p.id ? 'text-accent' : 'text-primary'}`}>{p.name}</h3>
               <p className="text-sm text-muted leading-relaxed line-clamp-3 group-hover:line-clamp-none transition-all">{p.strategy}</p>
             </div>
 
             <div className="space-y-4 flex-1">
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase text-[#10b981] tracking-widest">Vantaggi</p>
+                <p className="text-[10px] font-black uppercase text-positive tracking-widest">Vantaggi</p>
                 {p.pros.map((pro, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs text-primary/80">
-                    <Check className="w-3.5 h-3.5 text-[#10b981] shrink-0 mt-0.5" />
+                    <Check className="w-3.5 h-3.5 text-positive shrink-0 mt-0.5" />
                     <span>{pro}</span>
                   </div>
                 ))}
               </div>
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase text-[#ef4444] tracking-widest">Considerazioni</p>
+                <p className="text-[10px] font-black uppercase text-negative tracking-widest">Considerazioni</p>
                 {p.cons.map((con, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs text-muted">
-                    <div className="w-1 h-1 rounded-full bg-[#ef4444] shrink-0 mt-2" />
+                    <div className="w-1 h-1 rounded-full bg-negative shrink-0 mt-2" />
                     <span>{con}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className={`mt-8 w-full py-3 rounded-2xl flex items-center justify-center font-bold text-sm transition-all ${selected === p.id ? 'bg-[#3b82f6] text-white' : 'bg-foreground/5 text-muted'}`}>
+            <div className={`mt-8 w-full py-3 rounded-2xl flex items-center justify-center font-bold text-sm transition-all ${selected === p.id ? 'bg-accent text-white' : 'bg-elevated text-muted'}`}>
               {selected === p.id ? 'Selezionato' : 'Scegli questa opzione'}
             </div>
           </div>
@@ -86,10 +95,10 @@ export default function ProposalSelector({ mesoId, proposals }: { mesoId: string
       </div>
 
       <div className="flex justify-center mt-10">
-        <button 
+        <button
           onClick={handleConfirm}
           disabled={selected === null || loading}
-          className="px-12 py-4 rounded-3xl bg-gradient-to-r from-[#10b981] to-[#059669] text-white font-black text-lg shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:opacity-20 active:scale-95 transition-all flex items-center gap-3"
+          className="px-12 py-4 rounded-3xl bg-gradient-to-r from-positive to-positive/80 text-white font-black text-lg shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:opacity-20 active:scale-95 transition-all flex items-center gap-3 hover:brightness-110"
         >
           {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Zap className="w-6 h-6" />}
           Attiva Mesociclo

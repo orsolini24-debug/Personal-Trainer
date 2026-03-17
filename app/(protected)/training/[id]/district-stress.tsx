@@ -23,7 +23,7 @@ export default function DistrictStressForm({ sessionId, initialStress }: { sessi
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
       {DISTRICTS.map((d) => (
         <div key={d} className="flex items-center justify-between">
-          <span className="text-sm font-medium">{d}</span>
+          <span className="text-sm font-medium text-primary">{d}</span>
           <div className="flex gap-1">
             {[0, 1, 2, 3].map(level => (
               <button
@@ -31,11 +31,11 @@ export default function DistrictStressForm({ sessionId, initialStress }: { sessi
                 onClick={() => handleChange(d, level)}
                 className={`w-8 h-8 rounded-md text-xs font-semibold transition-colors ${
                   (stress[d] || 0) === level
-                    ? level === 0 ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-white' 
-                    : level === 1 ? 'bg-green-500 text-white'
-                    : level === 2 ? 'bg-yellow-500 text-white'
-                    : 'bg-red-500 text-white'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    ? level === 0 ? 'bg-elevated text-primary'
+                    : level === 1 ? 'bg-positive text-white'
+                    : level === 2 ? 'bg-warning text-white'
+                    : 'bg-negative text-white'
+                    : 'bg-base text-muted hover:bg-elevated hover:text-primary'
                 }`}
               >
                 {level}
@@ -44,11 +44,11 @@ export default function DistrictStressForm({ sessionId, initialStress }: { sessi
           </div>
         </div>
       ))}
-      <div className="col-span-full mt-4 flex gap-4 text-xs text-zinc-500">
-        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-zinc-200 dark:bg-zinc-700 rounded-sm"></div> 0 (Nullo)</span>
-        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded-sm"></div> 1 (Lieve)</span>
-        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-yellow-500 rounded-sm"></div> 2 (Medio)</span>
-        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded-sm"></div> 3 (Alto)</span>
+      <div className="col-span-full mt-4 flex gap-4 text-xs text-muted">
+        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-elevated rounded-sm border border-border"></div> 0 (Nullo)</span>
+        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-positive rounded-sm"></div> 1 (Lieve)</span>
+        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-warning rounded-sm"></div> 2 (Medio)</span>
+        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-negative rounded-sm"></div> 3 (Alto)</span>
       </div>
     </div>
   )

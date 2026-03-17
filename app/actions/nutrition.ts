@@ -212,3 +212,89 @@ export async function updateNutritionTargets(nutritionDayId: string, data: { kca
     return { success: false, error: error.message }
   }
 }
+
+// ─── MEAL TEMPLATES ──────────────────────────────────────────────────────────
+
+export async function saveMealAsTemplate(mealId: string, templateName: string) {
+  try {
+    const userId = await getUserId()
+    const meal = await prisma.meal.findUnique({
+      where: { id: mealId },
+      include: { foodItems: true, nutritionDay: { select: { userId: true } } }
+    })
+    if (!meal || meal.nutritionDay.userId !== userId) throw new Error("Pasto non trovato")
+    if (meal.foodItems.length === 0) throw new Error("Il pasto è vuoto")
+
+    const items = meal.foodItems.map(fi => ({
+      name: fi.name,
+      quantityG: fi.quantityG,
+      kcal: fi.kcal,
+      proteinG: fi.proteinG,
+      carbsG: fi.carbsG,
+      fatG: fi.fatG,
+    }))
+    const totalKcal = Math.round(meal.foodItems.reduce((s, fi) => s + (fi.kcal || 0), 0))
+    const totalProtein = Math.round(meal.foodItems.reduce((s, fi) => s + (fi.proteinG || 0), 0) * 10) / 10
+
+    const template = await prisma.mealTemplate.create({
+      data: { userId, name: templateName, mealType: meal.type, items, totalKcal, totalProtein }
+    })
+    return { success: true, data: template }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getMealTemplates(mealType?: MealType) {
+  try {
+    const userId = await getUserId()
+    const templates = await prisma.mealTemplate.findMany({
+      where: { userId, ...(mealType ? { mealType } : {}) },
+      orderBy: { createdAt: "desc" }
+    })
+    return { success: true, data: templates }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function applyTemplate(mealId: string, templateId: string) {
+  try {
+    const userId = await getUserId()
+    const [template, meal] = await Promise.all([
+      prisma.mealTemplate.findUnique({ where: { id: templateId } }),
+      prisma.meal.findUnique({ where: { id: mealId }, include: { nutritionDay: { select: { userId: true } } } })
+    ])
+    if (!template || template.userId !== userId) throw new Error("Template non trovato")
+    if (!meal || meal.nutritionDay.userId !== userId) throw new Error("Pasto non trovato")
+
+    const items = template.items as Array<{ name: string, quantityG?: number, kcal?: number, proteinG?: number, carbsG?: number, fatG?: number }>
+    await prisma.foodItem.createMany({
+      data: items.map(item => ({
+        mealId,
+        name: item.name,
+        quantityG: item.quantityG ?? null,
+        kcal: item.kcal ?? null,
+        proteinG: item.proteinG ?? null,
+        carbsG: item.carbsG ?? null,
+        fatG: item.fatG ?? null,
+        source: FoodSource.TEMPLATE,
+      }))
+    })
+    await updateDayTotals(mealId)
+    revalidatePath("/nutrition")
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deleteMealTemplate(templateId: string) {
+  try {
+    const userId = await getUserId()
+    await prisma.mealTemplate.deleteMany({ where: { id: templateId, userId } })
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}

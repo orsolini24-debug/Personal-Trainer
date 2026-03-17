@@ -39,12 +39,12 @@ export default async function MesoDetailPage({ params }: { params: Promise<{ id:
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${meso.status === 'ACTIVE' ? 'bg-[#3b82f6]/10 border-[#3b82f6]/20 text-[#3b82f6]' : 'bg-foreground/5 border-subtle text-muted'}`}>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${meso.status === 'ACTIVE' ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-foreground/5 border-subtle text-muted'}`}>
               <Calendar className="w-8 h-8" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${meso.status === 'ACTIVE' ? 'bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20' : 'bg-foreground/5 text-muted border-subtle'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${meso.status === 'ACTIVE' ? 'bg-positive/10 text-positive border-positive/20' : 'bg-foreground/5 text-muted border-subtle'}`}>
                   {meso.status}
                 </span>
                 <span className="text-[10px] text-muted font-bold uppercase tracking-widest">
@@ -62,21 +62,21 @@ export default async function MesoDetailPage({ params }: { params: Promise<{ id:
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <section className="bg-surface rounded-[2.5rem] p-8 border border-subtle">
-            <h3 className="text-sm font-black uppercase tracking-widest text-[#3b82f6] mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-accent mb-4 flex items-center gap-2">
               <Info className="w-4 h-4" /> Strategia e Obiettivi
             </h3>
-            <p className="text-[#94a3b8] text-sm leading-relaxed whitespace-pre-wrap">{meso.objectives}</p>
+            <p className="text-muted text-sm leading-relaxed whitespace-pre-wrap">{meso.objectives}</p>
           </section>
 
           <section className="space-y-4">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-2">
-              <Dumbbell className="w-4 h-4 text-[#3b82f6]" /> Struttura Allenamento
+              <Dumbbell className="w-4 h-4 text-accent" /> Struttura Allenamento
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {meso.workoutPlans[0]?.planDays.map(pd => (
                 <div key={pd.id} className="bg-surface p-6 rounded-[2rem] border border-subtle">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-foreground/5 flex items-center justify-center font-black text-[#3b82f6] text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-foreground/5 flex items-center justify-center font-black text-accent text-sm">
                       {pd.dayLabel}
                     </div>
                     <p className="font-black text-primary">{pd.focus}</p>
@@ -97,8 +97,8 @@ export default async function MesoDetailPage({ params }: { params: Promise<{ id:
 
         <div className="space-y-6">
           <section className="bg-surface rounded-[2.5rem] p-6 border border-subtle">
-            <h3 className="text-sm font-black uppercase tracking-widest text-[#f59e0b] mb-4 flex items-center gap-2">
-              <Target className="w-4h-4" /> Dettagli Periodo
+            <h3 className="text-sm font-black uppercase tracking-widest text-warning mb-4 flex items-center gap-2">
+              <Target className="w-4 h-4" /> Dettagli Periodo
             </h3>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between items-center">

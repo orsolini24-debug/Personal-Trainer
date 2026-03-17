@@ -45,11 +45,17 @@ export default function ExerciseTranslator() {
 
   return (
     <div className="bg-surface border border-subtle rounded-3xl p-6 relative overflow-hidden group">
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#3b82f6]/5 rounded-full blur-3xl group-hover:bg-[#3b82f6]/10 transition-all duration-700"></div>
-      
+      <div
+        className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl transition-all duration-700"
+        style={{ background: 'var(--accent-dim)' }}
+      />
+
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] border border-[#3b82f6]/20">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
+          >
             <Languages className="w-7 h-7" />
           </div>
           <div>
@@ -62,14 +68,19 @@ export default function ExerciseTranslator() {
           <button
             onClick={() => handleTranslate(false)}
             disabled={loading}
-            className="flex-1 md:flex-none px-5 py-3 bg-white/5 hover:bg-white/10 text-primary rounded-2xl font-bold text-xs transition-all border border-subtle disabled:opacity-50"
+            className="flex-1 md:flex-none px-5 py-3 text-primary rounded-2xl font-bold text-xs transition-all border border-subtle disabled:opacity-50"
+            style={{ background: 'var(--bg-elevated)' }}
           >
             {loading && !isAuto ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Batch 30"}
           </button>
-          
+
           <button
             onClick={toggleAuto}
-            className={`flex-[2] md:flex-none px-6 py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 ${isAuto ? 'bg-red-500 text-white shadow-red-500/20' : 'bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white shadow-blue-500/20'}`}
+            className="flex-[2] md:flex-none px-6 py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+            style={isAuto
+              ? { background: 'var(--negative)', color: 'var(--accent-on)' }
+              : { background: 'var(--accent)', color: 'var(--accent-on)' }
+            }
           >
             {isAuto ? <CircleStop className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {isAuto ? "Ferma Auto" : "Traduzione Automatica"}
@@ -79,11 +90,21 @@ export default function ExerciseTranslator() {
 
       {(totalTranslated > 0 || result) && (
         <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
-          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-[#10b981] transition-all duration-1000" style={{ width: loading ? '100%' : '0%', opacity: loading ? 1 : 0 }}></div>
+          <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+            <div
+              className="h-full transition-all duration-1000"
+              style={{
+                background: 'var(--positive)',
+                width: loading ? '100%' : '0%',
+                opacity: loading ? 1 : 0,
+              }}
+            />
           </div>
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-            <span className={result?.error ? "text-red-500" : "text-[#10b981] flex items-center gap-1"}>
+            <span
+              className="flex items-center gap-1"
+              style={{ color: result?.error ? 'var(--negative)' : 'var(--positive)' }}
+            >
               {result?.error ? result.error : <><CheckCircle2 className="w-3 h-3" /> {isAuto ? "Processando..." : "Completato"}</>}
             </span>
             <span className="text-muted">Totale Sessione: {totalTranslated}</span>

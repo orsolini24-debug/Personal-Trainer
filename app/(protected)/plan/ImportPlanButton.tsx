@@ -29,7 +29,7 @@ export default function ImportPlanButton({ large }: { large?: boolean }) {
 
   if (state === 'done') {
     return (
-      <div className="flex items-center gap-2 text-sm font-bold" style={{ color: '#10b981' }}>
+      <div className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--positive)' }}>
         <CheckCircle2 className="w-4 h-4" />
         Importato!
       </div>
@@ -38,7 +38,7 @@ export default function ImportPlanButton({ large }: { large?: boolean }) {
 
   if (state === 'error') {
     return (
-      <div className="text-sm font-bold" style={{ color: '#ef4444' }}>{msg}</div>
+      <div className="text-sm font-bold" style={{ color: 'var(--negative)' }}>{msg}</div>
     )
   }
 

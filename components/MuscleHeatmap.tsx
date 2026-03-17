@@ -12,11 +12,11 @@ export default function MuscleHeatmap({ stress, side }: MuscleHeatmapProps) {
   const getFill = (district: District) => {
     const val = stress[district] || 0
     if (val === 0) return 'transparent'
-    
-    // Scale opacity based on value
-    // 1 -> 30%, 2 -> 60%, 3+ -> 90%
+
+    // Scale opacity based on value: 1 -> 30%, 2 -> 60%, 3+ -> 90%
     const opacity = Math.min(0.9, val * 0.3)
-    return `rgba(239, 68, 68, ${opacity})` // #ef4444 with opacity
+    // Use color-mix to apply opacity over var(--negative) in a theme-aware way
+    return `color-mix(in srgb, var(--negative) ${Math.round(opacity * 100)}%, transparent)`
   }
 
   // Common stroke

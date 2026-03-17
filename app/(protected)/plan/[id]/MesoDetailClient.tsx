@@ -38,10 +38,10 @@ export default function MesoDetailClient({ id, status }: { id: string, status: s
   return (
     <div className="flex gap-3">
       {status !== 'ACTIVE' && (
-        <button 
+        <button
           onClick={handleActivate}
           disabled={loading}
-          className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-[#3b82f6] to-[#6366f1] text-white rounded-2xl font-black text-sm shadow-lg disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-2xl font-black text-sm shadow-lg disabled:opacity-50 btn-primary"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
           Attiva Piano

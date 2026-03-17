@@ -10,7 +10,7 @@ const groq = new Groq({
 export async function GET(request: Request) {
   // Verifichiamo un token segreto per il cron job per sicurezza
   const authHeader = request.headers.get('authorization');
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 });
   }
 
