@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { getBiometricHistory } from "@/app/actions/body"
+import { autoSkipPastPendingSessions } from "@/app/actions/session-flex"
 import BodyForm from "./body-form"
 import BodyChart from "./body-chart"
 import BodyHistory from "./body-history"
@@ -10,6 +11,9 @@ import { Camera, Activity, Scale, Percent, TrendingDown } from "lucide-react"
 export default async function BodyPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
+
+  // Auto-skip sessioni pianificate dei giorni passati non avviate
+  await autoSkipPastPendingSessions()
 
   const res = await getBiometricHistory(30)
   const history = res.data || []
@@ -36,6 +40,22 @@ export default async function BodyPage() {
         <h1 className="text-3xl font-black tracking-tight" style={{ color: "var(--fg-primary)" }}>Body Metrics</h1>
       </div>
 
+      {/* ── Banner "pesa oggi" se non ancora loggato ── */}
+      {!todayLog && (
+        <div
+          className="flex items-center gap-4 p-4 rounded-2xl"
+          style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", border: "1px solid var(--accent)" }}
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--accent)", color: "white" }}>
+            <Scale className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: "var(--fg-primary)" }}>Peso di oggi non registrato</p>
+            <p className="text-xs" style={{ color: "var(--fg-muted)" }}>Scrolla in basso per inserirlo</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { icon: Scale, label: "Peso", value: latest?.weightKg ? latest.weightKg + " kg" : "—", color: "var(--accent)" },
@@ -56,7 +76,7 @@ export default async function BodyPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
           <section className="rounded-[2.5rem] p-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
             <h2 className="font-black text-lg mb-5" style={{ color: "var(--fg-primary)" }}>Trend Peso (30 giorni)</h2>
             <BodyChart history={history} />
@@ -66,7 +86,7 @@ export default async function BodyPage() {
             <BodyHistory history={history.slice(0, 10)} />
           </section>
         </div>
-        <div className="lg:col-span-4 space-y-4">
+        <div className="lg:col-span-4 space-y-4 order-1 lg:order-2">
           <section className="rounded-[2.5rem] p-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
             <BodyForm initialData={todayLog} />
           </section>

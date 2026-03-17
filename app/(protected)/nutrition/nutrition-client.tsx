@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { addFoodItem, deleteFoodItem, saveMealAsTemplate, getMealTemplates, applyTemplate, deleteMealTemplate } from "@/app/actions/nutrition"
+import { addFoodItem, deleteFoodItem, saveMealAsTemplate, getMealTemplates, applyTemplate, deleteMealTemplate, addMeal } from "@/app/actions/nutrition"
 import { MealType } from "@prisma/client"
 import {
   ChevronDown,
@@ -42,6 +42,7 @@ interface Meal {
 }
 
 interface NutritionDay {
+  id: string
   kcalActual?: number | null
   kcalTarget?: number | null
   proteinG?: number | null
@@ -212,6 +213,131 @@ function MacroBar({
           }}
         />
       </div>
+    </div>
+  )
+}
+
+// ── Smart Alerts ──────────────────────────────────────────────────────────────
+
+function SmartAlerts({
+  kcalActual,
+  kcalTarget,
+  proActual,
+  proTarget,
+  carbActual,
+  carbTarget,
+  isTrainingDay,
+}: {
+  kcalActual: number
+  kcalTarget: number
+  proActual: number
+  proTarget: number
+  carbActual: number
+  carbTarget: number
+  isTrainingDay: boolean
+}) {
+  const [dismissed, setDismissed] = useState<string[]>([])
+
+  useEffect(() => {
+    const stored = localStorage.getItem("nutrition_alerts_dismissed")
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        const now = Date.now()
+        // Filtra i dismiss più vecchi di 2 ore
+        const filtered = Object.entries(parsed)
+          .filter(([_, timestamp]) => now - (timestamp as number) < 2 * 60 * 60 * 1000)
+        
+        setDismissed(filtered.map(([id]) => id))
+        // Pulisci il localStorage se necessario
+        const cleanObj = Object.fromEntries(filtered)
+        localStorage.setItem("nutrition_alerts_dismissed", JSON.stringify(cleanObj))
+      } catch (e) {
+        localStorage.removeItem("nutrition_alerts_dismissed")
+      }
+    }
+  }, [])
+
+  const handleDismiss = (id: string) => {
+    const now = Date.now()
+    const stored = localStorage.getItem("nutrition_alerts_dismissed")
+    const parsed = stored ? JSON.parse(stored) : {}
+    parsed[id] = now
+    localStorage.setItem("nutrition_alerts_dismissed", JSON.stringify(parsed))
+    setDismissed((prev) => [...prev, id])
+  }
+
+  const alerts = []
+  const now = new Date()
+  const hour = now.getHours()
+
+  // 1. Protein alert: proteine < 80% del target E sono le 19:00 o più
+  if (proActual < proTarget * 0.8 && hour >= 19 && !dismissed.includes("low_protein")) {
+    alerts.push({
+      id: "low_protein",
+      type: "negative",
+      icon: <AlertTriangle className="w-4 h-4" />,
+      title: "Aggiungi proteine a cena",
+      text: `Ti mancano ancora ${Math.round(proTarget - proActual)}g di proteine per raggiungere il target.`,
+    })
+  }
+
+  // 2. Calorie alert: calorie > 110% del target
+  if (kcalActual > kcalTarget * 1.1 && !dismissed.includes("high_calories")) {
+    alerts.push({
+      id: "high_calories",
+      type: "negative",
+      icon: <AlertTriangle className="w-4 h-4" />,
+      title: "Target calorico superato",
+      text: `Hai superato il target di ${Math.round(kcalActual - kcalTarget)} kcal.`,
+    })
+  }
+
+  // 3. Carbs training alert: giorno di allenamento E carboidrati < 70%
+  if (isTrainingDay && carbActual < carbTarget * 0.7 && !dismissed.includes("low_carbs_training")) {
+    alerts.push({
+      id: "low_carbs_training",
+      type: "warning",
+      icon: <Zap className="w-4 h-4" />,
+      title: "Carboidrati bassi",
+      text: "Giorno di allenamento: aumenta i carboidrati per supportare la performance.",
+    })
+  }
+
+  if (alerts.length === 0) return null
+
+  return (
+    <div className="space-y-3">
+      {alerts.map((alert) => (
+        <div
+          key={alert.id}
+          className="flex items-start gap-3 px-4 py-3.5 rounded-2xl animate-slide-up relative group"
+          style={{
+            background: `var(--${alert.type}-dim)`,
+            border: `1px solid var(--${alert.type})`,
+          }}
+        >
+          <div style={{ color: `var(--${alert.type})` }} className="mt-0.5 shrink-0">
+            {alert.icon}
+          </div>
+          <div className="flex-1 pr-6">
+            <p className="text-sm font-bold" style={{ color: `var(--${alert.type})` }}>
+              {alert.title}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--fg-muted)" }}>
+              {alert.text}
+            </p>
+          </div>
+          <button
+            onClick={() => handleDismiss(alert.id)}
+            className="absolute top-3 right-3 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ color: "var(--fg-subtle)" }}
+            aria-label="Dismiss alert"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
     </div>
   )
 }
@@ -389,33 +515,16 @@ export default function NutritionClient({
         </div>
       </div>
 
-      {/* ── Protein alert ── */}
-      {proMissing > 10 && (
-        <div
-          className="flex items-start gap-3 px-4 py-3.5 rounded-2xl animate-slide-up"
-          style={{
-            background: "var(--negative-dim)",
-            border: "1px solid var(--negative)",
-          }}
-        >
-          <AlertTriangle
-            className="w-4 h-4 shrink-0 mt-0.5"
-            style={{ color: "var(--negative)" }}
-          />
-          <div>
-            <p className="text-sm font-bold" style={{ color: "var(--negative)" }}>
-              Obiettivo proteine a rischio
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: "var(--fg-muted)" }}>
-              Ti mancano ancora{" "}
-              <span className="font-bold" style={{ color: "var(--negative)" }}>
-                {proMissing}g
-              </span>{" "}
-              — aggiungi yogurt greco, whey o petto di pollo.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* ── Smart Alerts ── */}
+      <SmartAlerts
+        kcalActual={kcalActual}
+        kcalTarget={kcalTarget}
+        proActual={proActual}
+        proTarget={proTarget}
+        carbActual={carbActual}
+        carbTarget={carbTarget}
+        isTrainingDay={!!initialDay.isTrainingDay}
+      />
 
       {/* ── Meal cards ── */}
       <div className="space-y-3 stagger">
@@ -424,18 +533,121 @@ export default function NutritionClient({
         ))}
       </div>
 
-      {/* Empty meals message */}
-      {(initialDay.meals ?? []).length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
+      {/* ── Aggiungi pasto picker ── */}
+      <AddMealPicker
+        dayId={initialDay.id}
+        existingTypes={(initialDay.meals ?? []).map(m => m.type)}
+        isTrainingDay={!!initialDay.isTrainingDay}
+        onAdded={() => router.refresh()}
+      />
+    </div>
+  )
+}
+
+// ── AddMealPicker ──────────────────────────────────────────────────────────────
+
+const ALL_MEAL_TYPES: { type: MealType; label: string; icon: React.ReactNode; color: string }[] = [
+  { type: MealType.BREAKFAST,    label: "Colazione",    icon: <Coffee   className="w-4 h-4" />, color: "var(--warning)" },
+  { type: MealType.LUNCH,        label: "Pranzo",       icon: <Sun      className="w-4 h-4" />, color: "var(--accent)" },
+  { type: MealType.PRE_WORKOUT,  label: "Pre-workout",  icon: <Dumbbell className="w-4 h-4" />, color: "var(--positive)" },
+  { type: MealType.POST_WORKOUT, label: "Post-workout", icon: <Dumbbell className="w-4 h-4" />, color: "var(--positive)" },
+  { type: MealType.DINNER,       label: "Cena",         icon: <Moon     className="w-4 h-4" />, color: "var(--accent2)" },
+  { type: MealType.SNACK,        label: "Spuntino",     icon: <Apple    className="w-4 h-4" />, color: "var(--warning)" },
+]
+
+function AddMealPicker({
+  dayId,
+  existingTypes,
+  isTrainingDay,
+  onAdded,
+}: {
+  dayId: string
+  existingTypes: MealType[]
+  isTrainingDay: boolean
+  onAdded: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [adding, setAdding] = useState<MealType | null>(null)
+
+  const available = ALL_MEAL_TYPES.filter(m => !existingTypes.includes(m.type))
+
+  const handleAdd = async (type: MealType) => {
+    setAdding(type)
+    await addMeal(dayId, type)
+    setAdding(null)
+    setOpen(false)
+    onAdded()
+  }
+
+  // Se non ci sono pasti e nessun tipo disponibile → tutto aggiunto
+  if (available.length === 0 && existingTypes.length > 0) return null
+
+  return (
+    <div>
+      {/* Bottone principale */}
+      {!open ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
+          style={{
+            background: "var(--bg-surface)",
+            border: "2px dashed var(--accent)",
+            color: "var(--accent)",
+          }}
+        >
+          <Plus className="w-4 h-4" />
+          Aggiungi pasto
+        </button>
+      ) : (
+        <div
+          className="rounded-2xl overflow-hidden animate-scale-in"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+        >
+          {/* Header picker */}
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center"
-            style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)" }}
+            className="px-4 py-3 flex items-center justify-between"
+            style={{ borderBottom: "1px solid var(--border-subtle)" }}
           >
-            <UtensilsCrossed className="w-6 h-6" style={{ color: "var(--fg-subtle)" }} />
+            <p className="text-sm font-bold" style={{ color: "var(--fg-primary)" }}>
+              Scegli tipo pasto
+            </p>
+            <button
+              onClick={() => setOpen(false)}
+              className="w-7 h-7 flex items-center justify-center rounded-full transition-colors"
+              style={{ color: "var(--fg-muted)" }}
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <p className="text-sm font-medium" style={{ color: "var(--fg-muted)" }}>
-            Nessun pasto per questo giorno
-          </p>
+
+          {/* Lista tipi disponibili */}
+          <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {available.map(({ type, label, icon, color }) => (
+              <button
+                key={type}
+                onClick={() => handleAdd(type)}
+                disabled={!!adding}
+                className="flex items-center gap-2.5 px-3 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-60"
+                style={{
+                  background: `${color}18`,
+                  border: `1px solid ${color}40`,
+                  color: "var(--fg-primary)",
+                }}
+              >
+                <span style={{ color }}>{adding === type ? <Loader2 className="w-4 h-4 animate-spin" /> : icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Empty state — tutti i pasti già aggiunti */}
+          {available.length === 0 && (
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+                Tutti i pasti sono già stati aggiunti per oggi
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

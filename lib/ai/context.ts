@@ -111,3 +111,68 @@ export async function getUserContext(userId: string) {
   }
 }
 
+export function summarizeUserContext(ctx: any) {
+  if (!ctx) return null
+
+  return {
+    profile: {
+      goal: ctx.userProfile?.primaryGoal,
+      level: ctx.userProfile?.experienceLevel,
+      years: ctx.userProfile?.trainingYears,
+      injuries: ctx.activeInjuries?.map((i: any) => `${i.district}: ${i.description}`),
+      equipment: ctx.userProfile?.equipmentLevel,
+      availableDays: ctx.userProfile?.availableDays,
+      sessionDuration: ctx.userProfile?.sessionDuration,
+    },
+    today: ctx.today,
+    biometrics: ctx.latestBiometric ? {
+      weight: ctx.latestBiometric.weightKg,
+      fatPct: ctx.latestBiometric.fatPct,
+      date: ctx.latestBiometric.date
+    } : null,
+    recovery: ctx.latestSync ? {
+      score: ctx.latestSync.recoveryScore,
+      hrv: ctx.latestSync.hrv,
+      tsb: ctx.latestSync.tsb,
+      sleep: ctx.latestSync.sleepMin,
+      acwr: ctx.latestSync.acwr
+    } : null,
+    mesocycle: ctx.activeMesocycle ? {
+      name: ctx.activeMesocycle.name,
+      objectives: ctx.activeMesocycle.objectives,
+      plans: ctx.activeMesocycle.workoutPlans?.map((p: any) => ({
+        name: p.name,
+        description: p.description,
+        days: p.planDays?.map((d: any) => ({
+          label: d.dayLabel,
+          focus: d.focus,
+          exercises: d.planExercises?.map((e: any) => `${e.name} (${e.sets}x${e.repsMin}-${e.repsMax})`)
+        }))
+      }))
+    } : null,
+    recentSessionsSummary: ctx.recentSessions?.slice(0, 5).map((s: any) => ({
+      date: s.date,
+      type: s.type,
+      duration: s.durationMin,
+      load: s.trainingLoad,
+      rpe: s.rpe,
+      exercises: s.exercises?.map((e: any) => {
+        const weights = e.setLogs?.map((l: any) => l.weightKg || 0) || [0]
+        return `${e.name} (${e.setLogs?.length} sets, max ${Math.max(...weights)}kg)`
+      })
+    })),
+    recentNutritionSummary: ctx.recentNutrition?.map((n: any) => ({
+      date: n.date,
+      kcal: n.kcalActual,
+      target: n.kcalTarget,
+      macros: { p: n.proteinG, c: n.carbsG, f: n.fatG }
+    })),
+    plannedToday: ctx.plannedToday ? {
+      label: ctx.plannedToday.planDay?.dayLabel,
+      focus: ctx.plannedToday.planDay?.focus,
+      exercises: ctx.plannedToday.planDay?.planExercises?.map((e: any) => `${e.name} (${e.sets}x${e.repsMin}-${e.repsMax})`)
+    } : null,
+    stressByDistrict: ctx.stressByDistrict
+  }
+}
+

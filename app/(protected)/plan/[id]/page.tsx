@@ -6,6 +6,8 @@ import { it } from "date-fns/locale"
 import { ChevronLeft, Calendar, Info, Dumbbell, Target } from "lucide-react"
 import Link from "next/link"
 import MesoDetailClient from "./MesoDetailClient"
+import KPITracker from "@/app/components/KPITracker"
+import { getActiveGoals } from "@/app/actions/athlete-goals"
 
 export default async function MesoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -13,18 +15,21 @@ export default async function MesoDetailPage({ params }: { params: Promise<{ id:
 
   const { id } = await params
 
-  const meso = await prisma.mesocycle.findUnique({
-    where: { id, userId: session.user.id },
-    include: {
-      workoutPlans: {
-        include: {
-          planDays: {
-            include: { planExercises: { orderBy: { orderIndex: 'asc' } } },
+  const [meso, goals] = await Promise.all([
+    prisma.mesocycle.findUnique({
+      where: { id, userId: session.user.id },
+      include: {
+        workoutPlans: {
+          include: {
+            planDays: {
+              include: { planExercises: { orderBy: { orderIndex: 'asc' } } },
+            },
           },
         },
-      },
-    }
-  })
+      }
+    }),
+    getActiveGoals()
+  ])
 
   if (!meso) notFound()
 
@@ -66,6 +71,13 @@ export default async function MesoDetailPage({ params }: { params: Promise<{ id:
               <Info className="w-4 h-4" /> Strategia e Obiettivi
             </h3>
             <p className="text-muted text-sm leading-relaxed whitespace-pre-wrap">{meso.objectives}</p>
+          </section>
+
+          <section className="bg-surface rounded-[2.5rem] p-8 border border-subtle">
+            <h3 className="text-sm font-black uppercase tracking-widest text-positive mb-6 flex items-center gap-2">
+              <Target className="w-4 h-4" /> KPI del Mesociclo
+            </h3>
+            <KPITracker goals={goals} />
           </section>
 
           <section className="space-y-4">

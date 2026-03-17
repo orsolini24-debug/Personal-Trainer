@@ -327,6 +327,11 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
     setRestLeft(0)
   }, [])
 
+  const adjustRest = (secs: number) => {
+    setRestLeft(prev => Math.max(0, prev + secs))
+    setRestTotal(prev => Math.max(1, prev + secs))
+  }
+
   // Completa serie
   const handleCompleteSet = useCallback(async () => {
     if (!ex) return
@@ -575,24 +580,34 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
       {/* ── Rest timer overlay ── */}
       {isResting && (
         <div
-          className="absolute inset-x-0 top-32 z-20 mx-4 rounded-2xl p-4 flex items-center gap-4 bg-elevated"
-          style={{ border: `1px solid ${accent}40`, boxShadow: `0 12px 40px ${accent}30` }}
+          className="absolute inset-x-0 top-32 z-20 mx-4 rounded-2xl p-4 flex items-center gap-4 bg-elevated shadow-2xl animate-in zoom-in-95 duration-300"
+          style={{ border: `1px solid ${accent}60`, boxShadow: `0 20px 60px ${accent}40` }}
         >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 animate-pulse"
             style={{ background: `${accent}20` }}>
             <Timer className="w-5 h-5" style={{ color: accent }} />
           </div>
           <div className="flex-1">
-            <p className="text-xs font-bold uppercase tracking-wider mb-0.5 text-muted">Recupero</p>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-muted">Recupero</p>
             <div className="h-1.5 rounded-full overflow-hidden bg-white/10">
               <div className="h-full rounded-full transition-all ease-linear"
                 style={{ width: `${(restLeft / restTotal) * 100}%`, background: accent }} />
             </div>
           </div>
-          <span className="text-2xl font-black tabular-nums" style={{ color: accent }}>{fmt(restLeft)}</span>
-          <button onClick={skipRest} className="text-xs font-bold px-3 py-2 rounded-lg bg-white/5 text-primary">
-            Skip
-          </button>
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-black tabular-nums leading-none" style={{ color: accent }}>{fmt(restLeft)}</span>
+            <div className="flex gap-2 mt-2">
+              <button onClick={() => adjustRest(-15)} className="p-1 rounded bg-white/5 text-[10px] font-bold text-muted hover:text-primary">
+                -15s
+              </button>
+              <button onClick={() => adjustRest(30)} className="p-1 rounded bg-white/5 text-[10px] font-bold text-accent hover:text-primary">
+                +30s
+              </button>
+              <button onClick={skipRest} className="p-1 rounded bg-white/5 text-[10px] font-black text-warning">
+                SKIP
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

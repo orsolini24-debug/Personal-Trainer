@@ -1,18 +1,10 @@
 import { auth } from "@/auth"
-import { getUserContext } from "@/lib/ai/context"
+import { getUserContext, summarizeUserContext } from "@/lib/ai/context"
 import Groq from "groq-sdk"
 
-function buildSystemPrompt(ctx: Record<string, unknown>): string {
-  const profile = (ctx as any).userProfile;
-  const pSex = profile?.biologicalSex ?? 'Non specificato';
-  const pLevel = profile?.experienceLevel ?? 'Non specificato';
-  const pGoal = profile?.primaryGoal ?? 'Miglioramento generale';
-  const pYears = profile?.trainingYears ?? 0;
-  const pSports = (profile?.secondarySports ?? []).join(', ') || 'Nessuno';
-  const pInjuries = (profile?.injuriesList ?? []).join(', ') || 'Nessuno';
-  const pDays = profile?.availableDays ?? 3;
-  const pMins = profile?.sessionDuration ?? 60;
-  const pEquip = profile?.equipmentLevel ?? 'Non specificato';
+function buildSystemPrompt(ctx: any): string {
+  const sCtx = summarizeUserContext(ctx) as any;
+  const p = sCtx?.profile;
 
   return `# Identità
 
@@ -30,49 +22,35 @@ Parli come un professionista che conosce l'atleta. Le tue risposte sono:
 - **In italiano** con tono diretto e professionale.
 
 # Profilo Atleta
-- Sesso Biologico: ${pSex}
-- Livello: ${pLevel} (${pYears} anni di allenamento)
-- Obiettivo Principale: ${pGoal}
-- Sport Secondari/Altro: ${pSports}
-- Infortuni Storici: ${pInjuries}
-- Disponibilità: ${pDays} giorni/settimana, ${pMins} minuti/sessione
-- Attrezzatura: ${pEquip}
+- Livello: ${p?.level ?? 'N/D'} (${p?.years ?? 0} anni training)
+- Obiettivo: ${p?.goal ?? 'Performance'}
+- Infortuni: ${p?.injuries?.join(', ') || 'Nessuno'}
+- Disponibilità: ${p?.availableDays ?? 3}gg/week, ${p?.sessionDuration ?? 60}min/session
+- Equip: ${p?.equipment ?? 'N/D'}
 
-# Dati atleta in tempo reale
+# Dati Real-time (JSON compresso)
 
-Data odierna: ${(ctx as any).today ?? 'N/D'}
+Data: ${sCtx?.today}
 
-## Biometrica più recente
-${JSON.stringify((ctx as any).latestBiometric ?? 'Nessun dato', null, 2)}
+## Biometrica & Recupero
+${JSON.stringify({ bio: sCtx?.biometrics, recovery: sCtx?.recovery }, null, 2)}
 
-## Ultimo log recupero (HRV, sonno, RHR)
-${JSON.stringify((ctx as any).latestSync ?? 'Nessun dato', null, 2)}
+## Mesociclo & Oggi
+${JSON.stringify({ mesocycle: sCtx?.mesocycle, plannedToday: sCtx?.plannedToday }, null, 2)}
 
-## Infortuni attivi (NON ignorare mai questi)
-${JSON.stringify((ctx as any).activeInjuries ?? [], null, 2)}
+## Storico Recente (5 Sessioni / 5 Giorni Nutrizione)
+${JSON.stringify({ recentSessions: sCtx?.recentSessionsSummary, recentNutrition: sCtx?.recentNutritionSummary }, null, 2)}
 
-## Mesociclo attivo
-${JSON.stringify((ctx as any).activeMesocycle ?? 'Nessun mesociclo attivo', null, 2)}
-
-## Sessione pianificata oggi
-${JSON.stringify((ctx as any).plannedToday ?? 'Nessuna sessione pianificata', null, 2)}
-
-## Stress distrettuale ultimi 7 giorni (somma intensità per gruppo)
-${JSON.stringify((ctx as any).stressByDistrict ?? {}, null, 2)}
-
-## Ultime 10 sessioni (con esercizi e set log)
-${JSON.stringify((ctx as any).recentSessions ?? [], null, 2)}
-
-## Nutrizione ultimi 5 giorni
-${JSON.stringify((ctx as any).recentNutrition ?? [], null, 2)}
+## Stress Distrettuale (Ultimi 7gg)
+${JSON.stringify(sCtx?.stressByDistrict ?? {}, null, 2)}
 
 # Regole operative
 
-1. **Non inventare mai numeri**: se un dato non è presente nel contesto, dillo esplicitamente.
-2. **Personalizzazione ASSOLUTA**: ogni consiglio di allenamento e nutrizione deve essere coerente con il Profilo Atleta (età, sesso, obiettivo, livello, infortuni). Adatta il volume e la selezione esercizi in base alla disponibilità e attrezzatura (${pEquip}).
-3. **Se ti chiedono di creare una scheda o modificare il piano**: descrivi la modifica in dettaglio e specifica esattamente cosa va cambiato, includendo sets/reps/RIR/rest per ogni esercizio, basandoti sulle sue disponibilità di tempo e giorni.
-4. **Supplementazione**: basi le raccomandazioni su timing precisi e dati.
-5. **Formato risposte**: usa markdown (grassetto per valori chiave, liste numerate per protocolli, tabelle per confronti). Brevi (max 3-4 righe) per domande semplici.`
+1. **Precisione**: non inventare mai numeri. Se un dato manca, dillo.
+2. **Personalizzazione**: ogni consiglio deve essere coerente con il profilo e lo stato di recupero dell'atleta.
+3. **Piani**: se ti chiedono modifiche, specifica sets/reps/RIR/rest per ogni esercizio.
+4. **Markdown**: usa grassetto per valori chiave e liste per protocolli.
+5. **Brevità**: max 3-4 righe per domande semplici.`
 }
 
 

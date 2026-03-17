@@ -37,6 +37,47 @@ async function getPlanIdForDay(planDayId: string): Promise<string> {
   return day?.planId ?? ''
 }
 
+/**
+ * Auto-skip: segna come SKIPPED tutte le PlannedSession dei giorni precedenti
+ * che sono ancora PENDING (non avviate, nessuna WorkoutSession collegata).
+ * Chiamare all'inizio di ogni page load rilevante (dashboard, body, plan).
+ */
+export async function autoSkipPastPendingSessions() {
+  const session = await auth()
+  if (!session?.user?.id) return { skipped: 0 }
+  const userId = session.user.id
+
+  // Considera "ieri" come soglia: sessioni pianificate prima di oggi senza sessione reale
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
+  const pending = await prisma.plannedSession.findMany({
+    where: {
+      userId,
+      status: 'PENDING',
+      scheduledDate: { lt: todayStart },
+      workoutSessionId: null,   // nessuna sessione reale completata
+    },
+    select: { id: true },
+  })
+
+  if (pending.length === 0) return { skipped: 0 }
+
+  await prisma.plannedSession.updateMany({
+    where: { id: { in: pending.map(p => p.id) } },
+    data: {
+      status: 'SKIPPED',
+      skipReason: 'Sessione non avviata — saltata automaticamente',
+    },
+  })
+
+  revalidatePath('/plan')
+  revalidatePath('/training')
+  revalidatePath('/dashboard')
+
+  return { skipped: pending.length }
+}
+
 export async function getAlternateDays(planDayId: string) {
   const session = await auth()
   if (!session?.user?.id) return []

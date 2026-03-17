@@ -7,6 +7,8 @@ import {
   Brain, Calendar, Zap, TrendingUp, Award, Clock
 } from "lucide-react"
 import RecoveryOrb from "@/components/RecoveryOrb"
+import KPITracker from "@/app/components/KPITracker"
+import { getActiveGoals } from "@/app/actions/athlete-goals"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -17,12 +19,13 @@ export default async function DashboardPage() {
   today.setUTCHours(0, 0, 0, 0)
 
   // Fetch data in parallel
-  const [recovery, nutrition, workout, biometric, profile] = await Promise.all([
+  const [recovery, nutrition, workout, biometric, profile, goals] = await Promise.all([
     prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
     prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
     prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: 'asc' } }),
     prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
-    prisma.userProfile.findUnique({ where: { userId } })
+    prisma.userProfile.findUnique({ where: { userId } }),
+    getActiveGoals()
   ])
 
   // Macro calculations
@@ -264,6 +267,22 @@ export default async function DashboardPage() {
             </div>
           </div>
 
+        </div>
+
+        {/* 6. KPI Tracker (Bottom Section) */}
+        <div className="col-span-12 mt-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-primary flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-accent/10 text-accent">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              Obiettivi Performance
+            </h2>
+            <Link href="/plan" className="text-xs font-bold text-muted hover:text-accent transition-all uppercase tracking-widest border-b border-subtle hover:border-accent">
+              Vedi Tutti
+            </Link>
+          </div>
+          <KPITracker goals={goals} />
         </div>
 
       </div>

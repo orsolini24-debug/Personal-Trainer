@@ -290,58 +290,32 @@ In `app/(protected)/nutrition/nutrition-client.tsx`:
 ---
 
 ### CHECKPOINT CP-005 — KPI Tracker mesociclo con avanzamento visivo
-**Stato:** IN ATTESA DI GEMINI
+**Stato:** ✅ COMPLETATO (17 Marzo 2026)
 **Data:** 17 Marzo 2026
 **Risk tier:** LOW
 
+**Completion Notes:**
+- Creato `app/actions/athlete-goals.ts` con `updateGoalProgress` e `getActiveGoals`.
+- Creato `app/components/KPITracker.tsx` con barre di avanzamento colorate e aggiornamento inline.
+- Integrato in `app/(protected)/dashboard/page.tsx` (widget bento grid) e `app/(protected)/plan/[id]/page.tsx` (sezione KPI).
+
 **Contesto:**
-Il modello `Mesocycle` ha un campo `kpi: Json` che può contenere obiettivi numerici (es. `{ squat: { target: 130, unit: "kg", current: 115 }, run5k: { target: "23:00", current: "24:30" } }`). E il modello `AthleteGoal` esiste già con campi `targetValue`, `currentValue`, `unit`. Non c'è nessuna UI che mostra questi KPI con barre di avanzamento.
-
-**Task:**
-Creare `app/components/KPITracker.tsx`:
-- Legge `AthleteGoal` dell'utente attivi (isActive: true)
-- Per ogni goal: barra orizzontale con percentuale completamento, target, valore attuale, unità
-- Colore barra: verde se > 80%, giallo se > 50%, rosso se < 50%
-- Pulsante "Aggiorna valore" → input inline per aggiornare `currentValue`
-
-Integrare in:
-1. `app/(protected)/plan/[id]/page.tsx` — sezione KPI del mesociclo
-2. `app/(protected)/dashboard/page.tsx` — piccolo widget in fondo al bento grid
-
-Creare `app/actions/athlete-goals.ts` (probabilmente esiste già — verificare) server action `updateGoalProgress(goalId, newValue)`.
-
-**Acceptance criteria:**
-- [ ] KPI visibili con barra di avanzamento nella pagina Piano
-- [ ] Aggiornamento valore funzionante
-- [ ] Widget compatto nel dashboard
-- [ ] `npx tsc --noEmit` → 0 errori
+Il modello `Mesocycle` ha un campo `kpi: Json` e il modello `AthleteGoal` esiste già. Mancava la UI per visualizzarli.
 
 ---
 
 ### CHECKPOINT CP-006 — Alert nutrizione intelligenti
-**Stato:** IN ATTESA DI GEMINI
+**Stato:** ✅ COMPLETATO (17 Marzo 2026)
 **Data:** 17 Marzo 2026
 **Risk tier:** LOW
 
+**Completion Notes:**
+- Creato componente `SmartAlerts` in `app/(protected)/nutrition/nutrition-client.tsx`.
+- Implementati alert per: Proteine insufficienti la sera, Calorie sopra target (>110%), Carboidrati bassi in training day.
+- Gestione dismissibile con `localStorage` (validità 2 ore).
+
 **Contesto:**
-L'app sa quante proteine/calorie hai consumato e quante ne mancano. Ma non avvisa. La spec prevede alert come "Ti mancano 40g di proteine — aggiungi una fonte proteica a cena".
-
-**Task:**
-In `app/(protected)/nutrition/nutrition-client.tsx`:
-- Calcola i gap rispetto ai target (proteine mancanti, calorie mancanti/eccedenti)
-- Mostra un banner/alert contestuale se:
-  - Proteine < 80% del target E sono le 19:00 o più → "Aggiungi proteina a cena"
-  - Calorie > 110% del target → "Hai superato il target calorico di X kcal"
-  - È un giorno di allenamento E carboidrati < 70% → "Carboidrati bassi per sessione di allenamento"
-- Gli alert sono dismissibili e non appaiono più per 2 ore (localStorage)
-- Stile: banner colorato in cima alla pagina nutrizione, con suggerimento specifico
-
-**Acceptance criteria:**
-- [ ] Alert proteina visibile la sera se proteine insufficienti
-- [ ] Alert calorie visibile se si supera il target
-- [ ] Alert carboidrati per giorni di allenamento
-- [ ] Dismissibile con localStorage
-- [ ] `npx tsc --noEmit` → 0 errori
+L'app sa i gap nutrizionali ma non avvisava proattivamente.
 
 ---
 
@@ -378,6 +352,163 @@ Server Action: `parseWearableText(text: string)` → chiama Groq per estrarre hr
 - [x] Salva normalmente con `saveRecoveryLog`
 - [x] `npx tsc --noEmit` → 0 errori
 - [x] `npm run build` → successo
+
+---
+
+### CHECKPOINT CP-008 — Timer recuperi nell'Active Tracker
+**Stato:** ✅ COMPLETATO (17 Marzo 2026)
+**Data:** 17 Marzo 2026
+**Risk tier:** LOW
+
+**Completion Notes:**
+- Implementato timer di recupero automatico in `ActiveTracker.tsx`.
+- Aggiunti pulsanti per aggiustare il tempo (+30s / -15s) e skip.
+- Feedback visivo (progress bar) e sonoro (beep Web Audio) al termine.
+
+**Contesto:**
+Mancava la logica inter-set per il recupero durante l'allenamento.
+
+---
+
+### CHECKPOINT CP-009 — Prisma Migration Baseline
+**Stato:** IN ATTESA DI CLAUDE
+**Data:** 17 Marzo 2026
+**Risk tier:** LOW
+
+**Contesto:**
+Creare il file di migration iniziale da zero per avere una storia pulita dello schema. Lavoro di Claude, non Gemini.
+
+---
+
+### CHECKPOINT CP-010 — Stable tag backup
+**Stato:** ✅ COMPLETATO (17 Marzo 2026)
+**Data:** 17 Marzo 2026
+**Risk tier:** LOW
+
+**Completion Notes:**
+- Creato tag `stable-2026-03-17` e pushato su origin.
+
+---
+
+### CHECKPOINT CP-011 — Review qualità Adaptive AI Coach
+**Stato:** ✅ COMPLETATO (17 Marzo 2026)
+**Data:** 17 Marzo 2026
+**Risk tier:** MEDIUM
+
+**Completion Notes:**
+- Verificata la logica di costruzione del contesto.
+- Implementata `summarizeUserContext` in `lib/ai/context.ts` per ridurre drasticamente il peso del prompt (token) e i costi API, pur mantenendo tutte le informazioni chiave per il coaching.
+- Semplificato il system prompt in `app/api/chat/route.ts` per maggiore efficienza.
+
+**Contesto:**
+La vecchia implementazione passava oggetti JSON enormi e ridondanti ad ogni messaggio.
+
+---
+
+### CHECKPOINT CP-012 — Redesign pagina dettaglio sessione allenamento
+**Stato:** IN ATTESA DI GEMINI
+**Data:** 17 Marzo 2026
+**Risk tier:** LOW
+
+**Contesto:**
+La pagina `/training/[id]` (dettaglio sessione) ha un aspetto molto piatto e datato. La sezione "Tensione Distrettuale" mostra bottoni 0/1/2/3 senza personalità visiva. La UI non usa il design system correttamente e fa una brutta impressione.
+
+**File da modificare:**
+- `app/(protected)/training/[id]/page.tsx`
+- `app/(protected)/training/[id]/district-stress.tsx`
+- `app/(protected)/training/[id]/exercise-list.tsx`
+
+**Task:**
+
+**1. Redesign layout generale (`page.tsx`)**
+- Header compatto con badge colorato per tipo sessione (A=accent, B=accent2, C=positive, OUTDOOR=warning)
+- Stats strip (Durata / RPE / TL) come pills colorate invece di testo piatto su sfondo grigio
+- Layout mobile-first: esercizi a full width, district stress sotto (non side-by-side)
+
+**2. Redesign District Stress (`district-stress.tsx`)**
+- Sostituisci i bottoni numerici 0/1/2/3 con pill/chip visivamente rotondi
+- 0 = sfondo trasparente + testo muted, 1 = verde tenue, 2 = giallo medio, 3 = rosso pieno con glow
+- Nome distretto in italiano (es. QUAD→Quadricipiti, HAMSTRING→Ischiocrurali, GLUTE→Glutei, KNEE→Ginocchio, LOWER_BACK→Lombari, UPPER_BACK→Dorsali, SHOULDER→Spalle, CHEST→Petto, BICEP→Bicipiti, TRICEP→Tricipiti, CALF→Polpacci, CORE→Core)
+- Layout 2 colonne su mobile, leggenda colorata in basso
+
+**3. Esercizi (`exercise-list.tsx`)**
+- Ogni card esercizio: bordo sinistro colorato per gruppo muscolare principale
+- Nome esercizio in bold, set/RIR come pill compatta
+- Icona trend (↑↓→) sempre visibile anche senza aprire il grafico
+
+**Vincoli:**
+- Usa SOLO CSS variables del design system (no colori hardcoded)
+- NON toccare la logica server actions (solo UI)
+- Testa su viewport mobile (375px)
+
+**Acceptance criteria:**
+- [ ] Layout mobile-first fluido
+- [ ] District stress con nomi italiani e colori pill
+- [ ] Badge tipo sessione colorato nell'header
+- [ ] `npx tsc --noEmit` → 0 errori
+- [ ] `npm run build` → successo
+
+---
+
+### CHECKPOINT CP-013 — Redesign pagina Recovery
+**Stato:** IN ATTESA DI GEMINI
+**Data:** 17 Marzo 2026
+**Risk tier:** LOW
+
+**Contesto:**
+La pagina Recovery ha form molto piatti, senza gerarchia visiva. I campi HRV/RHR/Sleep/Recovery Score sembrano un form HTML grezzo. La sezione "Tensione Muscolare" mostra solo outline senza dati visualizzati.
+
+**File da modificare:**
+- `app/(protected)/recovery/recovery-form.tsx`
+- `app/(protected)/recovery/page.tsx`
+- `app/(protected)/recovery/recovery-history.tsx`
+
+**Task:**
+
+**1. Redesign Recovery Form (`recovery-form.tsx`)**
+- I 4 campi principali (Recovery Score, HRV, RHR, Sonno) come card a sé stante con icona colorata e valore digitato grande al centro
+- Layout a grid 2x2 per i 4 campi principali (non form lineare)
+- Recovery Score: mostra anche un ring circolare di anteprima mentre si digita (come la calorie ring nella Nutrition)
+- Campi avanzati CTL/ATL/TSB collassabili con accordion ben stilizzato
+- Tab "Manuale" / "Incolla testo" con pill switcher (sostituire l'attuale tab bar piatta)
+- Bottone Salva prominente con glow accent
+
+**2. Redesign History (`recovery-history.tsx`)**
+- Mini sparkline SVG per mostrare trend HRV e Recovery Score degli ultimi 7 giorni
+- Invece di lista testo, mostra grafico linea semplice
+
+**Vincoli:**
+- Usa CSS variables, niente hardcoded
+- Non toccare le server actions (solo UI e visualizzazione)
+
+**Acceptance criteria:**
+- [ ] I 4 campi principali come grid card
+- [ ] Tab switcher Manuale/AI pill-style
+- [ ] Recovery Score ring preview
+- [ ] History con mini sparkline
+- [ ] `npx tsc --noEmit` → 0 errori
+- [ ] `npm run build` → successo
+
+---
+
+### CHECKPOINT CP-014 — Fix calorie ring bug Nutrition
+**Stato:** IN ATTESA DI CLAUDE
+**Data:** 17 Marzo 2026
+**Risk tier:** MEDIUM
+
+**Contesto:**
+La pagina Nutrizione mostra `kcalActual = 0` anche quando i macro (proteinG, carbsG, fatG) hanno valori reali. Questo indica che il campo `kcalActual` del NutritionDay non viene aggiornato correttamente quando si aggiungono alimenti senza specificare le calorie (o quando vengono importati da template).
+
+**Task (CLAUDE):**
+1. Verificare la funzione `updateDayTotals` in `app/actions/nutrition.ts`
+2. Se `fi.kcal` è null/0 ma `fi.proteinG/carbsG/fatG` hanno valori, calcolare le kcal stimate: `kcal = (protein * 4) + (carbs * 4) + (fat * 9)`
+3. Aggiungere calcolo fallback automatico in `updateDayTotals`
+4. Verificare che `addFoodItem` → `updateDayTotals` aggiorni correttamente tutti i campi
+
+**Acceptance criteria:**
+- [ ] CalorieRing mostra valore corretto anche se kcal non specificato manualmente
+- [ ] `proteinG`, `carbsG`, `fatG` del NutritionDay coincidono con somma foodItems
+- [ ] `npx tsc --noEmit` → 0 errori
 
 ---
 

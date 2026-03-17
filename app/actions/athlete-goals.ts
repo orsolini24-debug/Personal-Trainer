@@ -1,59 +1,49 @@
 'use server'
 
-import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
-import { GoalType, SportType } from "@prisma/client"
-import { revalidatePath } from "next/cache"
+import { auth } from '@/auth'
+import { prisma } from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
 
-export type GoalInput = {
-  type: GoalType
-  sport?: SportType
-  description: string
-  targetValue?: number
-  currentValue?: number
-  targetDate?: Date
-  unit?: string
-  priority?: number
-  notes?: string
-}
-
-export async function saveAthleteGoals(goals: GoalInput[]) {
+export async function updateGoalProgress(goalId: string, newValue: number) {
   const session = await auth()
-  if (!session?.user?.id) return { error: 'Unauthorized' }
-  const userId = session.user.id
+  if (!session?.user?.id) throw new Error('Non autorizzato')
 
-  // Deactivate old goals
-  await prisma.athleteGoal.updateMany({
-    where: { userId, isActive: true },
-    data: { isActive: false }
-  })
+  try {
+    await prisma.athleteGoal.update({
+      where: { 
+        id: goalId, 
+        userId: session.user.id 
+      },
+      data: { 
+        currentValue: newValue 
+      }
+    })
 
-  // Create new goals
-  await prisma.athleteGoal.createMany({
-    data: goals.map((g, i) => ({
-      userId,
-      type: g.type,
-      sport: g.sport,
-      description: g.description,
-      targetValue: g.targetValue,
-      currentValue: g.currentValue,
-      targetDate: g.targetDate,
-      unit: g.unit,
-      priority: g.priority ?? (i + 1),
-      notes: g.notes,
-      isActive: true,
-    }))
-  })
-
-  revalidatePath('/plan')
-  return { success: true }
+    revalidatePath('/dashboard')
+    revalidatePath('/plan')
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating goal progress:', error)
+    return { success: false, error: 'Errore durante l\'aggiornamento del progresso' }
+  }
 }
 
 export async function getActiveGoals() {
   const session = await auth()
   if (!session?.user?.id) return []
-  return prisma.athleteGoal.findMany({
-    where: { userId: session.user.id, isActive: true },
-    orderBy: { priority: 'asc' }
-  })
+
+  try {
+    return await prisma.athleteGoal.findMany({
+      where: { 
+        userId: session.user.id, 
+        isActive: true 
+      },
+      orderBy: { 
+        priority: 'asc' 
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching active goals:', error)
+    return []
+  }
 }

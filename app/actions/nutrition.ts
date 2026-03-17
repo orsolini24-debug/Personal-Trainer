@@ -84,7 +84,7 @@ export async function getOrCreateNutritionDay(date: Date) {
     const targetCarbs = isTrainingDay ? baseCarbs + 100 : baseCarbs;
 
     if (!day) {
-      day = await prisma.nutritionDay.create({
+      const newDay = await prisma.nutritionDay.create({
         data: {
           userId,
           date: d,
@@ -97,16 +97,16 @@ export async function getOrCreateNutritionDay(date: Date) {
       // Auto-create meals
       await prisma.meal.createMany({
         data: [
-          { nutritionDayId: day.id, type: MealType.BREAKFAST },
-          { nutritionDayId: day.id, type: MealType.LUNCH },
-          { nutritionDayId: day.id, type: MealType.PRE_WORKOUT },
-          { nutritionDayId: day.id, type: MealType.DINNER },
-          { nutritionDayId: day.id, type: MealType.SNACK },
+          { nutritionDayId: newDay.id, type: MealType.BREAKFAST },
+          { nutritionDayId: newDay.id, type: MealType.LUNCH },
+          { nutritionDayId: newDay.id, type: MealType.PRE_WORKOUT },
+          { nutritionDayId: newDay.id, type: MealType.DINNER },
+          { nutritionDayId: newDay.id, type: MealType.SNACK },
         ]
       })
 
       day = await prisma.nutritionDay.findUnique({
-        where: { id: day.id },
+        where: { id: newDay.id },
         include: { meals: { include: { foodItems: true } } }
       })
     } else if (day.isTrainingDay !== isTrainingDay || day.kcalTarget !== targetKcal) {
@@ -120,6 +120,8 @@ export async function getOrCreateNutritionDay(date: Date) {
         include: { meals: { include: { foodItems: true } } }
       })
     }
+
+    if (!day) throw new Error("Errore nella creazione del giorno nutrizionale")
 
     return { success: true, data: { ...day, targetCarbs, targetProtein: baseProtein, targetFat: baseFat } }
   } catch (error: any) {
