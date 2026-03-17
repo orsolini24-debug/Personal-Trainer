@@ -38,39 +38,45 @@ function NavLink({ item, active, onClick }: { item: typeof navItems[0]; active: 
     <Link
       href={item.href}
       onClick={onClick}
-      className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 w-full group"
+      className="relative flex items-center gap-2.5 px-3 py-2.5 w-full"
       style={{
-        background: active ? 'var(--bg-elevated)' : 'transparent',
+        borderRadius: 'var(--r-md, 14px)',
+        background: active
+          ? 'color-mix(in srgb, var(--accent) 10%, var(--bg-elevated))'
+          : 'transparent',
         color: active ? 'var(--fg-primary)' : 'var(--fg-muted)',
+        border: active
+          ? '1px solid color-mix(in srgb, var(--accent) 22%, transparent)'
+          : '1px solid transparent',
+        transition: 'all 180ms cubic-bezier(0.16,1,0.3,1)',
       }}
     >
-      {/* Left accent bar */}
-      <div
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 rounded-full transition-all duration-300"
+      {/* Icon — accent on active */}
+      <item.icon
+        size={16}
+        strokeWidth={active ? 2.2 : 1.7}
         style={{
-          height: active ? '60%' : '0%',
-          background: 'var(--accent)',
-          boxShadow: active ? '0 0 8px var(--accent)' : 'none',
+          color: active ? 'var(--accent)' : 'var(--fg-muted)',
+          flexShrink: 0,
+          transition: 'color 180ms ease',
         }}
       />
 
-      {/* Icon */}
-      <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200"
-        style={{
-          background: active ? 'var(--accent)' : 'transparent',
-          color: active ? 'var(--accent-on, #fff)' : 'var(--fg-muted)',
-        }}
+      <span
+        className="text-sm flex-1 tracking-tight"
+        style={{ fontWeight: active ? 600 : 500 }}
       >
-        <item.icon size={15} strokeWidth={active ? 2.5 : 1.8} />
-      </div>
+        {item.name}
+      </span>
 
-      <span className="text-sm font-semibold tracking-tight flex-1">{item.name}</span>
-
+      {/* Active dot indicator */}
       {active && (
-        <ChevronRight
-          size={14}
-          style={{ color: 'var(--fg-subtle)' }}
+        <div
+          className="w-1.5 h-1.5 rounded-full shrink-0"
+          style={{
+            background: 'var(--accent)',
+            boxShadow: '0 0 6px var(--glow-accent)',
+          }}
         />
       )}
     </Link>
@@ -80,30 +86,46 @@ function NavLink({ item, active, onClick }: { item: typeof navItems[0]; active: 
 function UserAvatar({ onLogout }: { onLogout: () => void }) {
   return (
     <div
-      className="flex items-center gap-3 px-3 py-3 rounded-xl"
-      style={{ borderTop: '1px solid var(--border-default)' }}
+      className="flex items-center gap-3 px-2 py-2.5 mt-1"
+      style={{
+        borderTop: '1px solid var(--border-subtle)',
+        background: 'color-mix(in srgb, var(--bg-elevated) 40%, transparent)',
+        borderRadius: 'var(--r-md, 14px)',
+      }}
     >
-      <div
-        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-black text-xs"
-        style={{
-          background: 'linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))',
-          color: '#fff',
-          boxShadow: '0 0 0 2px var(--bg-sidebar), 0 0 0 3px var(--accent)',
-        }}
-      >
-        G
+      {/* Avatar with ring */}
+      <div style={{ position: 'relative' }}>
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-black text-xs"
+          style={{
+            background: 'linear-gradient(145deg, var(--accent), var(--accent2, #6366f1))',
+            color: '#fff',
+            boxShadow: '0 2px 8px var(--glow-accent), inset 0 1px 0 rgba(255,255,255,0.2)',
+            fontSize: '11px',
+          }}
+        >
+          G
+        </div>
+        {/* Online dot */}
+        <div
+          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+          style={{
+            background: 'var(--positive)',
+            border: '2px solid var(--bg-sidebar)',
+          }}
+        />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold truncate" style={{ color: 'var(--fg-primary)' }}>Giorgio</p>
-        <p className="text-[10px] truncate" style={{ color: 'var(--fg-muted)' }}>Atleta</p>
+        <p className="text-xs font-bold truncate leading-none" style={{ color: 'var(--fg-primary)' }}>Giorgio</p>
+        <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--fg-subtle)' }}>Atleta · Pro</p>
       </div>
       <button
         onClick={onLogout}
-        className="p-1.5 rounded-lg transition-all"
-        style={{ color: 'var(--fg-muted)' }}
+        className="p-1.5 rounded-lg transition-all hover:bg-[var(--bg-elevated)]"
+        style={{ color: 'var(--fg-subtle)' }}
         title="Esci"
       >
-        <LogOut size={14} />
+        <LogOut size={13} />
       </button>
     </div>
   )
@@ -111,14 +133,17 @@ function UserAvatar({ onLogout }: { onLogout: () => void }) {
 
 function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHelp: () => void; onClose?: () => void }) {
   return (
-    <div className="flex flex-col h-full py-5 px-3">
+    <div className="flex flex-col h-full py-4 px-3 gap-1">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-2 mb-7 shrink-0">
+      <div className="flex items-center gap-3 px-2 mb-5 shrink-0">
         <div
-          className="w-9 h-9 rounded-[12px] flex items-center justify-center font-black text-xs text-white shrink-0"
+          className="w-9 h-9 flex items-center justify-center font-black text-white shrink-0"
           style={{
-            background: 'linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))',
-            boxShadow: '0 6px 16px -2px var(--glow-accent, rgba(0,0,0,0.25))',
+            borderRadius: '14px',
+            background: 'linear-gradient(145deg, var(--accent), var(--accent2, #6366f1))',
+            boxShadow: '0 4px 14px var(--glow-accent), inset 0 1px 0 rgba(255,255,255,0.22)',
+            fontSize: '11px',
+            letterSpacing: '-0.02em',
           }}
         >
           PE
@@ -127,32 +152,25 @@ function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHel
           <span
             className="font-black text-sm tracking-tight block"
             style={{
-              background: 'linear-gradient(135deg, var(--accent), var(--accent2, #6366f1))',
+              background: 'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 80%, var(--accent)))',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.03em',
             }}
           >
             Performance
           </span>
           <span
-            className="text-[9px] font-black uppercase block mt-0.5"
-            style={{ color: 'var(--fg-subtle)', letterSpacing: '0.18em' }}
+            className="text-[9px] font-bold uppercase block mt-0.5"
+            style={{ color: 'var(--fg-subtle)', letterSpacing: '0.15em' }}
           >
             Ecosystem
           </span>
         </div>
       </div>
 
-      {/* Section label */}
-      <p
-        className="text-[9px] font-black uppercase px-3 mb-2 tracking-widest shrink-0"
-        style={{ color: 'var(--fg-subtle)' }}
-      >
-        Menu
-      </p>
-
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto min-h-0 pr-0.5">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto min-h-0 scrollbar-hide">
         {navItems.map((item) => (
           <NavLink
             key={item.href}
@@ -164,21 +182,29 @@ function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHel
       </nav>
 
       {/* Help */}
-      <div
-        className="shrink-0 pt-3 space-y-0.5"
-        style={{ borderTop: '1px solid var(--border-default)' }}
+      <button
+        onClick={onHelp}
+        className="shrink-0 w-full flex items-center gap-2.5 px-3 py-2.5 transition-all"
+        style={{
+          borderRadius: 'var(--r-md, 14px)',
+          color: 'var(--fg-subtle)',
+          border: '1px solid transparent',
+          transition: 'all 180ms var(--ease-expo-out)',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-default)'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-muted)'
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-subtle)'
+        }}
       >
-        <button
-          onClick={onHelp}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200"
-          style={{ color: 'var(--fg-muted)' }}
-        >
-          <div className="w-8 h-8 flex items-center justify-center shrink-0">
-            <HelpCircle size={15} strokeWidth={1.8} />
-          </div>
-          <span className="text-sm font-semibold tracking-tight">Guida & Aiuto</span>
-        </button>
-      </div>
+        <HelpCircle size={15} strokeWidth={1.7} />
+        <span className="text-sm font-medium tracking-tight">Guida & Aiuto</span>
+      </button>
 
       {/* User avatar + logout */}
       <UserAvatar onLogout={() => signOut({ callbackUrl: '/login' })} />
@@ -208,27 +234,31 @@ function MobileMoreSheet({
 
       {/* Sheet */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
         style={{
-          background: 'var(--bg-sidebar)',
+          borderRadius: '28px 28px 0 0',
+          background: 'color-mix(in srgb, var(--bg-elevated) 96%, transparent)',
+          backdropFilter: 'blur(48px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(180%)',
           borderTop: '1px solid var(--border-default)',
           paddingBottom: 'env(safe-area-inset-bottom, 16px)',
           transform: open ? 'translateY(0)' : 'translateY(110%)',
           transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.3), 0 -1px 0 var(--border-subtle)',
         }}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-2">
           <div
-            className="w-10 h-1 rounded-full"
-            style={{ background: 'var(--border-default)' }}
+            className="w-9 h-1 rounded-full"
+            style={{ background: 'var(--border-strong)' }}
           />
         </div>
 
-        <div className="px-4 pt-2 pb-4">
+        <div className="px-4 pt-1 pb-4">
           <p
-            className="text-[10px] font-black uppercase tracking-widest px-1 mb-3"
-            style={{ color: 'var(--fg-subtle)' }}
+            className="text-[9px] font-black uppercase tracking-widest px-1 mb-3"
+            style={{ color: 'var(--fg-subtle)', letterSpacing: '0.14em' }}
           >
             Altro
           </p>
@@ -240,35 +270,39 @@ function MobileMoreSheet({
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all"
+                  className="flex items-center gap-3 px-3 py-3 transition-all"
                   style={{
-                    background: active ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                    border: `1px solid ${active ? 'var(--accent)' : 'var(--border-default)'}`,
+                    borderRadius: 'var(--r-lg, 20px)',
+                    background: active
+                      ? 'color-mix(in srgb, var(--accent) 10%, var(--bg-surface))'
+                      : 'var(--bg-surface)',
+                    border: `1px solid ${active
+                      ? 'color-mix(in srgb, var(--accent) 28%, transparent)'
+                      : 'var(--border-default)'}`,
                     color: active ? 'var(--accent)' : 'var(--fg-muted)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                   }}
                 >
-                  <item.icon size={18} strokeWidth={active ? 2.5 : 1.8} />
-                  <span className="text-sm font-semibold">{item.name}</span>
+                  <item.icon size={17} strokeWidth={active ? 2.2 : 1.7} />
+                  <span className="text-sm font-semibold tracking-tight">{item.name}</span>
                 </Link>
               )
             })}
           </div>
 
-          <div
-            className="mt-4 pt-4"
-            style={{ borderTop: '1px solid var(--border-default)' }}
-          >
+          <div className="mt-3">
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all"
+              className="w-full flex items-center gap-3 px-3 py-3 transition-all"
               style={{
-                background: 'var(--bg-base)',
-                border: '1px solid var(--border-default)',
-                color: 'var(--fg-muted)',
+                borderRadius: 'var(--r-md, 14px)',
+                background: 'color-mix(in srgb, var(--negative) 8%, var(--bg-surface))',
+                border: '1px solid color-mix(in srgb, var(--negative) 20%, transparent)',
+                color: 'var(--negative)',
               }}
             >
-              <LogOut size={18} strokeWidth={1.8} />
-              <span className="text-sm font-semibold">Esci</span>
+              <LogOut size={16} strokeWidth={1.8} />
+              <span className="text-sm font-semibold tracking-tight">Esci</span>
             </button>
           </div>
         </div>
@@ -307,7 +341,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         className="hidden md:flex flex-col w-56 h-screen shrink-0"
         style={{
           background: 'var(--bg-sidebar)',
-          borderRight: '1px solid var(--border-default)',
+          borderRight: '1px solid var(--border-subtle)',
         }}
       >
         <SidebarContent pathname={pathname} onHelp={() => setShowHelp(true)} />
@@ -407,41 +441,51 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
-      {/* Mobile Bottom Nav — 4 primary + More button */}
+      {/* Mobile Bottom Nav — iOS 2026 pill tab bar */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-30"
         style={{
-          background: 'color-mix(in srgb, var(--bg-sidebar) 94%, transparent)',
-          borderTop: '1px solid var(--border-default)',
-          backdropFilter: 'blur(40px)',
+          background: 'color-mix(in srgb, var(--bg-sidebar) 92%, transparent)',
+          borderTop: '1px solid var(--border-subtle)',
+          backdropFilter: 'blur(48px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(180%)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        {/* Top accent line */}
-        <div
-          className="absolute top-0 left-0 right-0 h-px"
-          style={{
-            background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
-          }}
-        />
-
-        <div className="flex items-center justify-around px-1 pt-1.5 pb-2">
+        <div className="flex items-stretch justify-around px-2 pt-2 pb-1">
           {PRIMARY_NAV.map((item) => {
             const active = isActive(item, pathname)
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-2xl min-w-[56px] transition-all duration-200"
-                style={{
-                  color: active ? 'var(--accent)' : 'var(--fg-subtle)',
-                  background: active ? 'var(--accent-dim)' : 'transparent',
-                }}
+                className="flex flex-col items-center gap-1 flex-1"
+                style={{ color: active ? 'var(--accent)' : 'var(--fg-subtle)' }}
               >
-                <item.icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+                {/* Pill behind icon when active */}
+                <div
+                  style={{
+                    padding: '5px 16px',
+                    borderRadius: '12px',
+                    background: active
+                      ? 'color-mix(in srgb, var(--accent) 14%, var(--bg-elevated))'
+                      : 'transparent',
+                    transition: 'all 220ms cubic-bezier(0.16,1,0.3,1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <item.icon size={21} strokeWidth={active ? 2.3 : 1.7} />
+                </div>
                 <span
-                  className="text-[9px] font-black uppercase"
-                  style={{ letterSpacing: '0.05em' }}
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: active ? 700 : 500,
+                    letterSpacing: '0.02em',
+                    lineHeight: 1,
+                    paddingBottom: '4px',
+                  }}
                 >
                   {item.name}
                 </span>
@@ -450,26 +494,43 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           })}
 
           {/* More button */}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-2xl min-w-[56px] transition-all duration-200"
-            style={{
-              color: MORE_NAV.some((item) => isActive(item, pathname))
-                ? 'var(--accent)'
-                : 'var(--fg-subtle)',
-              background: MORE_NAV.some((item) => isActive(item, pathname))
-                ? 'var(--accent-dim)'
-                : 'transparent',
-            }}
-          >
-            <MoreHorizontal size={22} strokeWidth={1.8} />
-            <span
-              className="text-[9px] font-black uppercase"
-              style={{ letterSpacing: '0.05em' }}
-            >
-              Altro
-            </span>
-          </button>
+          {(() => {
+            const moreActive = MORE_NAV.some((item) => isActive(item, pathname))
+            return (
+              <button
+                onClick={() => setMoreOpen(true)}
+                className="flex flex-col items-center gap-1 flex-1"
+                style={{ color: moreActive ? 'var(--accent)' : 'var(--fg-subtle)' }}
+              >
+                <div
+                  style={{
+                    padding: '5px 16px',
+                    borderRadius: '12px',
+                    background: moreActive
+                      ? 'color-mix(in srgb, var(--accent) 14%, var(--bg-elevated))'
+                      : 'transparent',
+                    transition: 'all 220ms cubic-bezier(0.16,1,0.3,1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <MoreHorizontal size={21} strokeWidth={1.7} />
+                </div>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: moreActive ? 700 : 500,
+                    letterSpacing: '0.02em',
+                    lineHeight: 1,
+                    paddingBottom: '4px',
+                  }}
+                >
+                  Altro
+                </span>
+              </button>
+            )
+          })()}
         </div>
       </nav>
     </div>
