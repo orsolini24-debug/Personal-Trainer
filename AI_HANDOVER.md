@@ -512,6 +512,57 @@ La pagina Nutrizione mostra `kcalActual = 0` anche quando i macro (proteinG, car
 
 ---
 
+### CHECKPOINT CP-014 — Fix calorie ring bug (COMPLETATO)
+**Stato:** COMPLETATO
+**Data:** 17 Marzo 2026
+**Da:** CLAUDE
+- Aggiunta formula fallback in `updateDayTotals`: se `fi.kcal` è 0/null usa `protein*4 + carbs*4 + fat*9`
+- CalorieRing ora mostra valore corretto anche senza kcal esplicito
+
+---
+
+### CHECKPOINT CP-015 — Redesign Design System v5.0 (Visual 2026)
+**Stato:** COMPLETATO
+**Data:** 17 Marzo 2026
+**Da:** CLAUDE
+**Risk tier:** LOW (nessuna logica di business toccata)
+
+**Contesto:**
+L'utente ha richiesto un visual upgrade completo: "la grafica e i temi in generale sono brutti vecchi non da 2026".
+
+**Cosa è stato fatto:**
+
+**`app/globals.css` — Design System v5.0:**
+- Nuovi token CSS: `--r-xs` (6px) → `--r-2xl` (36px) + `--r-full`. Durations: `--dur-fast/normal/slow/xslow`
+- `.card` / `.card-elevated`: border-radius 20px, `inset 0 1px 0 rgba(255,255,255,0.06)` inner highlight
+- `.card-interactive`: hover lift + border brighten + active press
+- `.card-accent-border`: gradient border via CSS mask technique (accent glow)
+- `.frosted`: floating panel per modal/tooltip (48px blur, `--r-xl`)
+- `.btn-primary`: gradient `accent → mix(accent,accent2)`, letter-spacing, better shadow + glow on hover
+- `.btn-ghost`: `--r-md` radius, `color-mix` hover bg, `--ease-expo-out` transition
+- `.badge`: pillola con uppercase, `font-weight: 700`, border colorato con `color-mix`
+- `.glass` / `.glass-sm` / `.glass-heavy`: inner highlight rafforzato (`rgba(255,255,255,0.09)`)
+- `.input-field`: `--r-md` radius, inner inset shadow on focus
+- Nuove keyframes: `blur-in`, `rise-up`, `pop-in`, `slide-right`, `glow-breathe`
+- Nuove utilities: `.animate-blur-in`, `.animate-rise-up`, `.animate-pop-in`, `.animate-glow-breathe`
+- Nuove utilities: `.surface-accent`, `.ring-accent/positive/negative`, `.num`, `.chip`, `.chip-active`
+- Nuova utility: `.divider-label`, `.text-accent-gradient`, `.mesh-bg`, `.tap-target`, `.line-clamp-1/2/3`
+
+**`app/(protected)/ClientLayout.tsx` — Navigation 2026:**
+- `NavLink`: eliminato left-bar + square icon bg. Sostituito con pill bg (`color-mix accent 10%`) + accent border + dot indicator a destra
+- `UserAvatar`: avatar con `inset` highlight, online dot verde, "Atleta · Pro" subtitle
+- `SidebarContent`: logo più premium (14px radius, `inset 0 1px 0 rgba(255,255,255,0.22)`), `scrollbar-hide` su nav, help button con hover mouse events
+- Mobile bottom nav: stile **iOS tab bar 2026** — pill bg dietro icona su active (`border-radius: 12px`), font-weight dinamico
+- `MobileMoreSheet`: frosted glass (blur 48px), `border-radius: 28px 28px 0 0`, exit button rosso accent
+- Header: `border-subtle` più sottile, `saturate(160%)` nel backdrop, `font-weight: 700` su page title
+
+**Acceptance criteria:**
+- [x] `npx tsc --noEmit --skipLibCheck` → 0 errori
+- [x] Nessuna rottura di componenti esistenti (token backward-compatible)
+- [x] Tutti i 9 temi supportano le nuove classi (uso `color-mix` e variabili relative)
+
+---
+
 ## 🔒 REGOLE BACKUP (vigenti da 17 Mar 2026)
 
 - Backup creato SOLO su dichiarazione esplicita di Giorgio ("versione stabile")
