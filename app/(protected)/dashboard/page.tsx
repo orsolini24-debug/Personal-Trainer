@@ -18,15 +18,37 @@ export default async function DashboardPage() {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
-  // Fetch data in parallel
-  const [recovery, nutrition, workout, biometric, profile, goals] = await Promise.all([
-    prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
-    prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
-    prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: 'asc' } }),
-    prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
-    prisma.userProfile.findUnique({ where: { userId } }),
-    getActiveGoals()
-  ])
+  let recovery, nutrition, workout, biometric, profile, goals;
+
+  try {
+    // Fetch data in parallel
+    const results = await Promise.all([
+      prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
+      prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
+      prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: 'asc' } }),
+      prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
+      prisma.userProfile.findUnique({ where: { userId } }),
+      getActiveGoals()
+    ])
+    
+    recovery = results[0]
+    nutrition = results[1]
+    workout = results[2]
+    biometric = results[3]
+    profile = results[4]
+    goals = results[5]
+  } catch (error) {
+    console.error("Dashboard Data Fetch Error:", error)
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h1 className="text-2xl font-black text-negative">Errore Caricamento Dati</h1>
+        <p className="text-muted">Si è verificato un errore durante il recupero dei dati dal database. Verifica la connessione.</p>
+        <div className="p-4 bg-negative/5 border border-negative/20 rounded-2xl text-xs font-mono text-left overflow-auto max-w-full">
+          {error instanceof Error ? error.message : "Unknown database error"}
+        </div>
+      </div>
+    )
+  }
 
   // Macro calculations
   const kcalActual = nutrition?.kcalActual || 0

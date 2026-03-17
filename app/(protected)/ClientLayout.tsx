@@ -6,7 +6,6 @@ import {
   LayoutDashboard, Dumbbell, Utensils, HeartPulse,
   MessageCircle, Activity, Calendar, LogOut,
   HelpCircle, Menu, X, BookOpen, MoreHorizontal,
-  ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
@@ -405,24 +404,24 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <header
           className="flex items-center justify-between shrink-0"
           style={{
-            height: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
+            height: 'calc(3.25rem + env(safe-area-inset-top, 0px))',
             paddingTop: 'env(safe-area-inset-top, 0px)',
             paddingLeft: '4rem',
             paddingRight: '1rem',
-            borderBottom: '1px solid var(--border-default)',
-            backdropFilter: 'blur(32px)',
-            background: 'color-mix(in srgb, var(--bg-base) 80%, transparent)',
+            borderBottom: '1px solid var(--border-subtle)',
+            backdropFilter: 'blur(40px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(160%)',
+            background: 'color-mix(in srgb, var(--bg-base) 78%, transparent)',
             position: 'sticky',
             top: 0,
             zIndex: 20,
           }}
-          /* on md+, override padding */
         >
           {/* Page title shown on mobile */}
           <div className="md:hidden flex items-center">
             <span
-              className="text-sm font-black tracking-tight"
-              style={{ color: 'var(--fg-primary)' }}
+              className="text-sm font-bold tracking-tight"
+              style={{ color: 'var(--fg-primary)', letterSpacing: '-0.02em' }}
             >
               {pageTitle}
             </span>
