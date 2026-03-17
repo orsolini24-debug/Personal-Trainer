@@ -155,10 +155,18 @@ async function updateDayTotals(mealId: string) {
   let kcal = 0, p = 0, c = 0, f = 0
   day.meals.forEach(m => {
     m.foodItems.forEach(fi => {
-      kcal += fi.kcal || 0
-      p += fi.proteinG || 0
-      c += fi.carbsG || 0
-      f += fi.fatG || 0
+      // Calcolo kcal: usa il valore esplicito se disponibile,
+      // altrimenti stima dai macros (protein*4 + carbs*4 + fat*9)
+      const pG = fi.proteinG || 0
+      const cG = fi.carbsG || 0
+      const fG = fi.fatG || 0
+      const fiKcal = fi.kcal && fi.kcal > 0
+        ? fi.kcal
+        : Math.round(pG * 4 + cG * 4 + fG * 9)
+      kcal += fiKcal
+      p += pG
+      c += cG
+      f += fG
     })
   })
 
