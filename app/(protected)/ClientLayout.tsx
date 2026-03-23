@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Dumbbell, Utensils, HeartPulse,
-  MessageCircle, Activity, Calendar, LogOut,
+  MessageCircle, Activity, Calendar, CalendarDays, LogOut,
   HelpCircle, Menu, X, BookOpen, MoreHorizontal,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -15,12 +15,13 @@ import ThemeToggle from '@/components/ThemeToggle'
 const navItems = [
   { name: 'Dashboard',  href: '/dashboard',         icon: LayoutDashboard, exact: false },
   { name: 'Training',   href: '/training',          icon: Dumbbell,        exact: true  },
-  { name: 'Libreria',   href: '/training/library',  icon: BookOpen,        exact: false },
+  { name: 'Calendario', href: '/calendar',          icon: CalendarDays,    exact: false },
   { name: 'Nutrition',  href: '/nutrition',         icon: Utensils,        exact: false },
   { name: 'Recovery',   href: '/recovery',          icon: HeartPulse,      exact: false },
   { name: 'Coach',      href: '/coach',             icon: MessageCircle,   exact: false },
   { name: 'Body',       href: '/body',              icon: Activity,        exact: false },
   { name: 'Plan',       href: '/plan',              icon: Calendar,        exact: false },
+  { name: 'Libreria',   href: '/training/library',  icon: BookOpen,        exact: false },
 ]
 
 const PRIMARY_NAV = navItems.slice(0, 4)
