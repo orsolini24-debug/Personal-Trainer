@@ -33,6 +33,8 @@ model User {
   activeSession    ActiveSession?
   goals            AthleteGoal[]
   mealTemplates    MealTemplate[]
+  manualActivities ManualActivity[]
+  dailyAnalyses    DailyAnalysis[]
 }
 
 model UserProfile {
@@ -483,6 +485,9 @@ enum MesoStatus {
 }
 
 enum SportType {
+  STRENGTH
+  HIIT
+  WALKING
   PALESTRA
   SOCCER
   PADEL
@@ -678,4 +683,43 @@ enum GoalType {
   NUTRITION_ONLY
   TRAINING_ONLY
   CUSTOM
+}
+
+// ─── MANUAL ACTIVITIES (non-plan entries: runs, walks, files) ────────────────
+
+model ManualActivity {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime   @db.Date
+  title        String
+  sportType    SportType?
+  customType   String?    // Free-form label for un-enumerated types
+  durationMin  Int?
+  distanceKm   Float?
+  heartRateAvg Int?
+  heartRateMax Int?
+  calories     Int?
+  notes        String?    @db.Text
+  attachments  String[]   // base64 data URIs or cloud URLs (photos, screenshots)
+  rawJson      String?    @db.Text // Verbatim JSON exported from smartwatch
+  aiSummary    String?    @db.Text // AI-generated summary / parsed metrics
+  source       String     @default("MANUAL") // MANUAL | WATCH_JSON | SCREENSHOT | PHOTO
+  createdAt    DateTime   @default(now())
+}
+
+// ─── DAILY AI ANALYSIS ───────────────────────────────────────────────────────
+
+model DailyAnalysis {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                 DateTime  @db.Date
+  analysisText         String    @db.Text    // Full narrative report
+  adherenceScore       Float?                // 0.0 – 1.0
+  suggestedAdaptations String?   @db.Text   // JSON: [{type, description, targetDate}]
+  appliedAt            DateTime?
+  createdAt            DateTime  @default(now())
+
+  @@unique([userId, date])
 }

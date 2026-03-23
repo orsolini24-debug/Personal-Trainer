@@ -55,6 +55,23 @@ export default async function ActiveSessionPage({ searchParams }: Props) {
     }
   }
 
+  // Batch-load ExerciseDefinition data (media + muscles) by name
+  const exerciseNames = exercises.map(ex => ex.name)
+  const exerciseDefs = await prisma.exerciseDefinition.findMany({
+    where: { name: { in: exerciseNames } },
+    select: {
+      name: true,
+      mediaUrl: true,
+      mediaUrls: true,
+      primaryMuscles: true,
+      secondaryMuscles: true,
+      descriptionIt: true,
+      description: true,
+      tipsIt: true,
+    },
+  })
+  const defByName = Object.fromEntries(exerciseDefs.map(d => [d.name, d]))
+
   // Serializza per passare al client
   const trackerData = {
     activeSessionId: active.id,
@@ -66,6 +83,7 @@ export default async function ActiveSessionPage({ searchParams }: Props) {
     exercises: exercises.map(ex => {
       let parsedNotes: { restSec?: number; repsMin?: number; repsMax?: number; plan?: string } = {}
       try { parsedNotes = JSON.parse(ex.technicalNotes ?? '{}') } catch {}
+      const def = defByName[ex.name]
       return {
         id: ex.id,
         name: ex.name,
@@ -76,6 +94,13 @@ export default async function ActiveSessionPage({ searchParams }: Props) {
         targetRir: ex.rir ?? 2,
         restSec: parsedNotes.restSec ?? 120,
         planNotes: parsedNotes.plan ?? ex.technicalNotes ?? '',
+        // Exercise definition data
+        mediaUrl: def?.mediaUrl ?? null,
+        mediaUrls: def?.mediaUrls ?? [],
+        primaryMuscles: def?.primaryMuscles ?? [],
+        secondaryMuscles: def?.secondaryMuscles ?? [],
+        description: def?.descriptionIt ?? def?.description ?? null,
+        tips: def?.tipsIt ?? null,
         completedSets: ex.setLogs.map(sl => ({
           setNumber: sl.setNumber,
           weightKg: sl.weightKg,

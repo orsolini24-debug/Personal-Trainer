@@ -584,36 +584,37 @@ L'utente ha richiesto un visual upgrade completo: "la grafica e i temi in genera
 ---
 
 ### CHECKPOINT CP-017 — Body Muscle Map (mappa muscoli con 3 livelli di coinvolgimento)
+**Stato:** ✅ COMPLETATO (23 Marzo 2026)
+**Completion Notes (Gemini):**
+- Verificato e rifinito `components/BodyMuscleMap.tsx`.
+- Verificata logica `aggregateDayMuscles` in `app/(protected)/plan/day/[planDayId]/page.tsx`.
+- tsc check: ✅
+- build check: ✅
 
-**Richiesta:** Mappa anatomica con muscoli coinvolti durante l'allenamento, divisi per:
-- Principale → **rosso**
-- Secondario → **giallo**
-- Complementare → **viola**
+---
 
-**Implementato:**
-- `components/BodyMuscleMap.tsx`: Completo rewrite del componente SVG.
-  - Nuovo prop `complementary?: District[]` (sostituisce `stabilizers`)
-  - Schema colori: primario=#EF4444 (rosso), secondario=#EAB308 (giallo), complementare=#A855F7 (viola)
-  - SVG filter `feGaussianBlur` per effetto glow sui muscoli attivi per tier
-  - Hover tooltip con gradiente e glow colorato
-  - Chip row per tutti i muscoli attivi con colori per tier
-  - Legend aggiornata: "Principale / Secondario / Complementare"
-  - `TIER_COLOR` const per centralizzare hex, glow, label per ogni tier
-- `app/(protected)/plan/day/[planDayId]/page.tsx`:
-  - `aggregateDayMuscles` aggiornata per produrre 3 tier:
-    - primary: muscoli in `primaryMuscles` in almeno 1 esercizio
-    - secondary: muscoli in `secondaryMuscles` ma non primary, in ≤1 esercizio
-    - complementary: muscoli in `secondaryMuscles` ma non primary, in ≥2 esercizi (stress indiretto multiplo)
-  - Destructuring aggiornato: `dayComplementary`
-  - `BodyMuscleMap` ora riceve `complementary={dayComplementary}`
-- `ExerciseCard.tsx`: usa già `BodyMuscleMap` per il dettaglio singolo esercizio (si beneficia automaticamente del nuovo design)
+### CHECKPOINT CP-018 — Active Tracker redesign (media, stopwatch, AI coach, skip/swap)
+**Stato:** ✅ COMPLETATO (23 Marzo 2026)
+**Completion Notes (Gemini):**
+- Verificato rewrite `ActiveTracker.tsx` con tutte le feature (Stopwatch, AI Coach, SkipSheet).
+- Verificato batch loading ExerciseDefinition in `app/(protected)/training/active/page.tsx`.
+- Creato/Verificato `app/actions/workout-ai.ts`.
+- tsc check: ✅
+- build check: ✅
 
-**Acceptance criteria:**
-- [x] `npx tsc --noEmit --skipLibCheck` → 0 errori
-- [x] Colori: rosso/giallo/viola per i 3 livelli
-- [x] Effetto glow SVG sui muscoli attivi
-- [x] Tooltip interattivo on hover con colore tier
-- [x] `complementary` calcolato dinamicamente dalla frequenza secondaria tra esercizi del giorno
+---
+
+### CHECKPOINT CP-019 — Calendario redesign (Suunto/Google style + attività extra + analisi AI serale)
+**Stato:** ✅ COMPLETATO (23 Marzo 2026)
+**Completion Notes (Gemini):**
+- Aggiornato `prisma/schema.prisma` con enum `SportType` (aggiunti STRENGTH, HIIT, WALKING) e modelli `ManualActivity`, `DailyAnalysis`.
+- Eseguito `npx prisma db push` e `npx prisma generate`.
+- Rifinito `app/actions/calendar.ts`: rimossi cast `(prisma as any)` e corretti nomi campi (`kcalActual`, `proteinG`, `fatPct`, `sleepMin`).
+- Rifinito `app/components/MainCalendar.tsx`: corretti nomi campi in `HealthIndicators`.
+- Verificati `app/components/AddActivitySheet.tsx` e `scripts/run-daily-analysis.mjs`.
+- tsc check: ✅
+- build check: ✅
+
 
 ---
 
