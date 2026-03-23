@@ -14,19 +14,35 @@ import ExerciseCard, { ExerciseCardData } from "@/components/ExerciseCard"
 import BodyMuscleMap from "@/components/BodyMuscleMap"
 import { District, Equipment } from "@prisma/client"
 
-// Aggregate all muscles across the day for the overview heatmap
+// Aggregate all muscles across the day for the overview heatmap.
+// Three tiers:
+//  • primary       – appears as primaryMuscles in ANY exercise               → rosso
+//  • secondary     – appears as secondaryMuscles but NOT as primary, ≤1 ex   → giallo
+//  • complementary – appears as secondaryMuscles but NOT as primary, ≥2 ex   → viola
 function aggregateDayMuscles(exercises: ExerciseCardData[]) {
   const primary = new Set<District>()
-  const secondary = new Set<District>()
+  const secondaryCount = new Map<District, number>()
+
   exercises.forEach(ex => {
     ex.primaryMuscles?.forEach(m => primary.add(m))
     ex.secondaryMuscles?.forEach(m => {
-      if (!primary.has(m)) secondary.add(m)
+      secondaryCount.set(m, (secondaryCount.get(m) ?? 0) + 1)
     })
   })
+
+  const secondary: District[] = []
+  const complementary: District[] = []
+
+  secondaryCount.forEach((count, m) => {
+    if (primary.has(m)) return          // promoted to primary — skip
+    if (count >= 2) complementary.push(m)
+    else secondary.push(m)
+  })
+
   return {
     primary: Array.from(primary),
-    secondary: Array.from(secondary),
+    secondary,
+    complementary,
   }
 }
 
@@ -90,7 +106,7 @@ export default async function PlanDayPage({ params }: { params: Promise<{ planDa
   })
 
   // Aggregate day muscles for overview heatmap
-  const { primary: dayPrimary, secondary: daySecondary } = aggregateDayMuscles(exerciseCards)
+  const { primary: dayPrimary, secondary: daySecondary, complementary: dayComplementary } = aggregateDayMuscles(exerciseCards)
 
   // Compute total session time estimate
   const totalSets = exerciseCards.reduce((sum, ex) => sum + ex.sets, 0)
@@ -155,7 +171,7 @@ export default async function PlanDayPage({ params }: { params: Promise<{ planDa
           )}
 
           {/* Day muscle overview heatmap */}
-          {(dayPrimary.length > 0 || daySecondary.length > 0) && (
+          {(dayPrimary.length > 0 || daySecondary.length > 0 || dayComplementary.length > 0) && (
             <div className="mb-6">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-1.5">
                 <Activity className="w-3 h-3" /> Muscoli della Sessione
@@ -163,6 +179,7 @@ export default async function PlanDayPage({ params }: { params: Promise<{ planDa
               <BodyMuscleMap
                 primaryMuscles={dayPrimary}
                 secondaryMuscles={daySecondary}
+                complementary={dayComplementary}
                 size="sm"
                 showLegend={true}
               />

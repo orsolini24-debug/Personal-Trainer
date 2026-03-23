@@ -563,6 +563,60 @@ L'utente ha richiesto un visual upgrade completo: "la grafica e i temi in genera
 
 ---
 
+### CHECKPOINT CP-016 — Calendario settimanale full-width interattivo
+**Stato:** COMPLETATO
+**Data:** 17 Marzo 2026
+**Da:** CLAUDE
+
+**Contesto:** Calendario Gemini non soddisfaceva — troppo piccolo (sidebar 4/12), nessuna assegnazione manuale, 0 info per giorno.
+
+**Implementato:**
+- `plans.ts`: Nuove action `assignSessionToDay` + `removeSessionFromDay`. Update `getWeekCalendarData` per restituire `exerciseCount`
+- `WeeklyCalendar.tsx`: Completo rewrite full-width. 7 card giorno (scroll mobile). Ogni card: label, data grande, pill sessione colorata, focus, esercizi, stato. Click "+" → SessionPicker dropdown con lista planDays. Hover sessione → × rimuovi (solo PENDING) + "Cambia sessione". Oggi evidenziato. Auto-pianifica con Sparkles
+- `plan/page.tsx`: Calendario spostato full-width SOPRA il grid 8/4. Sidebar destra: solo NutritionPlan + Roadmap
+
+**Acceptance criteria:**
+- [x] `npx tsc --noEmit --skipLibCheck` → 0 errori
+- [x] Assegnazione manuale + rimozione + cambio sessione
+- [x] Auto-pianificazione settimana
+- [x] Info per giorno: label, focus, esercizi, stato
+
+---
+
+### CHECKPOINT CP-017 — Body Muscle Map (mappa muscoli con 3 livelli di coinvolgimento)
+
+**Richiesta:** Mappa anatomica con muscoli coinvolti durante l'allenamento, divisi per:
+- Principale → **rosso**
+- Secondario → **giallo**
+- Complementare → **viola**
+
+**Implementato:**
+- `components/BodyMuscleMap.tsx`: Completo rewrite del componente SVG.
+  - Nuovo prop `complementary?: District[]` (sostituisce `stabilizers`)
+  - Schema colori: primario=#EF4444 (rosso), secondario=#EAB308 (giallo), complementare=#A855F7 (viola)
+  - SVG filter `feGaussianBlur` per effetto glow sui muscoli attivi per tier
+  - Hover tooltip con gradiente e glow colorato
+  - Chip row per tutti i muscoli attivi con colori per tier
+  - Legend aggiornata: "Principale / Secondario / Complementare"
+  - `TIER_COLOR` const per centralizzare hex, glow, label per ogni tier
+- `app/(protected)/plan/day/[planDayId]/page.tsx`:
+  - `aggregateDayMuscles` aggiornata per produrre 3 tier:
+    - primary: muscoli in `primaryMuscles` in almeno 1 esercizio
+    - secondary: muscoli in `secondaryMuscles` ma non primary, in ≤1 esercizio
+    - complementary: muscoli in `secondaryMuscles` ma non primary, in ≥2 esercizi (stress indiretto multiplo)
+  - Destructuring aggiornato: `dayComplementary`
+  - `BodyMuscleMap` ora riceve `complementary={dayComplementary}`
+- `ExerciseCard.tsx`: usa già `BodyMuscleMap` per il dettaglio singolo esercizio (si beneficia automaticamente del nuovo design)
+
+**Acceptance criteria:**
+- [x] `npx tsc --noEmit --skipLibCheck` → 0 errori
+- [x] Colori: rosso/giallo/viola per i 3 livelli
+- [x] Effetto glow SVG sui muscoli attivi
+- [x] Tooltip interattivo on hover con colore tier
+- [x] `complementary` calcolato dinamicamente dalla frequenza secondaria tra esercizi del giorno
+
+---
+
 ## 🔒 REGOLE BACKUP (vigenti da 17 Mar 2026)
 
 - Backup creato SOLO su dichiarazione esplicita di Giorgio ("versione stabile")

@@ -101,6 +101,7 @@ export interface WeekCalendarSession {
   planDayFocus: string | null
   planDayId: string
   workoutSessionId: string | null
+  exerciseCount: number
 }
 
 export async function getWeekCalendarData(weekStartISO: string): Promise<WeekCalendarSession[]> {
@@ -114,7 +115,11 @@ export async function getWeekCalendarData(weekStartISO: string): Promise<WeekCal
 
   const sessions = await prisma.plannedSession.findMany({
     where: { userId, scheduledDate: { gte: weekStart, lte: weekEnd } },
-    include: { planDay: true },
+    include: {
+      planDay: {
+        include: { planExercises: { select: { id: true } } },
+      },
+    },
     orderBy: { scheduledDate: 'asc' },
   })
 
@@ -126,7 +131,53 @@ export async function getWeekCalendarData(weekStartISO: string): Promise<WeekCal
     planDayFocus: s.planDay.focus,
     planDayId: s.planDay.id,
     workoutSessionId: s.workoutSessionId,
+    exerciseCount: s.planDay.planExercises.length,
   }))
+}
+
+// ─── MANUAL ASSIGNMENT ──────────────────────────────────────────────────────
+
+export async function assignSessionToDay(planId: string, planDayId: string, dateISO: string) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: 'Non autenticato' }
+  const userId = session.user.id
+
+  const date = new Date(dateISO + 'T00:00:00Z')
+
+  // Remove existing PENDING session on that date (don't touch COMPLETED)
+  await prisma.plannedSession.deleteMany({
+    where: { userId, scheduledDate: date, status: 'PENDING' },
+  })
+
+  // Verify ownership of planDay
+  const planDay = await prisma.planDay.findFirst({
+    where: { id: planDayId, plan: { userId } },
+  })
+  if (!planDay) return { error: 'Giornata non trovata' }
+
+  try {
+    await prisma.plannedSession.create({
+      data: { userId, planId, planDayId, scheduledDate: date },
+    })
+    return { success: true }
+  } catch {
+    return { error: 'Sessione già presente' }
+  }
+}
+
+export async function removeSessionFromDay(plannedSessionId: string) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: 'Non autenticato' }
+  const userId = session.user.id
+
+  // Only allow removing PENDING sessions — COMPLETED have workout data
+  const existing = await prisma.plannedSession.findFirst({
+    where: { id: plannedSessionId, userId, status: 'PENDING' },
+  })
+  if (!existing) return { error: 'Sessione non trovata o già completata' }
+
+  await prisma.plannedSession.delete({ where: { id: plannedSessionId } })
+  return { success: true }
 }
 
 export async function schedulePlanForWeek(planId: string, weekStartISO: string) {

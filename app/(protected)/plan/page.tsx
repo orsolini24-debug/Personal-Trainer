@@ -18,6 +18,7 @@ import OnboardingWizard from "@/app/(protected)/onboarding/OnboardingWizard"
 import CoachInsights from "./CoachInsights"
 import NutritionPlanSection from "./NutritionPlanSection"
 import WeeklyCalendar from "@/app/components/WeeklyCalendar"
+import type { PlanDayOption } from "@/app/components/WeeklyCalendar"
 import { getWeekCalendarData } from "@/app/actions/plans"
 
 export default async function PlanPage() {
@@ -70,6 +71,14 @@ export default async function PlanPage() {
   })()
   const weekSessions = await getWeekCalendarData(todayMonday)
 
+  // 2d. Build plan day options for the calendar picker
+  const planDaysForCalendar: PlanDayOption[] = activeMeso?.workoutPlans[0]?.planDays.map(pd => ({
+    id: pd.id,
+    dayLabel: pd.dayLabel,
+    focus: pd.focus,
+    exerciseCount: pd.planExercises.length,
+  })) ?? []
+
   // 3. Fetch Archive
   const archivedMesos = await prisma.mesocycle.findMany({
     where: { userId, status: { in: [MesoStatus.ARCHIVED, MesoStatus.COMPLETED] } },
@@ -120,97 +129,104 @@ export default async function PlanPage() {
 
           {/* ── ACTIVE MESOCYCLE ── */}
           {activeMeso ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-6">
-                <section className="bg-surface rounded-[2.5rem] p-8 border border-border relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
-                    <Target className="w-64 h-64" />
-                  </div>
+            <div className="space-y-8">
+              {/* ── Full-width Weekly Calendar ── */}
+              <WeeklyCalendar
+                planId={activeMeso.workoutPlans[0]?.id}
+                planDays={planDaysForCalendar}
+                initialSessions={weekSessions}
+              />
 
-                  <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shadow-lg border border-accent/20">
-                          <PlayCircle className="w-8 h-8" />
-                        </div>
-                        <div>
-                          <span className="px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/20">
-                            In Corso
-                          </span>
-                          <h2 className="text-3xl font-black text-primary mt-1">{activeMeso.name}</h2>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black uppercase text-muted tracking-widest mb-1">Timeline</p>
-                        <p className="text-sm font-bold text-primary">{format(new Date(activeMeso.startDate), "dd MMM")} — {activeMeso.endDate ? format(new Date(activeMeso.endDate), "dd MMM") : '4 sett.'}</p>
-                      </div>
+              {/* ── Mesocycle + Sidebar ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-8 space-y-6">
+                  <section className="bg-surface rounded-[2.5rem] p-8 border border-border relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
+                      <Target className="w-64 h-64" />
                     </div>
 
-                    <div className="bg-base p-6 rounded-3xl border border-border mb-8">
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
-                          <Info className="w-4 h-4" /> Focus Tecnico
-                        </h3>
-                        <button className="text-[10px] font-bold text-muted hover:text-primary flex items-center gap-1">
-                          <Settings2 className="w-3 h-3" /> Modifica
-                        </button>
-                      </div>
-                      <p className="text-subtle text-sm leading-relaxed italic">{activeMeso.objectives}</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeMeso.workoutPlans[0]?.planDays.map(pd => (
-                        <Link
-                          key={pd.id}
-                          href={`/plan/day/${pd.id}`}
-                          className="bg-base p-5 rounded-[2rem] border border-border hover:border-accent/30 transition-all group/card cursor-pointer block"
-                        >
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-elevated flex items-center justify-center font-black text-accent group-hover/card:bg-accent group-hover/card:text-white transition-all">
-                              {pd.dayLabel}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-black text-accent opacity-0 group-hover/card:opacity-100 transition-all uppercase tracking-widest">Inizia Sessione</span>
-                              <ArrowRight className="w-4 h-4 text-accent opacity-0 group-hover/card:opacity-100 transition-all" />
-                            </div>
+                    <div className="relative z-10">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shadow-lg border border-accent/20">
+                            <PlayCircle className="w-8 h-8" />
                           </div>
-                          <p className="font-black text-primary mb-1">{pd.focus}</p>
-                          <p className="text-[10px] text-muted uppercase font-bold tracking-tighter mb-4">{pd.planExercises.length} Esercizi</p>
-                          <div className="space-y-1.5 opacity-60 group-hover/card:opacity-100 transition-opacity">
-                            {pd.planExercises.slice(0, 3).map(pe => (
-                              <p key={pe.id} className="text-[10px] text-subtle truncate flex items-center gap-2">
-                                <span className="w-1 h-1 rounded-full bg-accent inline-block" /> {pe.name}
-                              </p>
-                            ))}
+                          <div>
+                            <span className="px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/20">
+                              In Corso
+                            </span>
+                            <h2 className="text-3xl font-black text-primary mt-1">{activeMeso.name}</h2>
                           </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-              </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black uppercase text-muted tracking-widest mb-1">Timeline</p>
+                          <p className="text-sm font-bold text-primary">{format(new Date(activeMeso.startDate), "dd MMM")} — {activeMeso.endDate ? format(new Date(activeMeso.endDate), "dd MMM") : '4 sett.'}</p>
+                        </div>
+                      </div>
 
-              {/* Side Content */}
-              <div className="lg:col-span-4 space-y-6">
-                <WeeklyCalendar
-                  planId={activeMeso.workoutPlans[0]?.id}
-                  initialSessions={weekSessions}
-                />
-                <NutritionPlanSection activeNutritionMeso={activeNutritionMeso} />
+                      <div className="bg-base p-6 rounded-3xl border border-border mb-8">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                            <Info className="w-4 h-4" /> Focus Tecnico
+                          </h3>
+                          <button className="text-[10px] font-bold text-muted hover:text-primary flex items-center gap-1">
+                            <Settings2 className="w-3 h-3" /> Modifica
+                          </button>
+                        </div>
+                        <p className="text-subtle text-sm leading-relaxed italic">{activeMeso.objectives}</p>
+                      </div>
 
-                <section className="bg-surface rounded-[2.5rem] p-6 border border-border">
-                  <h2 className="text-lg font-black text-primary mb-6 flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-warning/10 text-warning">
-                      <Milestone className="w-4 h-4" />
+                      {/* Plan days grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {activeMeso.workoutPlans[0]?.planDays.map(pd => (
+                          <Link
+                            key={pd.id}
+                            href={`/plan/day/${pd.id}`}
+                            className="bg-base p-5 rounded-[2rem] border border-border hover:border-accent/30 transition-all group/card cursor-pointer block"
+                          >
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="w-10 h-10 rounded-xl bg-elevated flex items-center justify-center font-black text-accent group-hover/card:bg-accent group-hover/card:text-white transition-all">
+                                {pd.dayLabel}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-black text-accent opacity-0 group-hover/card:opacity-100 transition-all uppercase tracking-widest">Inizia Sessione</span>
+                                <ArrowRight className="w-4 h-4 text-accent opacity-0 group-hover/card:opacity-100 transition-all" />
+                              </div>
+                            </div>
+                            <p className="font-black text-primary mb-1">{pd.focus}</p>
+                            <p className="text-[10px] text-muted uppercase font-bold tracking-tighter mb-4">{pd.planExercises.length} Esercizi</p>
+                            <div className="space-y-1.5 opacity-60 group-hover/card:opacity-100 transition-opacity">
+                              {pd.planExercises.slice(0, 3).map(pe => (
+                                <p key={pe.id} className="text-[10px] text-subtle truncate flex items-center gap-2">
+                                  <span className="w-1 h-1 rounded-full bg-accent inline-block" /> {pe.name}
+                                </p>
+                              ))}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                    Roadmap
-                  </h2>
-                  <div className="p-4 rounded-2xl bg-base border border-border text-center">
-                    <p className="text-sm text-muted italic">
-                      La roadmap dettagliata sarà disponibile prossimamente.
-                    </p>
-                  </div>
-                </section>
+                  </section>
+                </div>
+
+                {/* Side Content */}
+                <div className="lg:col-span-4 space-y-6">
+                  <NutritionPlanSection activeNutritionMeso={activeNutritionMeso} />
+
+                  <section className="bg-surface rounded-[2.5rem] p-6 border border-border">
+                    <h2 className="text-lg font-black text-primary mb-6 flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-warning/10 text-warning">
+                        <Milestone className="w-4 h-4" />
+                      </div>
+                      Roadmap
+                    </h2>
+                    <div className="p-4 rounded-2xl bg-base border border-border text-center">
+                      <p className="text-sm text-muted italic">
+                        La roadmap dettagliata sarà disponibile prossimamente.
+                      </p>
+                    </div>
+                  </section>
+                </div>
               </div>
             </div>
           ) : !draftMeso && (
