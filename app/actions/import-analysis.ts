@@ -114,6 +114,7 @@ REGOLE:
           startDate: new Date(),
           objectives: planData.objectives,
           status: MesoStatus.ACTIVE,
+          planType: 'TRAINING_ONLY',
         }
       })
 

@@ -41,9 +41,13 @@ export default async function PlanPage() {
     orderBy: { createdAt: 'desc' }
   })
 
-  // 2. Fetch Active Training Mesocycle (excludes NUTRITION_ONLY)
+  // 2. Fetch Active Training Mesocycle (excludes NUTRITION_ONLY, includes null planType)
   const activeMeso = await prisma.mesocycle.findFirst({
-    where: { userId, status: MesoStatus.ACTIVE, NOT: { planType: 'NUTRITION_ONLY' } },
+    where: {
+      userId,
+      status: MesoStatus.ACTIVE,
+      OR: [{ planType: null }, { planType: 'TRAINING_ONLY' }, { planType: 'FULL' }]
+    },
     include: {
       workoutPlans: {
         include: {
