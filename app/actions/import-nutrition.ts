@@ -46,7 +46,7 @@ const EXTRACT_PROMPT = `Sei un nutrizionista esperto. Analizza questo piano alim
   "rawText": "testo originale estratto"
 }`
 
-async function parseWithAI(text: string): Promise<NutritionPlanData | null> {
+export async function parseNutritionPlanFromText(text: string): Promise<NutritionPlanData | null> {
   try {
     const response = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
@@ -61,7 +61,7 @@ async function parseWithAI(text: string): Promise<NutritionPlanData | null> {
     const raw = response.choices[0]?.message?.content ?? ''
     return JSON.parse(raw) as NutritionPlanData
   } catch (error) {
-    console.error("parseWithAI error:", error)
+    console.error("parseNutritionPlanFromText error:", error)
     return null
   }
 }
@@ -96,7 +96,7 @@ export async function importNutritionPlanFromText(text: string) {
   if (!session?.user?.id) return { error: 'Non autenticato' }
   const userId = session.user.id
 
-  const data = await parseWithAI(text)
+  const data = await parseNutritionPlanFromText(text)
   if (!data) return { error: 'Impossibile analizzare il piano alimentare. Controlla il testo e riprova.' }
 
   await saveNutritionPlan(userId, data)

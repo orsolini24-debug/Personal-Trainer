@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import Groq from "groq-sdk"
 import { MesoStatus, SessionType } from "@prisma/client"
-import { importNutritionPlanFromText } from "./import-nutrition"
+import { importNutritionPlanFromText, parseNutritionPlanFromText, type NutritionPlanData } from "./import-nutrition"
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "missing"
@@ -54,24 +54,35 @@ export async function analyzeAndImportPlanSmart(text: string): Promise<SmartImpo
     console.log("[IMPORT] containsTraining:", containsTraining, "containsNutrition:", containsNutrition)
 
     let trainingRes = null
-    let nutritionRes = null
-
-    if (containsTraining) {
-      trainingRes = await analyzeAndImportPlan(text)
-      console.log("[IMPORT] trainingRes:", JSON.stringify(trainingRes))
-    }
+    let nutritionData: NutritionPlanData | null = null
 
     if (containsNutrition) {
-      nutritionRes = await importNutritionPlanFromText(text)
-      console.log("[IMPORT] nutritionRes:", JSON.stringify(nutritionRes))
+      nutritionData = await parseNutritionPlanFromText(text)
+      console.log("[IMPORT] nutritionData parsed:", !!nutritionData)
+    }
+
+    if (containsTraining) {
+      // Se abbiamo sia training che nutrition, passiamo nutritionData ad analyzeAndImportPlan
+      trainingRes = await analyzeAndImportPlan(text, nutritionData || undefined)
+      console.log("[IMPORT] trainingRes:", JSON.stringify(trainingRes))
+    } else if (containsNutrition && nutritionData) {
+      // Solo nutrizione via smart import -> usiamo la action dedicata che crea NUTRITION_ONLY
+      const res = await importNutritionPlanFromText(text)
+      return {
+        success: true,
+        importedTraining: false,
+        importedNutrition: !!res.success,
+        trainingError: null,
+        nutritionError: !res.success ? (res as any).error : null
+      }
     }
 
     return {
       success: true,
       importedTraining: !!(containsTraining && trainingRes?.success),
-      importedNutrition: !!(containsNutrition && nutritionRes?.success),
+      importedNutrition: !!(containsNutrition && nutritionData),
       trainingError: trainingRes && !trainingRes.success ? trainingRes.error : null,
-      nutritionError: (nutritionRes && 'error' in nutritionRes) ? (nutritionRes.error as string) : null
+      nutritionError: (containsNutrition && !nutritionData) ? "Errore parsing nutrizione" : null
     }
   } catch (error: any) {
     console.error("[IMPORT] Smart import error:", error)
@@ -79,7 +90,7 @@ export async function analyzeAndImportPlanSmart(text: string): Promise<SmartImpo
   }
 }
 
-export async function analyzeAndImportPlan(text: string) {
+export async function analyzeAndImportPlan(text: string, nutritionData?: NutritionPlanData) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
   const userId = session.user.id
@@ -124,7 +135,7 @@ REGOLE:
 
     // Inizia transazione DB
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Archivia precedenti
+      // 1. Archivia precedenti (allenamento e dieta)
       await tx.mesocycle.updateMany({
         where: { userId, status: MesoStatus.ACTIVE },
         data: { status: MesoStatus.ARCHIVED }
@@ -134,11 +145,20 @@ REGOLE:
       const meso = await tx.mesocycle.create({
         data: {
           userId,
-          name: planData.name || "Piano Importato",
+          name: planData.name || nutritionData?.name || "Piano Importato",
           startDate: new Date(),
-          objectives: planData.objectives,
+          objectives: planData.objectives || nutritionData?.strategy,
           status: MesoStatus.ACTIVE,
-          planType: 'TRAINING_ONLY',
+          planType: nutritionData ? 'FULL' : 'TRAINING_ONLY',
+          kpi: nutritionData ? {
+            kcalTarget: nutritionData.kcalTarget,
+            proteinG: nutritionData.proteinG,
+            carbsG: nutritionData.carbsG,
+            fatG: nutritionData.fatG,
+            meals: nutritionData.meals,
+            guidelines: nutritionData.guidelines,
+            rawText: nutritionData.rawText,
+          } : undefined,
         }
       })
 
@@ -147,44 +167,48 @@ REGOLE:
         data: {
           userId,
           mesocycleId: meso.id,
-          name: planData.name || "Piano Importato",
-          goal: planData.objectives,
+          name: planData.name || nutritionData?.name || "Piano Importato",
+          goal: planData.objectives || nutritionData?.strategy,
           source: 'IMPORTED',
           isActive: true,
         }
       })
 
       // 4. Crea Giorni ed Esercizi
-      for (let i = 0; i < planData.plan.length; i++) {
-        const day = planData.plan[i]
-        const pDay = await tx.planDay.create({
-          data: {
-            planId: workoutPlan.id,
-            dayLabel: (day.dayLabel || "A") as SessionType,
-            focus: day.focus,
-            orderIndex: i,
-          }
-        })
+      if (planData.plan && Array.isArray(planData.plan)) {
+        for (let i = 0; i < planData.plan.length; i++) {
+          const day = planData.plan[i]
+          const pDay = await tx.planDay.create({
+            data: {
+              planId: workoutPlan.id,
+              dayLabel: (day.dayLabel || "A") as SessionType,
+              focus: day.focus,
+              orderIndex: i,
+            }
+          })
 
-        await tx.planExercise.createMany({
-          data: day.exercises.map((ex: any, idx: number) => ({
-            planDayId: pDay.id,
-            name: ex.name,
-            orderIndex: idx,
-            sets: parseInt(ex.sets) || 3,
-            repsMin: parseInt(ex.repsMin) || 8,
-            repsMax: parseInt(ex.repsMax) || 12,
-            targetRir: parseInt(ex.targetRir) || 2,
-            restSec: parseInt(ex.restSec) || 90,
-            notes: ex.notes || "",
-          }))
-        })
+          if (day.exercises && Array.isArray(day.exercises)) {
+            await tx.planExercise.createMany({
+              data: day.exercises.map((ex: any, idx: number) => ({
+                planDayId: pDay.id,
+                name: ex.name,
+                orderIndex: idx,
+                sets: parseInt(ex.sets) || 3,
+                repsMin: parseInt(ex.repsMin) || 8,
+                repsMax: parseInt(ex.repsMax) || 12,
+                targetRir: parseInt(ex.targetRir) || 2,
+                restSec: parseInt(ex.restSec) || 90,
+                notes: ex.notes || "",
+              }))
+            })
+          }
+        }
       }
 
       return meso
     })
 
-    // Segna onboarding completato (fondamentale dopo DB reset)
+    // Segna onboarding completato
     await prisma.user.update({
       where: { id: userId },
       data: { onboardingCompleted: true }

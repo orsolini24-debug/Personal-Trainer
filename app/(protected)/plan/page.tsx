@@ -61,10 +61,15 @@ export default async function PlanPage() {
   })
 
   // 2b. Fetch Active Nutrition Plan (NUTRITION_ONLY)
-  const activeNutritionMeso = await prisma.mesocycle.findFirst({
+  let activeNutritionMeso = await prisma.mesocycle.findFirst({
     where: { userId, status: MesoStatus.ACTIVE, planType: 'NUTRITION_ONLY' },
     orderBy: { startDate: 'desc' }
   })
+
+  // Se non c'è un piano di sola nutrizione, ma quello di allenamento è FULL, usiamo quello per la visualizzazione dieta
+  if (!activeNutritionMeso && activeMeso?.planType === 'FULL') {
+    activeNutritionMeso = activeMeso
+  }
 
   // 2c. Fetch current week sessions for calendar
   const todayMonday = (() => {
