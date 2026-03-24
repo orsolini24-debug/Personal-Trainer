@@ -112,13 +112,13 @@ export async function getOrCreateNutritionDay(date: Date) {
       if (planKpi?.meals) {
         for (const m of planKpi.meals) {
           const lowerName = m.name.toLowerCase()
-          let type = MealType.SNACK
+          let mealType: MealType = MealType.SNACK
           for (const [key, val] of Object.entries(MEAL_MAP)) {
-            if (lowerName.includes(key)) { type = val; break; }
+            if (lowerName.includes(key)) { mealType = val; break; }
           }
           mealsToCreate.push({ 
             nutritionDayId: newDay.id, 
-            type, 
+            type: mealType, 
             suggestedFoods: m.foods || [] 
           })
         }
