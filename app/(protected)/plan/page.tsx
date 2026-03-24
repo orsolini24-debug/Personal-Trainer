@@ -113,113 +113,109 @@ export default async function PlanPage() {
         <>
           {/* ── PROPOSALS SECTION (If Draft Exists) ── */}
           {draftMeso && draftMeso.aiProposals && (
-            <section className="bg-surface/50 rounded-[3rem] p-8 border border-accent/30 relative overflow-hidden glass-heavy animate-rise-up">
-              <div className="absolute top-0 right-0 p-10 opacity-[0.05] pointer-events-none animate-glow-breathe">
-                <Sparkles className="w-64 h-64 text-accent" />
-              </div>
-              <ProposalSelector mesoId={draftMeso.id} proposals={draftMeso.aiProposals as any} />
-            </section>
-          )}
-
-          {/* ── COACH INSIGHTS (AI ADAPTATION) ── */}
-          {activeMeso && (
-            <div className="animate-rise-up" style={{ animationDelay: '100ms' }}>
-              <CoachInsights mesoId={activeMeso.id} />
+            <div className="space-y-10 animate-rise-up">
+              <section className="bg-surface/50 rounded-[3rem] p-8 border border-accent/30 relative overflow-hidden glass-heavy">
+                <div className="absolute top-0 right-0 p-10 opacity-[0.05] pointer-events-none animate-glow-breathe">
+                  <Sparkles className="w-64 h-64 text-accent" />
+                </div>
+                <ProposalSelector mesoId={draftMeso.id} proposals={draftMeso.aiProposals as any} />
+              </section>
             </div>
           )}
 
-          {/* ── ACTIVE MESOCYCLE ── */}
-          {activeMeso ? (
+          {/* ── ACTIVE PLAN DASHBOARD (Training or Nutrition) ── */}
+          {(activeMeso || activeNutritionMeso) ? (
             <div className="space-y-10">
-              {/* ── Full-width Weekly Calendar ── */}
-              <div className="animate-rise-up" style={{ animationDelay: '200ms' }}>
-                <WeeklyCalendar
-                  planId={activeMeso.workoutPlans[0]?.id}
-                  planDays={planDaysForCalendar}
-                  initialSessions={weekSessions}
-                />
-              </div>
+              
+              {/* ── COACH INSIGHTS (AI ADAPTATION) ── */}
+              {activeMeso && (
+                <div className="animate-rise-up" style={{ animationDelay: '100ms' }}>
+                  <CoachInsights mesoId={activeMeso.id} />
+                </div>
+              )}
 
-              {/* ── Mesocycle + Sidebar ── */}
+              {/* ── Full-width Weekly Calendar (Solo se c'è allenamento) ── */}
+              {activeMeso && (
+                <div className="animate-rise-up" style={{ animationDelay: '200ms' }}>
+                  <WeeklyCalendar
+                    planId={activeMeso.workoutPlans[0]?.id}
+                    planDays={planDaysForCalendar}
+                    initialSessions={weekSessions}
+                  />
+                </div>
+              )}
+
+              {/* ── Main Content Grid ── */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-8 space-y-10 animate-rise-up" style={{ animationDelay: '300ms' }}>
-                  {/* Training Section */}
-                  <section className="rounded-[3rem] p-10 card-elevated mesh-bg border border-border relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.04] group-hover:rotate-12 group-hover:scale-110 transition-transform duration-1000">
-                      <Target className="w-72 h-72" />
-                    </div>
-
-                    <div className="relative z-10">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                        <div className="flex items-center gap-5">
-                          <div className="w-16 h-16 rounded-2xl btn-primary flex items-center justify-center glow-accent">
-                            <PlayCircle className="w-10 h-10" />
-                          </div>
-                          <div>
-                            <span className="badge badge-accent mb-1.5 animate-glow-breathe">
-                              In Corso
-                            </span>
-                            <h2 className="text-4xl font-black text-primary tracking-tighter leading-none">{activeMeso.name}</h2>
-                          </div>
-                        </div>
-                        <div className="text-right glass-sm p-4 rounded-2xl border border-border/50">
-                          <p className="text-[10px] font-black uppercase text-fg-subtle tracking-widest mb-1.5">Timeline</p>
-                          <p className="text-sm font-black text-primary num tracking-tight">
-                            {format(new Date(activeMeso.startDate), "dd MMM")} — {activeMeso.endDate ? format(new Date(activeMeso.endDate), "dd MMM") : '4 sett.'}
-                          </p>
-                        </div>
+                  
+                  {/* 1. Training Section (Se esiste) */}
+                  {activeMeso && (
+                    <section className="rounded-[3rem] p-10 card-elevated mesh-bg border border-border relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-12 opacity-[0.04] group-hover:rotate-12 group-hover:scale-110 transition-transform duration-1000">
+                        <Target className="w-72 h-72" />
                       </div>
 
-                      <div className="glass-sm p-6 rounded-[2rem] border border-border/40 mb-10 surface-accent">
-                        <div className="flex justify-between items-start mb-4">
-                          <h3 className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
-                            <Info className="w-4 h-4" /> Focus Tecnico
-                          </h3>
-                          <MesoSettings mesoId={activeMeso.id} mesoName={activeMeso.name} />
+                      <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                          <div className="flex items-center gap-5">
+                            <div className="w-16 h-16 rounded-2xl btn-primary flex items-center justify-center glow-accent">
+                              <PlayCircle className="w-10 h-10" />
+                            </div>
+                            <div>
+                              <span className="badge badge-accent mb-1.5 animate-glow-breathe">
+                                Allenamento Attivo
+                              </span>
+                              <h2 className="text-4xl font-black text-primary tracking-tighter leading-none">{activeMeso.name}</h2>
+                            </div>
+                          </div>
+                          <div className="text-right glass-sm p-4 rounded-2xl border border-border/50">
+                            <p className="text-[10px] font-black uppercase text-fg-subtle tracking-widest mb-1.5">Timeline</p>
+                            <p className="text-sm font-black text-primary num tracking-tight">
+                              {format(new Date(activeMeso.startDate), "dd MMM")} — {activeMeso.endDate ? format(new Date(activeMeso.endDate), "dd MMM") : '4 sett.'}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-fg-muted text-sm leading-relaxed italic opacity-80">{activeMeso.objectives}</p>
-                      </div>
 
-                      {/* Plan days grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        {activeMeso.workoutPlans[0]?.planDays.map((pd, idx) => (
-                          <Link
-                            key={pd.id}
-                            href={`/plan/day/${pd.id}`}
-                            className="p-6 rounded-[2.5rem] card-interactive surface-accent group/card"
-                            style={{ animationDelay: `${idx * 100}ms` }}
-                          >
-                            <div className="flex justify-between items-start mb-5">
-                              <div className="w-12 h-12 rounded-2xl glass-sm flex items-center justify-center font-black text-accent group-hover/card:btn-primary group-hover/card:text-white transition-all shadow-md">
-                                {pd.dayLabel}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black text-accent opacity-0 group-hover/card:opacity-100 transition-all uppercase tracking-widest">Inizia</span>
+                        <div className="glass-sm p-6 rounded-[2rem] border border-border/40 mb-10 surface-accent">
+                          <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                              <Info className="w-4 h-4" /> Focus Tecnico
+                            </h3>
+                            <MesoSettings mesoId={activeMeso.id} mesoName={activeMeso.name} />
+                          </div>
+                          <p className="text-fg-muted text-sm leading-relaxed italic opacity-80">{activeMeso.objectives}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {activeMeso.workoutPlans[0]?.planDays.map((pd, idx) => (
+                            <Link
+                              key={pd.id}
+                              href={`/plan/day/${pd.id}`}
+                              className="p-6 rounded-[2.5rem] card-interactive surface-accent group/card"
+                            >
+                              <div className="flex justify-between items-start mb-5">
+                                <div className="w-12 h-12 rounded-2xl glass-sm flex items-center justify-center font-black text-accent group-hover/card:btn-primary group-hover/card:text-white transition-all shadow-md">
+                                  {pd.dayLabel}
+                                </div>
                                 <ArrowRight className="w-5 h-5 text-accent opacity-0 group-hover/card:opacity-100 transition-all" />
                               </div>
-                            </div>
-                            <p className="font-black text-lg text-primary mb-1 tracking-tight">{pd.focus}</p>
-                            <p className="text-[10px] text-fg-subtle uppercase font-black tracking-widest mb-5 opacity-60">{pd.planExercises.length} Esercizi</p>
-                            <div className="space-y-2 opacity-50 group-hover/card:opacity-100 transition-opacity">
-                              {pd.planExercises.slice(0, 3).map(pe => (
-                                <p key={pe.id} className="text-[10px] font-bold text-fg-muted truncate flex items-center gap-2.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-accent/40 inline-block" /> {pe.name}
-                                </p>
-                              ))}
-                            </div>
-                          </Link>
-                        ))}
+                              <p className="font-black text-lg text-primary mb-1 tracking-tight">{pd.focus}</p>
+                              <p className="text-[10px] text-fg-subtle uppercase font-black tracking-widest mb-5 opacity-60">{pd.planExercises.length} Esercizi</p>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </section>
+                    </section>
+                  )}
 
-                  {/* Nutrition Section (Moved here to be under training) */}
+                  {/* 2. Nutrition Section (Sotto l'allenamento, o da sola se manca allenamento) */}
                   <div className="animate-rise-up" style={{ animationDelay: '400ms' }}>
                     <NutritionPlanSection activeNutritionMeso={activeNutritionMeso} />
                   </div>
                 </div>
 
-                {/* Side Content */}
+                {/* Sidebar Sidebar */}
                 <div className="lg:col-span-4 space-y-8 animate-rise-up" style={{ animationDelay: '500ms' }}>
                   <section className="rounded-[2.5rem] p-8 card-elevated mesh-bg border border-border">
                     <div className="divider-label mb-8">Roadmap</div>
@@ -236,6 +232,7 @@ export default async function PlanPage() {
               </div>
             </div>
           ) : !draftMeso && (
+            /* ── EMPTY STATE / WIZARD ── */
             <section className="bg-surface rounded-[3.5rem] p-10 md:p-14 border border-border relative overflow-hidden glass-heavy">
               <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none animate-glow-breathe">
                 <Sparkles className="w-72 h-72 text-accent" />

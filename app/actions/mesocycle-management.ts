@@ -17,7 +17,7 @@ export async function activateMesocycle(id: string) {
         where: { userId, status: MesoStatus.ACTIVE },
         data: { status: MesoStatus.ARCHIVED }
       })
-      
+
       await tx.workoutPlan.updateMany({
         where: { userId, isActive: true },
         data: { isActive: false }
@@ -43,15 +43,61 @@ export async function activateMesocycle(id: string) {
   }
 }
 
+/**
+ * Elimina un mesociclo e tutta la struttura collegata.
+ *
+ * Ordine di eliminazione (rispetta i vincoli FK):
+ *   SetLog → ActiveSession
+ *   PlannedSession
+ *   PlanExercise → PlanDay → WorkoutPlan
+ *   WorkoutSession (detached: mesocycleId = null, i log rimangono)
+ *   Mesocycle
+ */
 export async function deleteMesocycle(id: string) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
-  
+  const userId = session.user.id
+
   try {
-    await prisma.mesocycle.delete({
-      where: { id, userId: session.user.id }
+    await prisma.$transaction(async (tx) => {
+      // Verifica ownership
+      const meso = await tx.mesocycle.findUnique({ where: { id } })
+      if (!meso || meso.userId !== userId) throw new Error("Mesociclo non trovato")
+
+      // 1. Raccogli gli ID dei WorkoutPlan di questo meso
+      const plans = await tx.workoutPlan.findMany({
+        where: { mesocycleId: id },
+        select: { id: true },
+      })
+      const planIds = plans.map(p => p.id)
+
+      // 2. Elimina PlannedSession legate ai piani
+      if (planIds.length > 0) {
+        await tx.plannedSession.deleteMany({
+          where: { planId: { in: planIds } },
+        })
+      }
+
+      // 3. Elimina i WorkoutPlan (cascades a PlanDay → PlanExercise)
+      if (planIds.length > 0) {
+        await tx.workoutPlan.deleteMany({
+          where: { id: { in: planIds } },
+        })
+      }
+
+      // 4. Scollega le sessioni reali (non le cancelliamo — i log restano)
+      await tx.workoutSession.updateMany({
+        where: { mesocycleId: id, userId },
+        data: { mesocycleId: null },
+      })
+
+      // 5. Elimina il mesociclo
+      await tx.mesocycle.delete({ where: { id } })
     })
+
     revalidatePath("/plan")
+    revalidatePath("/calendar")
+    revalidatePath("/training")
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
