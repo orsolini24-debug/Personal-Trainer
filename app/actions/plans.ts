@@ -180,6 +180,31 @@ export async function removeSessionFromDay(plannedSessionId: string) {
   return { success: true }
 }
 
+export async function deletePlannedSession(id: string) {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error('Non autenticato')
+  const userId = session.user.id
+
+  try {
+    // We only allow deleting PENDING or SKIPPED sessions.
+    // If it's COMPLETED, it has a workout session attached, so better keep it.
+    const session = await prisma.plannedSession.findUnique({
+      where: { id, userId }
+    })
+
+    if (!session) throw new Error('Sessione non trovata')
+    if (session.status === 'COMPLETED') throw new Error('Non puoi eliminare una sessione già completata. Elimina l\'allenamento associato invece.')
+
+    await prisma.plannedSession.delete({
+      where: { id, userId }
+    })
+
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
 export async function schedulePlanForWeek(planId: string, weekStartISO: string) {
   const session = await auth()
   if (!session?.user?.id) return { error: 'Non autenticato' }

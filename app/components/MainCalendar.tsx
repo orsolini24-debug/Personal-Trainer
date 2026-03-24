@@ -11,9 +11,11 @@ import {
 import {
   getCalendarMonthData, getDayDetail, logPlannedSessionRetroactive,
   runDailyAnalysis,
+  deleteSkippedSessions, deletePastPendingSessions,
   type CalendarDayData, type DayDetailData, type ManualActivitySummary
 } from '@/app/actions/calendar'
-import { markSessionSkipped } from '@/app/actions/plans'
+import { markSessionSkipped, deletePlannedSession } from '@/app/actions/plans'
+import { Trash2, CalendarX } from 'lucide-react'
 import AddActivitySheet from '@/app/components/AddActivitySheet'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -111,6 +113,29 @@ export default function MainCalendar() {
     closeDrawer()
   }
 
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Eliminare definitivamente questa sessione pianificata?')) return
+    const res = await deletePlannedSession(sessionId)
+    if (res.success) {
+      fetchMonthData(currentDate)
+      closeDrawer()
+    } else {
+      alert(res.error)
+    }
+  }
+
+  const handleCleanCalendar = async () => {
+    if (!confirm('Vuoi eliminare tutte le sessioni saltate e quelle passate non completate?')) return
+    setLoading(true)
+    try {
+      await deleteSkippedSessions()
+      await deletePastPendingSessions()
+      fetchMonthData(currentDate)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleRunAnalysis = () => {
     if (!selectedDay) return
     startAnalysis(async () => {
@@ -155,6 +180,14 @@ export default function MainCalendar() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleCleanCalendar}
+            disabled={loading}
+            className="p-2.5 rounded-xl bg-surface border border-border text-muted hover:text-[#EF4444] hover:border-[#EF4444]/40 transition-all active:scale-95 disabled:opacity-50"
+            title="Pulisci calendario (elimina saltate e passate)"
+          >
+            <CalendarX className="w-4 h-4" />
+          </button>
           <button
             onClick={() => setCurrentDate(new Date())}
             className="px-4 py-2 rounded-xl bg-surface border border-border text-xs font-black uppercase tracking-widest text-muted hover:text-primary hover:border-accent/40 transition-all"
@@ -349,6 +382,7 @@ export default function MainCalendar() {
                       submitting={submitting}
                       onRetroLog={handleRetroactiveLog}
                       onSkip={handleSkip}
+                      onDelete={handleDeleteSession}
                     />
                   )}
 
@@ -418,7 +452,10 @@ function PlannedSessionCard({
   load, setLoad,
   rpe, setRpe,
   notes, setNotes,
-  submitting, onRetroLog, onSkip
+  submitting,
+  onRetroLog,
+  onSkip,
+  onDelete
 }: {
   day: CalendarDayData
   detail: DayDetailData | null
@@ -431,7 +468,9 @@ function PlannedSessionCard({
   submitting: boolean
   onRetroLog: () => void
   onSkip: () => void
+  onDelete: (id: string) => void
 }) {
+
   const planned = day.planned ?? detail?.planned
   if (!planned) return null
 
@@ -462,6 +501,15 @@ function PlannedSessionCard({
             </div>
             <p className="font-black text-primary truncate">{planned.focus ?? `Sessione ${planned.label}`}</p>
           </div>
+          {!isCompleted && (
+            <button
+              onClick={() => onDelete(planned.id)}
+              className="p-2 rounded-xl hover:bg-negative/10 text-muted hover:text-negative transition-all"
+              title="Elimina sessione"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
