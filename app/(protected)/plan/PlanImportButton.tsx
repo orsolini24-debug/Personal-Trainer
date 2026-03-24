@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react"
 import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileType, Info } from "lucide-react"
 import { analyzeAndImportPlanSmart } from "@/app/actions/import-analysis"
 import { extractTextFromImage } from "@/app/actions/import-vision"
-import { useRouter } from "next/navigation"
 
 export default function PlanImportButton() {
   const [isOpen, setIsOpen] = useState(false)
@@ -13,7 +12,6 @@ export default function PlanImportButton() {
   const [isExtracting, setIsExtracting] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const pdfInputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
 
   // Load PDF.js dynamically
   useEffect(() => {
@@ -47,9 +45,7 @@ export default function PlanImportButton() {
 
       alert(msg)
       if (res.importedTraining || res.importedNutrition) {
-        setIsOpen(false)
-        setText("")
-        router.refresh()
+        window.location.href = '/plan'
       }
     } else {
       alert("Errore: " + res.error)
