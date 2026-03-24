@@ -11,7 +11,25 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "missing"
 })
 
-export async function analyzeAndImportPlanSmart(text: string) {
+export type SmartImportResult = 
+  | { 
+      success: true; 
+      importedTraining: boolean; 
+      importedNutrition: boolean; 
+      trainingError: string | null; 
+      nutritionError: string | null;
+      error?: never;
+    }
+  | { 
+      success: false; 
+      error: string; 
+      importedTraining?: never; 
+      importedNutrition?: never; 
+      trainingError?: never; 
+      nutritionError?: never;
+    };
+
+export async function analyzeAndImportPlanSmart(text: string): Promise<SmartImportResult> {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
@@ -48,15 +66,13 @@ export async function analyzeAndImportPlanSmart(text: string) {
       console.log("[IMPORT] nutritionRes:", JSON.stringify(nutritionRes))
     }
 
-    const result = {
+    return {
       success: true,
-      importedTraining: containsTraining && trainingRes?.success,
-      importedNutrition: containsNutrition && nutritionRes?.success,
+      importedTraining: !!(containsTraining && trainingRes?.success),
+      importedNutrition: !!(containsNutrition && nutritionRes?.success),
       trainingError: trainingRes && !trainingRes.success ? trainingRes.error : null,
-      nutritionError: nutritionRes && 'error' in nutritionRes ? (nutritionRes.error as string) : null
+      nutritionError: (nutritionRes && 'error' in nutritionRes) ? (nutritionRes.error as string) : null
     }
-    console.log("[IMPORT] final result:", JSON.stringify(result))
-    return result
   } catch (error: any) {
     console.error("[IMPORT] Smart import error:", error)
     return { success: false, error: error.message }
