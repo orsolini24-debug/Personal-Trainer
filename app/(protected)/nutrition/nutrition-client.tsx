@@ -1116,27 +1116,10 @@ function AddFoodForm({
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true)
       try {
-        const url =
-          `https://world.openfoodfacts.org/cgi/search.pl` +
-          `?search_terms=${encodeURIComponent(name.trim())}` +
-          `&search_simple=1&action=process&json=1` +
-          `&fields=product_name,nutriments&page_size=10&lc=it`
-        const res  = await fetch(url, { signal: AbortSignal.timeout(5000) })
+        // Proxy server-side → evita CORS / throttling da browser
+        const res  = await fetch(`/api/food-search?q=${encodeURIComponent(name.trim())}`)
         const data = await res.json()
-        const prods: OFFProduct[] = (data.products ?? [])
-          .filter((pr: any) =>
-            pr.product_name &&
-            pr.nutriments?.['energy-kcal_100g'] != null
-          )
-          .slice(0, 6)
-          .map((pr: any, i: number) => ({
-            id:   String(i),
-            name: pr.product_name,
-            kcal: Math.round(pr.nutriments['energy-kcal_100g'] ?? 0),
-            p:    round1(pr.nutriments['proteins_100g']       ?? 0),
-            c:    round1(pr.nutriments['carbohydrates_100g']  ?? 0),
-            f:    round1(pr.nutriments['fat_100g']            ?? 0),
-          }))
+        const prods: OFFProduct[] = data.products ?? []
         setSuggestions(prods)
         setShowSugg(prods.length > 0)
       } catch { /* silently ignore network errors */ }
