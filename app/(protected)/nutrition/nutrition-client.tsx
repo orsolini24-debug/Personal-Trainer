@@ -106,6 +106,15 @@ const mealAccents: Record<string, string> = {
   [MealType.SNACK]:        "var(--warning)",
 }
 
+const mealNames: Record<string, string> = {
+  [MealType.BREAKFAST]:    "Colazione",
+  [MealType.LUNCH]:        "Pranzo",
+  [MealType.PRE_WORKOUT]:  "Pre-workout",
+  [MealType.POST_WORKOUT]: "Post-workout",
+  [MealType.DINNER]:       "Cena",
+  [MealType.SNACK]:        "Spuntino",
+}
+
 // ── Circular progress SVG ─────────────────────────────────────────────────────
 
 function CalorieRing({
@@ -117,58 +126,64 @@ function CalorieRing({
   target: number
   pct: number
 }) {
-  const r = 56
+  const size = 180
+  const r = 70
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
   const ringColor =
     pct > 110 ? "var(--negative)" : pct > 90 ? "var(--positive)" : "var(--accent)"
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 144, height: 144 }}>
-      <svg width={144} height={144} style={{ transform: "rotate(-90deg)" }}>
+    <div className="relative flex items-center justify-center animate-scale-in" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         {/* Track */}
         <circle
-          cx={72}
-          cy={72}
+          cx={size / 2}
+          cy={size / 2}
           r={r}
           fill="none"
-          strokeWidth={10}
-          stroke="var(--border-default)"
+          strokeWidth={12}
+          stroke="var(--border-subtle)"
+          className="opacity-50"
         />
         {/* Progress */}
         <circle
-          cx={72}
-          cy={72}
+          cx={size / 2}
+          cy={size / 2}
           r={r}
           fill="none"
-          strokeWidth={10}
+          strokeWidth={12}
           stroke={ringColor}
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
           style={{
-            transition: "stroke-dashoffset 0.7s cubic-bezier(0.16,1,0.3,1)",
-            filter: `drop-shadow(0 0 8px ${ringColor})`,
+            transition: "stroke-dashoffset 1.2s var(--ease-expo-out)",
+            filter: `drop-shadow(0 0 12px ${ringColor}60)`,
           }}
         />
       </svg>
       {/* Centre label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span
-          className="text-2xl font-black tabular-nums leading-none"
-          style={{ color: ringColor }}
+          className="text-4xl font-black tabular-nums leading-none num"
+          style={{ color: "var(--fg-primary)" }}
         >
           {actual}
         </span>
-        <span className="text-[10px] font-semibold mt-0.5" style={{ color: "var(--fg-subtle)" }}>
-          / {target} kcal
+        <span className="text-[10px] font-black mt-1.5 uppercase tracking-widest" style={{ color: "var(--fg-subtle)" }}>
+          Kcal residui
         </span>
-        <span
-          className="text-[11px] font-bold mt-1"
-          style={{ color: "var(--fg-muted)" }}
+        <div 
+          className="mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-black border"
+          style={{ 
+            background: `${ringColor}15`, 
+            borderColor: `${ringColor}30`,
+            color: ringColor
+          }}
         >
-          {pct}%
-        </span>
+          {pct}% DEL TARGET
+        </div>
       </div>
     </div>
   )
@@ -486,14 +501,16 @@ export default function NutritionClient({
 
       {/* ── Hero: calorie ring + macro bars ── */}
       <div
-        className="card p-5 flex flex-col sm:flex-row items-center gap-6"
-        style={{ background: "var(--bg-surface)" }}
+        className="surface-accent mesh-bg p-8 rounded-[2.5rem] border border-border-subtle flex flex-col sm:flex-row items-center gap-10 shadow-2xl relative overflow-hidden"
       >
+        {/* Glow decoration */}
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+        
         {/* Ring */}
         <CalorieRing actual={kcalActual} target={kcalTarget} pct={pct} />
 
         {/* Macro bars */}
-        <div className="flex-1 w-full space-y-4">
+        <div className="flex-1 w-full space-y-5 relative z-10">
           <MacroBar
             label="Proteine"
             actual={proActual}
@@ -526,10 +543,18 @@ export default function NutritionClient({
         isTrainingDay={!!initialDay.isTrainingDay}
       />
 
-      {/* ── Meal cards ── */}
-      <div className="space-y-3 stagger">
+      {/* ── Meal sections with dividers ── */}
+      <div className="space-y-12 pt-6 stagger">
         {(initialDay.meals ?? []).map((meal) => (
-          <MealSection key={meal.id} meal={meal} />
+          <div key={meal.id} className="space-y-4">
+            <div className="divider-label mx-2">
+              <span className="flex items-center gap-2">
+                <span style={{ color: mealAccents[meal.type] }}>{mealIcons[meal.type]}</span>
+                {mealNames[meal.type] || meal.type}
+              </span>
+            </div>
+            <MealSection meal={meal} />
+          </div>
         ))}
       </div>
 
@@ -666,15 +691,6 @@ function MealSection({ meal }: { meal: Meal }) {
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; totalKcal: number; totalProtein: number }>>([])
   const [loadingTemplates, setLoadingTemplates] = useState(false)
   const [applyingId, setApplyingId] = useState<string | null>(null)
-
-  const mealNames: Record<string, string> = {
-    [MealType.BREAKFAST]:    "Colazione",
-    [MealType.LUNCH]:        "Pranzo",
-    [MealType.PRE_WORKOUT]:  "Pre-workout",
-    [MealType.POST_WORKOUT]: "Post-workout",
-    [MealType.DINNER]:       "Cena",
-    [MealType.SNACK]:        "Spuntino",
-  }
 
   const mealTotal = meal.foodItems.reduce((acc, item) => acc + (item.kcal || 0), 0)
   const accent = mealAccents[meal.type] || "var(--accent)"

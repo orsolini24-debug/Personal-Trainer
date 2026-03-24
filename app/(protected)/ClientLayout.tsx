@@ -98,9 +98,9 @@ function UserAvatar({ onLogout }: { onLogout: () => void }) {
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-black text-xs"
           style={{
-            background: 'linear-gradient(145deg, var(--accent), var(--accent2, #6366f1))',
-            color: '#fff',
-            boxShadow: '0 2px 8px var(--glow-accent), inset 0 1px 0 rgba(255,255,255,0.2)',
+            background: 'var(--accent)',
+            color: 'var(--accent-on, #fff)',
+            boxShadow: '0 2px 8px var(--glow-accent)',
             fontSize: '11px',
           }}
         >
@@ -139,11 +139,12 @@ function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHel
         <div
           className="w-9 h-9 flex items-center justify-center font-black text-white shrink-0"
           style={{
-            borderRadius: '14px',
-            background: 'linear-gradient(145deg, var(--accent), var(--accent2, #6366f1))',
-            boxShadow: '0 4px 14px var(--glow-accent), inset 0 1px 0 rgba(255,255,255,0.22)',
+            borderRadius: '10px',
+            background: 'var(--accent)',
+            boxShadow: '0 2px 12px var(--glow-accent)',
             fontSize: '11px',
             letterSpacing: '-0.02em',
+            fontFamily: "'Sora', sans-serif",
           }}
         >
           PE
@@ -152,10 +153,9 @@ function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHel
           <span
             className="font-black text-sm tracking-tight block"
             style={{
-              background: 'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 80%, var(--accent)))',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.03em',
+              color: 'var(--accent)',
+              letterSpacing: '-0.04em',
+              fontSize: '13px',
             }}
           >
             Performance

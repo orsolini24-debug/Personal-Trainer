@@ -34,68 +34,81 @@ export default async function BodyPage() {
     : null
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-8">
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.2em] mb-1" style={{ color: "var(--warning)" }}>Composizione Corporea</p>
-        <h1 className="text-3xl font-black tracking-tight" style={{ color: "var(--fg-primary)" }}>Body Metrics</h1>
+    <div className="max-w-5xl mx-auto space-y-8 pb-12 animate-page">
+      <div className="stagger">
+        <p className="divider-label mb-2">Composizione Corporea</p>
+        <h1 className="text-4xl font-black tracking-tighter text-accent-gradient">Body Metrics</h1>
       </div>
 
       {/* ── Banner "pesa oggi" se non ancora loggato ── */}
       {!todayLog && (
         <div
-          className="flex items-center gap-4 p-4 rounded-2xl"
-          style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", border: "1px solid var(--accent)" }}
+          className="flex items-center gap-5 p-5 rounded-[2rem] glass-sm animate-glow-breathe"
+          style={{ border: "1px solid var(--accent)" }}
         >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--accent)", color: "white" }}>
-            <Scale className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 btn-primary glow-accent">
+            <Scale className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold" style={{ color: "var(--fg-primary)" }}>Peso di oggi non registrato</p>
-            <p className="text-xs" style={{ color: "var(--fg-muted)" }}>Scrolla in basso per inserirlo</p>
+            <p className="text-base font-black tracking-tight" style={{ color: "var(--fg-primary)" }}>Peso di oggi non registrato</p>
+            <p className="text-sm opacity-60" style={{ color: "var(--fg-muted)" }}>Inserisci i tuoi dati per mantenere il trend accurato</p>
           </div>
+          <button className="btn-ghost px-4 py-2 text-[10px] font-black uppercase tracking-widest hidden sm:block">Log veloci</button>
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 stagger">
         {[
-          { icon: Scale, label: "Peso", value: latest?.weightKg ? latest.weightKg + " kg" : "—", color: "var(--accent)" },
-          { icon: Percent, label: "Grasso", value: latest?.fatPct ? latest.fatPct + "%" : "—", color: "var(--warning)" },
-          { icon: Activity, label: "Vita", value: latest?.waistCm ? latest.waistCm + " cm" : "—", color: "var(--accent2)" },
-          { icon: TrendingDown, label: "Logs", value: history.length, color: "var(--positive)" },
-        ].map(({ icon: Icon, label, value, color }) => (
-          <div key={label} className="p-5 rounded-[2rem] flex flex-col gap-3" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "color-mix(in srgb, " + color + " 12%, transparent)", color }}>
-              <Icon className="w-5 h-5" />
+          { icon: Scale, label: "Peso", value: latest?.weightKg ? latest.weightKg : "—", unit: "kg", color: "var(--accent)" },
+          { icon: Percent, label: "Grasso", value: latest?.fatPct ? latest.fatPct : "—", unit: "%", color: "var(--warning)" },
+          { icon: Activity, label: "Vita", value: latest?.waistCm ? latest.waistCm : "—", unit: "cm", color: "var(--accent2)" },
+          { icon: TrendingDown, label: "Logs", value: history.length, unit: "entry", color: "var(--positive)" },
+        ].map(({ icon: Icon, label, value, unit, color }, i) => (
+          <div key={label} className="p-6 rounded-[2.5rem] flex flex-col gap-4 card-interactive surface-accent group" style={{ animationDelay: `${i * 100}ms` }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110" style={{ background: "color-mix(in srgb, " + color + " 15%, transparent)", color, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)` }}>
+              <Icon className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase tracking-widest mb-0.5" style={{ color: "var(--fg-muted)" }}>{label}</p>
-              <p className="text-2xl font-black" style={{ color: "var(--fg-primary)" }}>{value}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-50" style={{ color: "var(--fg-muted)" }}>{label}</p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-3xl font-black num tracking-tighter" style={{ color: "var(--fg-primary)" }}>{value}</p>
+                <span className="text-[10px] font-bold opacity-40 uppercase tracking-tighter">{unit}</span>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
-          <section className="rounded-[2.5rem] p-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
-            <h2 className="font-black text-lg mb-5" style={{ color: "var(--fg-primary)" }}>Trend Peso (30 giorni)</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 stagger">
+        <div className="lg:col-span-8 space-y-6 order-2 lg:order-1">
+          <section className="rounded-[3rem] p-8 card-elevated mesh-bg" style={{ border: "1px solid var(--border-default)" }}>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-black text-xl tracking-tight" style={{ color: "var(--fg-primary)" }}>Trend Peso <span className="text-xs opacity-40 ml-2 font-bold uppercase tracking-widest">30 Giorni</span></h2>
+              <div className="badge badge-accent">Analisi AI Attiva</div>
+            </div>
             <BodyChart history={history} />
           </section>
-          <section className="rounded-[2.5rem] p-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
-            <h2 className="font-black text-lg mb-5" style={{ color: "var(--fg-primary)" }}>Storico Recente</h2>
+          
+          <section className="rounded-[3rem] p-8 card-elevated" style={{ border: "1px solid var(--border-default)" }}>
+            <h2 className="font-black text-xl mb-6 tracking-tight" style={{ color: "var(--fg-primary)" }}>Storico Recente</h2>
             <BodyHistory history={history.slice(0, 10)} />
           </section>
         </div>
-        <div className="lg:col-span-4 space-y-4 order-1 lg:order-2">
-          <section className="rounded-[2.5rem] p-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
+
+        <div className="lg:col-span-4 space-y-6 order-1 lg:order-2">
+          <section className="rounded-[3rem] p-8 surface-accent" style={{ border: "1px solid var(--border-default)" }}>
             <BodyForm initialData={todayLog} />
           </section>
-          <section className="rounded-[2.5rem] p-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--accent2) 12%, transparent)", color: "var(--accent2)" }}>
-                <Camera className="w-4 h-4" />
+          
+          <section className="rounded-[3rem] p-8 card-elevated mesh-bg" style={{ border: "1px solid var(--border-default)" }}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center btn-primary" style={{ background: "color-mix(in srgb, var(--accent2) 15%, transparent)", color: "var(--accent2)" }}>
+                <Camera className="w-5 h-5" />
               </div>
-              <h2 className="font-black text-base" style={{ color: "var(--fg-primary)" }}>Foto Progresso</h2>
+              <div>
+                <h2 className="font-black text-lg tracking-tight" style={{ color: "var(--fg-primary)" }}>Foto Progresso</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Frontale · Laterale</p>
+              </div>
             </div>
             <PhotoUpload />
           </section>

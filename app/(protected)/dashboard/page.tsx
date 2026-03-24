@@ -74,7 +74,7 @@ export default async function DashboardPage() {
     : (profile?.experienceLevel ?? 'Atleta')
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-700">
+    <div className="space-y-8 pb-12 animate-page">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -90,10 +90,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Bento Grid Layout */}
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
+      <div className="grid grid-cols-12 gap-4 md:gap-6 stagger">
         
         {/* 1. Recovery Orb (Large Widget) - Span 12 to 5 */}
-        <div className="col-span-12 md:col-span-5 lg:col-span-4 bg-surface rounded-[2.5rem] border border-subtle p-8 relative overflow-hidden group hover:border-positive/30 transition-all duration-500">
+        <div className="col-span-12 md:col-span-5 lg:col-span-4 surface-accent mesh-bg rounded-[2.5rem] border border-subtle p-8 relative overflow-hidden group hover:border-positive/30 transition-all duration-500 animate-in">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
             <HeartPulse className="w-32 h-32 text-positive" />
           </div>
@@ -115,18 +115,18 @@ export default async function DashboardPage() {
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="p-3 rounded-2xl bg-base border border-subtle">
                 <p className="text-[10px] uppercase font-bold text-muted tracking-widest">HRV</p>
-                <p className="text-xl font-black text-primary">{recovery?.hrv || '--'}<span className="text-[10px] ml-1 opacity-50 font-medium">ms</span></p>
+                <p className="text-xl font-black text-primary num">{recovery?.hrv || '--'}<span className="text-[10px] ml-1 opacity-50 font-medium">ms</span></p>
               </div>
               <div className="p-3 rounded-2xl bg-base border border-subtle">
                 <p className="text-[10px] uppercase font-bold text-muted tracking-widest">TSB</p>
-                <p className="text-xl font-black text-primary">{recovery?.tsb || '--'}</p>
+                <p className="text-xl font-black text-primary num">{recovery?.tsb || '--'}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* 2. Nutrition Circle (Middle Widget) - Span 12 to 7 */}
-        <div className="col-span-12 md:col-span-7 lg:col-span-8 bg-surface rounded-[2.5rem] border border-subtle p-8 relative overflow-hidden group hover:border-accent/30 transition-all duration-500">
+        <div className="col-span-12 md:col-span-7 lg:col-span-8 surface-accent mesh-bg rounded-[2.5rem] border border-subtle p-8 relative overflow-hidden group hover:border-accent/30 transition-all duration-500 animate-in">
           <div className="relative z-10">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-lg font-bold flex items-center gap-2 text-primary">
@@ -151,8 +151,8 @@ export default async function DashboardPage() {
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center">
-                  <span className="text-3xl font-black text-primary">{kcalActual}</span>
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-tighter">/ {kcalTarget} kcal</span>
+                  <span className="text-3xl font-black text-primary num">{kcalActual}</span>
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-tighter num">/ {kcalTarget} kcal</span>
                 </div>
               </div>
 
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
                   <div key={m.label} className="space-y-2">
                     <div className="flex justify-between text-xs font-bold">
                       <span className="text-primary">{m.label}</span>
-                      <span className="text-muted">{m.val} / {m.target}g</span>
+                      <span className="text-muted num">{m.val} / {m.target}g</span>
                     </div>
                     <div className="h-2 w-full bg-foreground/5 rounded-full overflow-hidden">
                       <div className="h-full rounded-full transition-all duration-1000" 
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* 3. Training Session (Modern Card) - Span 12 to 6 */}
-        <div className="col-span-12 md:col-span-6 bg-surface rounded-[2.5rem] border border-subtle p-8 hover:border-accent2/30 transition-all duration-500 group relative overflow-hidden">
+        <div className="col-span-12 md:col-span-6 surface-accent mesh-bg rounded-[2.5rem] border border-subtle p-8 hover:border-accent2/30 transition-all duration-500 group relative overflow-hidden animate-in">
           <div className="absolute -bottom-4 -right-4 opacity-5 group-hover:rotate-12 transition-transform duration-700">
             <Dumbbell className="w-40 h-40" />
           </div>
@@ -199,8 +199,8 @@ export default async function DashboardPage() {
                 </div>
                 <h3 className="text-2xl font-black text-primary">Sessione {workout.type}</h3>
                 <div className="flex items-center gap-6 text-sm text-muted font-medium">
-                  {workout.durationMin && <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> {workout.durationMin} min</div>}
-                  {workout.trainingLoad && <div className="flex items-center gap-2"><TrendingUp className="w-4 h-4" /> TL {workout.trainingLoad}</div>}
+                  {workout.durationMin && <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> <span className="num">{workout.durationMin}</span> min</div>}
+                  {workout.trainingLoad && <div className="flex items-center gap-2"><TrendingUp className="w-4 h-4" /> TL <span className="num">{workout.trainingLoad}</span></div>}
                 </div>
                 <Link href="/training/active" className="mt-4 inline-flex items-center justify-center w-full py-4 text-white rounded-2xl font-bold transition-transform active:scale-95" style={{ background: 'var(--accent2)', boxShadow: '0 0 20px color-mix(in srgb, var(--accent2) 30%, transparent)' }}>
                   Inizia Sessione
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* 4. AI Coach Insight (Dynamic Card) - Span 12 to 6 */}
-        <div className="col-span-12 md:col-span-6 bg-surface rounded-[2.5rem] border border-subtle p-8 hover:border-accent2/30 transition-all duration-500 group relative overflow-hidden">
+        <div className="col-span-12 md:col-span-6 surface-accent mesh-bg rounded-[2.5rem] border border-subtle p-8 hover:border-accent2/30 transition-all duration-500 group relative overflow-hidden animate-in">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent2/10 rounded-full blur-3xl group-hover:bg-accent2/20 transition-all duration-700"></div>
           <div className="relative z-10 flex flex-col h-full">
             <h2 className="text-lg font-bold flex items-center gap-2 text-primary mb-6">
@@ -252,14 +252,14 @@ export default async function DashboardPage() {
         <div className="col-span-12 lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4">
           
           {/* Biometrics */}
-          <Link href="/body" className="bg-surface p-6 rounded-[2rem] border border-subtle hover:bg-foreground/[0.02] transition-all flex items-center justify-between">
+          <Link href="/body" className="surface-accent p-6 rounded-[2rem] border border-subtle hover:bg-foreground/[0.02] transition-all flex items-center justify-between animate-in">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center text-warning">
                 <Activity className="w-6 h-6" />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-muted uppercase tracking-widest">Ultimo Peso</p>
-                <p className="text-2xl font-black text-primary">{biometric?.weightKg || '--'} <span className="text-sm font-medium opacity-50">kg</span></p>
+                <p className="text-2xl font-black text-primary num">{biometric?.weightKg || '--'} <span className="text-sm font-medium opacity-50">kg</span></p>
               </div>
             </div>
             <div className="w-16 h-8 opacity-30">
@@ -268,7 +268,7 @@ export default async function DashboardPage() {
           </Link>
 
           {/* Sport Status */}
-          <div className="bg-surface p-6 rounded-[2rem] border border-subtle flex items-center gap-4">
+          <div className="surface-accent p-6 rounded-[2rem] border border-subtle flex items-center gap-4 animate-in">
             <div className="w-12 h-12 rounded-2xl bg-positive/10 flex items-center justify-center text-positive">
               <Award className="w-6 h-6" />
             </div>
@@ -279,20 +279,20 @@ export default async function DashboardPage() {
           </div>
 
           {/* Streak/Activity */}
-          <div className="bg-surface p-6 rounded-[2rem] border border-subtle flex items-center gap-4">
+          <div className="surface-accent p-6 rounded-[2rem] border border-subtle flex items-center gap-4 animate-in">
             <div className="w-12 h-12 rounded-2xl bg-negative/10 flex items-center justify-center text-negative">
               <TrendingUp className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-muted uppercase tracking-widest">Streak Settimanale</p>
-              <p className="text-xl font-black text-primary">4 / 5 <span className="text-sm font-medium opacity-50 text-muted">Sessioni</span></p>
+              <p className="text-xl font-black text-primary num">4 / 5 <span className="text-sm font-medium opacity-50 text-muted">Sessioni</span></p>
             </div>
           </div>
 
         </div>
 
         {/* 6. KPI Tracker (Bottom Section) */}
-        <div className="col-span-12 mt-8">
+        <div className="col-span-12 mt-8 animate-in">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-black text-primary flex items-center gap-3">
               <div className="p-2 rounded-xl bg-accent/10 text-accent">

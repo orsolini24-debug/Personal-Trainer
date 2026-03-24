@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=Sora:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400..700;1,400..500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Sora:wght@300..900&family=JetBrains+Mono:ital,wght@0,400..700;1,400..500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,39 +11,39 @@
 
 /* ── DEFAULT: COBALT (Blue/Indigo — PE Brand) ── */
 :root, [data-theme="cobalt"], [data-theme="dark"], [data-theme="cobalt-dark"] {
-  --bg-base: #05050F; --bg-surface: #0D0D1A; --bg-elevated: #141424; --bg-input: #0A0A18; --bg-sidebar: #070712;
-  --fg-primary: #F1F5F9; --fg-muted: #94A3B8; --fg-subtle: #475569;
-  --accent: #3B82F6; --accent-dim: rgba(59,130,246,0.15); --accent-on: #FFFFFF;
-  --accent2: #6366F1; --accent2-dim: rgba(99,102,241,0.15);
-  --positive: #4ADE80; --positive-dim: rgba(74,222,128,0.12);
-  --negative: #F87171; --negative-dim: rgba(248,113,113,0.12);
+  --bg-base: #06060F; --bg-surface: #0C0C1D; --bg-elevated: #12122A; --bg-input: #09091A; --bg-sidebar: #04040D;
+  --fg-primary: #E8EAF0; --fg-muted: #8B92A8; --fg-subtle: #3D4460;
+  --accent: #3B82F6; --accent-dim: rgba(59,130,246,0.12); --accent-on: #FFFFFF;
+  --accent2: #0EA5E9; --accent2-dim: rgba(14,165,233,0.12);
+  --positive: #22C55E; --positive-dim: rgba(34,197,94,0.12);
+  --negative: #F43F5E; --negative-dim: rgba(244,63,94,0.12);
   --warning: #F59E0B; --warning-dim: rgba(245,158,11,0.12);
-  --border-default: rgba(255,255,255,0.07); --border-subtle: rgba(255,255,255,0.04); --border-strong: rgba(255,255,255,0.18);
+  --border-default: rgba(255,255,255,0.06); --border-subtle: rgba(255,255,255,0.03); --border-strong: rgba(255,255,255,0.14);
   --sidebar-active-border: #3B82F6;
-  --glow-accent: rgba(59,130,246,0.40); --glow-positive: rgba(74,222,128,0.35); --glow-negative: rgba(248,113,113,0.35);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.6), 0 8px 16px rgba(0,0,0,0.4);
-  --shadow-xl: 0 40px 80px rgba(0,0,0,0.7), 0 16px 32px rgba(0,0,0,0.5);
+  --glow-accent: rgba(59,130,246,0.35); --glow-positive: rgba(34,197,94,0.3); --glow-negative: rgba(244,63,94,0.3);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4);
+  --shadow-lg: 0 20px 48px rgba(0,0,0,0.65), 0 8px 16px rgba(0,0,0,0.45);
+  --shadow-xl: 0 40px 80px rgba(0,0,0,0.75), 0 16px 32px rgba(0,0,0,0.5);
   --background: var(--bg-base); --foreground: var(--fg-primary);
   color-scheme: dark;
 }
 
 [data-theme="cobalt-light"] {
-  --bg-base: #F8FAFC; --bg-surface: #FFFFFF; --bg-elevated: #F1F5F9; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
-  --fg-primary: #0F172A; --fg-muted: #64748B; --fg-subtle: #94A3B8;
-  --accent: #2563EB; --accent-dim: #2563EB1A; --accent-on: #FFFFFF;
-  --accent2: #4F46E5; --accent2-dim: #4F46E51A;
-  --positive: #059669; --positive-dim: #0596691A;
-  --negative: #DC2626; --negative-dim: #DC26261A;
-  --warning: #D97706; --warning-dim: #D977061A;
-  --border-default: rgba(15,23,42,0.1); --border-subtle: rgba(15,23,42,0.05); --border-strong: rgba(15,23,42,0.2);
-  --sidebar-active-border: #2563EB;
-  --glow-accent: #2563EB40; --glow-positive: #05966940; --glow-negative: #DC262640;
-  --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
-  --shadow-md: 0 4px 6px rgba(15,23,42,0.05);
-  --shadow-lg: 0 10px 15px rgba(15,23,42,0.05);
-  --shadow-xl: 0 20px 25px rgba(15,23,42,0.05);
+  --bg-base: #FAFAFA; --bg-surface: #FFFFFF; --bg-elevated: #F4F4F5; --bg-input: #FFFFFF; --bg-sidebar: #FFFFFF;
+  --fg-primary: #09090B; --fg-muted: #52525B; --fg-subtle: #A1A1AA;
+  --accent: #E11D48; --accent-dim: rgba(225,29,72,0.1); --accent-on: #FFFFFF;
+  --accent2: #F97316; --accent2-dim: rgba(249,115,22,0.1);
+  --positive: #059669; --positive-dim: rgba(5,150,105,0.1);
+  --negative: #DC2626; --negative-dim: rgba(220,38,38,0.1);
+  --warning: #D97706; --warning-dim: rgba(217,119,6,0.1);
+  --border-default: rgba(9,9,11,0.1); --border-subtle: rgba(9,9,11,0.05); --border-strong: rgba(9,9,11,0.2);
+  --sidebar-active-border: #E11D48;
+  --glow-accent: rgba(225,29,72,0.3); --glow-positive: rgba(5,150,105,0.3); --glow-negative: rgba(220,38,38,0.3);
+  --shadow-sm: 0 1px 3px rgba(9,9,11,0.08), 0 1px 2px rgba(9,9,11,0.06);
+  --shadow-md: 0 4px 8px rgba(9,9,11,0.08), 0 2px 4px rgba(9,9,11,0.05);
+  --shadow-lg: 0 12px 24px rgba(9,9,11,0.1), 0 4px 8px rgba(9,9,11,0.06);
+  --shadow-xl: 0 24px 48px rgba(9,9,11,0.12), 0 8px 16px rgba(9,9,11,0.07);
   --background: var(--bg-base); --foreground: var(--fg-primary);
   color-scheme: light;
 }
@@ -361,7 +361,7 @@
   }
   
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
     background-color: var(--background);
     color: var(--foreground);
     line-height: 1.6;
@@ -382,15 +382,44 @@
   }
 }
 
+/* ================================================================
+   ATHLETIC DESIGN TOKENS — Performance Ecosystem
+   Impeccable: precision over decoration
+   ================================================================ */
+:root {
+  /* Spacing scale — dramatic jumps, not uniform */
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+  --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px;
+
+  /* Border radius — less round than before (more tactical) */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px; --r-pill: 999px;
+
+  /* Duration — snappy, purposeful */
+  --dur-instant: 80ms; --dur-fast: 130ms; --dur-normal: 220ms; --dur-slow: 380ms;
+
+  /* Easing — always decelerate, never bounce */
+  --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-quart-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
 /* Tabular numbers for numeric displays */
 .font-mono, .tabular-nums, .text-right {
   font-feature-settings: 'tnum' 1, 'kern' 1;
   font-variant-numeric: tabular-nums;
 }
 
+/* Anti-gradient-text: use this instead of gradient WebkitTextFillColor */
+.brand-text {
+  color: var(--accent);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
 /* ================================================================
    GLASS MORPHISM — Layered depth system
    ================================================================ */
+/* PURPOSEFUL ONLY — floating elements, modals, drawers. NOT for regular cards. */
 @layer components {
   .glass {
     backdrop-filter: blur(40px) saturate(160%) brightness(1.04);
@@ -440,11 +469,26 @@
       0 32px 80px rgba(0,0,0,0.15);
   }
 
+  /* Standard surface — use instead of glass for regular cards */
+  .surface {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .surface-elevated {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+  }
+
   .card {
     background: var(--bg-surface, #0D0D1A);
     border: 1px solid var(--border-default);
     border-radius: var(--r-lg, 20px);
-    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.06);
+    box-shadow: var(--shadow-sm);
   }
 
   .card-elevated {
@@ -500,14 +544,10 @@
   }
 
   .btn-primary {
-    background: linear-gradient(
-      160deg,
-      var(--accent, #3B82F6),
-      color-mix(in srgb, var(--accent, #3B82F6) 65%, var(--accent2, #6366F1))
-    );
+    background: var(--accent);
     color: var(--accent-on, #FFFFFF);
     border-radius: var(--r-md, 14px);
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.02em;
     transition:
       transform var(--dur-normal) var(--ease-expo-out),
@@ -516,11 +556,11 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.14);
   }
   .btn-primary:hover {
-    filter: brightness(1.12);
-    transform: translateY(-1px);
+    filter: brightness(1.1);
+    transform: translateY(-2px);
     box-shadow:
-      0 6px 28px var(--glow-accent),
-      0 2px 6px rgba(0,0,0,0.3),
+      0 8px 32px var(--glow-accent),
+      0 2px 8px rgba(0,0,0,0.3),
       inset 0 1px 0 rgba(255,255,255,0.14);
   }
   .btn-primary:active {
@@ -563,6 +603,77 @@
   }
   .input-field::placeholder {
     color: var(--fg-subtle, #475569);
+  }
+
+  /* ── Status badges ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--r-pill);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .badge-accent {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .badge-positive {
+    background: var(--positive-dim);
+    color: var(--positive);
+    border: 1px solid color-mix(in srgb, var(--positive) 20%, transparent);
+  }
+  .badge-negative {
+    background: var(--negative-dim);
+    color: var(--negative);
+    border: 1px solid color-mix(in srgb, var(--negative) 20%, transparent);
+  }
+  .badge-warning {
+    background: var(--warning-dim);
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 20%, transparent);
+  }
+  .badge-neutral {
+    background: color-mix(in srgb, var(--fg-subtle) 12%, transparent);
+    color: var(--fg-muted);
+    border: 1px solid color-mix(in srgb, var(--fg-subtle) 15%, transparent);
+  }
+
+  /* ── Data metric display — tabular, athletic ── */
+  .metric-value {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--fg-primary);
+  }
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  /* ── Section headers — athletic, no decorative elements ── */
+  .section-header {
+    font-family: 'Sora', system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--fg-primary);
+  }
+
+  /* ── Divider — minimal ── */
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: var(--space-lg) 0;
   }
 
   .badge {
@@ -642,6 +753,16 @@
 /* ================================================================
    ANIMATIONS — Keyframes
    ================================================================ */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -708,7 +829,8 @@
    ANIMATION UTILITY CLASSES
    ================================================================ */
 @layer utilities {
-  .animate-page { animation: page-enter 0.5s var(--ease-expo-out, cubic-bezier(0.16,1,0.3,1)) both; }
+  .animate-page { animation: page-enter 0.3s var(--ease-expo-out) both; }
+  .animate-fade-up { animation: fade-up 0.35s var(--ease-expo-out) both; }
   .animate-slide-up { animation: slide-up-fade 0.4s var(--ease-expo-out, cubic-bezier(0.16,1,0.3,1)) both; }
   .animate-scale-in { animation: scale-in-spring 0.4s var(--ease-expo-out, cubic-bezier(0.16,1,0.3,1)) both; }
   .animate-float { animation: float 4s ease-in-out infinite; }
@@ -786,15 +908,18 @@
 /* ================================================================
    SCROLLBAR — Refined
    ================================================================ */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-default);
-  border-radius: 9999px;
-  transition: background 0.2s;
+  background: var(--border-strong);
+  border-radius: 2px;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
-* { scrollbar-width: thin; scrollbar-color: var(--border-default) transparent; }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-subtle);
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ================================================================
    MOBILE — iOS safe areas & input zoom prevention

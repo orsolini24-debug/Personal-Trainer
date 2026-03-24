@@ -2,40 +2,31 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { Send, Brain, User, Trash2, ChevronRight } from "lucide-react"
+import { Send, Brain, User, Trash2, ChevronRight, Sparkles } from "lucide-react"
 
 type Message = { role: "user" | "assistant", content: string }
 
 const SUGGESTED = [
   "Come sto recuperando questa settimana?",
-  "Analizza le mie ultime sessioni e dimmi cosa migliorare",
-  "Cosa mangio oggi per ottimizzare l'allenamento stasera?",
-  "Qual è il rischio infortuni attuale e come lo gestisco?",
-  "Progredisco come previsto nel mio piano?",
-  "Suggerisci integratori per il mio profilo attuale",
+  "Analizza le mie ultime sessioni",
+  "Cosa mangio oggi per allenarmi meglio?",
+  "Qual è il mio rischio infortuni attuale?",
+  "Suggerisci integratori per il mio profilo",
 ]
 
 function renderMarkdown(text: string) {
-  // Bold
   let html = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  // Italic
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  // Headers
-  html = html.replace(/^### (.+)$/gm, '<h3 class="font-black text-sm mt-3 mb-1">$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2 class="font-black text-base mt-4 mb-1">$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1 class="font-black text-lg mt-4 mb-2">$1</h1>')
-  // Numbered lists
-  html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>')
-  // Bullet lists
-  html = html.replace(/^[-•] (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
-  // Wrap <li> groups
-  html = html.replace(/(<li[\s\S]*?<\/li>\n?)+/g, m => `<ul class="space-y-0.5 my-1">${m}</ul>`)
-  // Code inline
-  html = html.replace(/`(.+?)`/g, '<code class="px-1 py-0.5 rounded text-[11px] font-mono" style="background:var(--bg-elevated);color:var(--accent)">$1</code>')
-  // Newlines
-  html = html.replace(/\n\n/g, '</p><p class="mb-2">')
+  html = html.replace(/^### (.+)$/gm, '<h3 class="font-black text-sm mt-4 mb-1 text-accent-gradient">$1</h3>')
+  html = html.replace(/^## (.+)$/gm, '<h2 class="font-black text-base mt-5 mb-1 text-accent-gradient">$1</h2>')
+  html = html.replace(/^# (.+)$/gm, '<h1 class="font-black text-lg mt-6 mb-2 text-accent-gradient">$1</h1>')
+  html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal mb-1">$1</li>')
+  html = html.replace(/^[-•] (.+)$/gm, '<li class="ml-4 list-disc mb-1">$1</li>')
+  html = html.replace(/(<li[\s\S]*?<\/li>\n?)+/g, m => `<ul class="space-y-1 my-2">${m}</ul>`)
+  html = html.replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded-md text-[11px] font-mono surface-accent" style="color:var(--accent)">$1</code>')
+  html = html.replace(/\n\n/g, '</p><p class="mb-3">')
   html = html.replace(/\n/g, '<br/>')
-  return `<p class="mb-2">${html}</p>`
+  return `<p class="mb-3 leading-relaxed text-balance">${html}</p>`
 }
 
 export default function ChatClient() {
@@ -48,7 +39,6 @@ export default function ChatClient() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Load messages when user session is available
   useEffect(() => {
     if (!session?.user?.id) return
     try {
@@ -116,37 +106,36 @@ export default function ChatClient() {
   return (
     <>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 min-h-0 custom-scrollbar">
 
-        {/* Empty state with suggested prompts */}
+        {/* Empty state */}
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center gap-6">
+          <div className="h-full flex flex-col items-center justify-center gap-8 animate-blur-in">
             <div className="text-center">
               <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent)' }}
+                className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 mesh-bg animate-glow-breathe"
+                style={{ border: '1px solid var(--accent)' }}
               >
-                <Brain className="w-7 h-7" style={{ color: 'var(--accent)' }} />
+                <Brain className="w-10 h-10" style={{ color: 'var(--accent)' }} />
               </div>
-              <p className="font-black text-base" style={{ color: 'var(--fg-primary)' }}>Ciao, sono il tuo coach.</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--fg-muted)' }}>
-                Ho accesso completo ai tuoi dati. Chiedi qualsiasi cosa.
+              <h2 className="font-black text-2xl tracking-tight text-accent-gradient">Coach AI</h2>
+              <p className="text-sm mt-2 opacity-70 max-w-[240px] mx-auto leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
+                Analizzo i tuoi dati biometrici, allenamenti e nutrizione per guidarti.
               </p>
             </div>
-            <div className="w-full max-w-sm space-y-2">
-              {SUGGESTED.map(s => (
+            <div className="w-full max-w-sm grid grid-cols-1 gap-2.5">
+              <p className="divider-label text-[9px] mb-1">Suggerimenti</p>
+              {SUGGESTED.map((s, i) => (
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-left transition"
-                  style={{
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border-default)',
-                    color: 'var(--fg-muted)',
-                  }}
+                  className="group w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs text-left transition-all animate-rise-up card-interactive"
+                  style={{ animationDelay: `${i * 70}ms` }}
                 >
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--accent)' }} />
-                  {s}
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 glass-sm group-hover:bg-accent group-hover:text-white transition-colors">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold opacity-80 group-hover:opacity-100">{s}</span>
                 </button>
               ))}
             </div>
@@ -155,27 +144,21 @@ export default function ChatClient() {
 
         {/* Message list */}
         {messages.map((m, i) => (
-          <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+          <div key={i} className={`flex gap-3 md:gap-4 ${m.role === 'user' ? 'flex-row-reverse' : ''} animate-slide-up`}>
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-              style={{
-                background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
-                border: '1px solid var(--border-default)',
-              }}
+              className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 mt-1 shadow-md ${m.role === 'user' ? 'btn-primary' : 'glass surface-accent'}`}
             >
               {m.role === 'user'
-                ? <User className="w-4 h-4" style={{ color: 'var(--accent-on, white)' }} />
-                : <Brain className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                ? <User className="w-4 h-4" />
+                : <Brain className="w-4 h-4 text-accent" />
               }
             </div>
             <div
-              className="px-4 py-3 rounded-2xl max-w-[85%] text-sm leading-relaxed"
-              style={{
-                background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
-                color: m.role === 'user' ? 'var(--accent-on, white)' : 'var(--fg-primary)',
-                borderRadius: m.role === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
-                border: m.role === 'user' ? 'none' : '1px solid var(--border-default)',
-              }}
+              className={`px-5 py-3.5 max-w-[88%] text-sm leading-relaxed shadow-lg ${
+                m.role === 'user' 
+                ? 'btn-primary rounded-[20px_4px_20px_20px]' 
+                : 'glass-sm rounded-[4px_20px_20px_20px] surface-accent border-subtle'
+              }`}
             >
               {m.role === 'assistant' ? (
                 <div
@@ -183,7 +166,7 @@ export default function ChatClient() {
                   dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }}
                 />
               ) : (
-                <span className="whitespace-pre-wrap">{m.content}</span>
+                <span className="whitespace-pre-wrap font-medium tracking-tight">{m.content}</span>
               )}
             </div>
           </div>
@@ -191,17 +174,11 @@ export default function ChatClient() {
 
         {/* Loading */}
         {loading && (
-          <div className="flex gap-3">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
-            >
-              <Brain className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+          <div className="flex gap-4 animate-pulse">
+            <div className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 glass surface-accent">
+              <Brain className="w-4 h-4 text-accent" />
             </div>
-            <div
-              className="px-4 py-3 rounded-2xl flex items-center gap-1.5"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
-            >
+            <div className="px-6 py-4 rounded-[4px_20px_20px_20px] flex items-center gap-2 glass-sm surface-accent border-subtle">
               {[0, 150, 300].map(d => (
                 <span
                   key={d}
@@ -215,21 +192,17 @@ export default function ChatClient() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div
-        className="shrink-0 p-3"
-        style={{ borderTop: '1px solid var(--border-default)' }}
-      >
-        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+      {/* Input — Frosted Floating Bar */}
+      <div className="shrink-0 p-4 md:p-6 pt-2">
+        <div className="max-w-3xl mx-auto frosted p-2 pr-3 flex gap-2 items-end shadow-2xl">
           {messages.length > 0 && (
             <button
               type="button"
-              onClick={() => { setMessages([]); localStorage.removeItem(storageKey) }}
-              className="p-2.5 rounded-xl transition shrink-0"
-              style={{ color: 'var(--fg-subtle)', background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
+              onClick={() => { if(confirm('Cancellare la chat?')) { setMessages([]); localStorage.removeItem(storageKey); } }}
+              className="tap-target rounded-xl transition-all hover:bg-negative/10 hover:text-negative text-fg-subtle shrink-0"
               title="Nuova conversazione"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-5 h-5" />
             </button>
           )}
           <textarea
@@ -237,39 +210,36 @@ export default function ChatClient() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Scrivi al coach… (Invio per inviare, Shift+Invio per andare a capo)"
+            placeholder="Scrivi al coach…"
             rows={1}
-            className="flex-1 px-4 py-2.5 rounded-xl text-sm resize-none outline-none transition"
+            className="flex-1 px-4 py-3 rounded-xl text-sm resize-none outline-none transition bg-transparent border-none"
             style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-default)',
               color: 'var(--fg-primary)',
-              minHeight: '42px',
-              maxHeight: '120px',
+              minHeight: '44px',
+              maxHeight: '160px',
             }}
             onInput={e => {
               const el = e.currentTarget
               el.style.height = 'auto'
-              el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+              el.style.height = Math.min(el.scrollHeight, 160) + 'px'
             }}
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="p-2.5 rounded-xl transition shrink-0"
-            style={{
-              background: loading || !input.trim() ? 'var(--bg-elevated)' : 'var(--accent)',
-              color: loading || !input.trim() ? 'var(--fg-subtle)' : 'var(--accent-on, white)',
-              border: '1px solid var(--border-default)',
-            }}
+            className={`tap-target rounded-xl transition-all shrink-0 ${loading || !input.trim() ? 'opacity-30' : 'btn-primary glow-accent'}`}
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5" />
           </button>
-        </form>
-        <p className="text-[10px] mt-1.5 text-center" style={{ color: 'var(--fg-subtle)' }}>
-          Il coach legge i tuoi dati in tempo reale · Le risposte sono basate sul tuo profilo specifico
-        </p>
+        </div>
+        <div className="mt-3 flex items-center justify-center gap-2 opacity-40">
+          <Sparkles size={10} className="text-accent" />
+          <p className="text-[9px] font-bold uppercase tracking-widest">
+            AI Coach · 2026 Engine
+          </p>
+        </div>
       </div>
     </>
   )
 }
+

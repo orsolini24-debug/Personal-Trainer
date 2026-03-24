@@ -121,28 +121,69 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
       <TimerComponent />
 
       {/* Lista */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {exercises.map((ex, idx) => (
-          <div key={ex.id} className="flex items-center justify-between p-4 bg-base rounded-xl border border-border-subtle hover:border-border transition-colors">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-primary">{idx + 1}. {ex.name}</span>
-                <button onClick={() => openChart(ex.name)} className="p-1 text-muted hover:text-accent transition-colors" title="Vedi progressione">
-                  <Activity className="w-4 h-4" />
+          <div 
+            key={ex.id} 
+            className="group relative flex items-center justify-between p-5 bg-base rounded-2xl border border-border-subtle hover:border-accent/40 card-interactive shadow-sm overflow-hidden"
+            style={{ borderLeft: '4px solid var(--accent)' }}
+          >
+            {/* Background Glow on Hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            
+            <div className="flex-1 relative z-10">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-accent/10 text-accent text-[10px] font-black num">
+                  {idx + 1}
+                </span>
+                <span className="font-bold text-primary tracking-tight">{ex.name}</span>
+                <div className="h-px flex-1 bg-border/50 mx-2 hidden md:block" />
+                <button 
+                  onClick={() => openChart(ex.name)} 
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/5 text-accent hover:bg-accent hover:text-white transition-all duration-300 border border-accent/10"
+                  title="Vedi progressione"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-black uppercase tracking-wider">Trend</span>
                 </button>
               </div>
-              <div className="text-sm text-muted mt-1.5 flex gap-4">
-                {ex.sets && ex.reps && <span className="bg-elevated px-2 py-0.5 rounded">{ex.sets}x{ex.reps}</span>}
-                {ex.loadKg != null && <span className="bg-accent/10 text-accent px-2 py-0.5 rounded font-medium">{ex.loadKg} kg</span>}
-                {ex.rir != null && <span className="bg-elevated px-2 py-0.5 rounded">RIR {ex.rir}</span>}
+              
+              <div className="text-sm mt-3 flex flex-wrap gap-3">
+                {ex.sets && ex.reps && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-elevated border border-border shadow-inner">
+                    <span className="text-[10px] font-bold text-muted uppercase">Sets</span>
+                    <span className="font-black text-primary num">{ex.sets}x{ex.reps}</span>
+                  </div>
+                )}
+                {ex.loadKg != null && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-accent2/10 border border-accent2/20 shadow-inner">
+                    <span className="text-[10px] font-bold text-accent2 uppercase">Carico</span>
+                    <span className="font-black text-accent2 num">{ex.loadKg} <small className="text-[10px] font-medium opacity-70">kg</small></span>
+                  </div>
+                )}
+                {ex.rir != null && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warning/10 border border-warning/20 shadow-inner">
+                    <span className="text-[10px] font-bold text-warning uppercase">RIR</span>
+                    <span className="font-black text-warning num">{ex.rir}</span>
+                  </div>
+                )}
               </div>
             </div>
-            <button onClick={() => handleDelete(ex.id)} className="text-negative/70 p-2 hover:text-negative hover:bg-negative/10 rounded-lg transition-all ml-2">
+            
+            <button 
+              onClick={() => handleDelete(ex.id)} 
+              className="relative z-10 text-negative/40 p-2.5 hover:text-negative hover:bg-negative/10 rounded-xl transition-all ml-4"
+            >
               <Trash2 className="h-5 w-5" />
             </button>
           </div>
         ))}
-        {exercises.length === 0 && <p className="text-sm text-muted text-center py-4">Nessun esercizio aggiunto.</p>}
+        {exercises.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-border rounded-3xl bg-base/50">
+            <Plus className="w-8 h-8 text-muted/30 mb-2" />
+            <p className="text-sm text-muted font-medium">Nessun esercizio aggiunto.</p>
+          </div>
+        )}
       </div>
 
       {/* Form Aggiungi */}

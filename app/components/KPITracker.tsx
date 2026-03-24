@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { updateGoalProgress } from '@/app/actions/athlete-goals'
 import { type AthleteGoal } from '@prisma/client'
+import { Target, TrendingUp, CheckCircle2, ChevronRight } from 'lucide-react'
 
 interface Props {
   goals: AthleteGoal[]
@@ -25,73 +26,92 @@ export default function KPITracker({ goals, isCompact = false }: Props) {
 
   if (goals.length === 0) {
     return (
-      <div className="p-4 text-sm text-[var(--fg-muted)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl">
-        Nessun obiettivo attivo impostato.
+      <div className="p-8 rounded-[2rem] glass-sm border border-dashed border-border/50 text-center mesh-bg animate-blur-in">
+        <div className="w-12 h-12 rounded-2xl glass flex items-center justify-center mx-auto mb-4 opacity-20">
+          <Target className="w-6 h-6" />
+        </div>
+        <p className="text-fg-subtle font-black tracking-tight uppercase text-[10px] opacity-50">Nessun obiettivo attivo impostato.</p>
       </div>
     )
   }
 
   return (
-    <div className={`grid gap-4 ${isCompact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-      {goals.map((goal) => {
+    <div className={`grid gap-5 stagger ${isCompact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+      {goals.map((goal, idx) => {
         const current = goal.currentValue || 0
         const target = goal.targetValue || 1
-        // Se target < current potrebbe essere un obiettivo di perdita peso o simile.
-        // Ma di base facciamo current/target.
-        // Se target è 0, mettiamo 0%
         let progress = target !== 0 ? (current / target) * 100 : 0
         
-        // Gestione semplice per obiettivi "a calare" (es. peso corporeo)
-        // Se non abbiamo un valore iniziale, è difficile calcolare la % reale di progresso.
-        // Per ora limitiamo a 100% se raggiunto/superato.
         if (progress > 100) progress = 100
         if (progress < 0) progress = 0
 
-        const barColor = progress >= 80 ? 'var(--positive)' : progress >= 50 ? 'var(--warning)' : 'var(--negative)'
+        const isCompleted = progress >= 100
+        const barColor = isCompleted ? 'var(--positive)' : progress >= 50 ? 'var(--accent)' : 'var(--warning)'
 
         return (
-          <div key={goal.id} className="p-4 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-xl flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-semibold text-[var(--fg-primary)] leading-tight">{goal.description}</h4>
-                <p className="text-xs text-[var(--fg-muted)] uppercase tracking-wider mt-0.5">{goal.type}</p>
+          <div 
+            key={goal.id} 
+            className="p-6 rounded-[2rem] card-interactive surface-accent group animate-rise-up"
+            style={{ animationDelay: `${idx * 100}ms` }}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${isCompleted ? 'bg-positive/10 text-positive' : 'glass-sm text-accent'}`}>
+                  {isCompleted ? <CheckCircle2 size={20} /> : <Target size={20} />}
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-black text-sm text-primary tracking-tight leading-tight truncate">{goal.description}</h4>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{goal.type}</span>
+                    <span className="w-1 h-1 rounded-full bg-border-default" />
+                    <span className="text-[9px] font-black text-accent uppercase tracking-widest">{goal.unit}</span>
+                  </div>
+                </div>
               </div>
               <div className="text-right">
-                <span className="text-lg font-bold text-[var(--fg-primary)]">
-                  {current}
-                </span>
-                <span className="text-sm text-[var(--fg-muted)] ml-1">
-                  / {target} {goal.unit}
-                </span>
+                <div className="flex items-baseline justify-end gap-1">
+                  <span className="text-2xl font-black text-primary num tracking-tighter">
+                    {current}
+                  </span>
+                  <span className="text-[10px] font-bold text-fg-subtle opacity-40 uppercase tracking-tighter">
+                    / {target}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-2 bg-[var(--bg-base)] rounded-full overflow-hidden mt-1">
-              <div 
-                className="h-full transition-all duration-500 ease-out"
-                style={{ 
-                  width: `${progress}%`,
-                  backgroundColor: barColor,
-                  boxShadow: `0 0 8px ${barColor}44`
-                }}
-              />
+            {/* Progress Bar Container */}
+            <div className="relative pt-2">
+              <div className="flex justify-between items-center mb-2">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${isCompleted ? 'text-positive' : 'text-fg-subtle opacity-60'}`}>
+                  {isCompleted ? 'Obiettivo Raggiunto' : 'In Progresso'}
+                </span>
+                <span className="text-[10px] font-black num text-primary">
+                  {progress.toFixed(1)}%
+                </span>
+              </div>
+              <div className="w-full h-2.5 bg-bg-base rounded-full overflow-hidden border border-border-subtle shadow-inner">
+                <div 
+                  className="h-full transition-all duration-1000 ease-out rounded-full"
+                  style={{ 
+                    width: `${progress}%`,
+                    backgroundColor: barColor,
+                    boxShadow: `0 0 12px color-mix(in srgb, ${barColor} 40%, transparent)`
+                  }}
+                />
+              </div>
             </div>
 
-            <div className="flex justify-between items-center mt-1">
-              <span className="text-[10px] text-[var(--fg-subtle)] font-mono uppercase">
-                Progress: {progress.toFixed(1)}%
-              </span>
-              
+            <div className="flex justify-end mt-5">
               {editingId === goal.id ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 animate-pop-in">
                   <input
                     type="number"
                     step="any"
                     autoFocus
                     value={tempValue}
                     onChange={(e) => setTempValue(e.target.value)}
-                    className="w-20 px-2 py-0.5 text-xs bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded focus:border-[var(--accent)] outline-none"
+                    className="w-24 px-3 py-1.5 text-xs font-bold glass surface-accent border-accent/40 rounded-xl focus:ring-accent outline-none num"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleUpdate(goal.id)
                       if (e.key === 'Escape') setEditingId(null)
@@ -99,7 +119,7 @@ export default function KPITracker({ goals, isCompact = false }: Props) {
                   />
                   <button 
                     onClick={() => handleUpdate(goal.id)}
-                    className="text-[10px] bg-[var(--accent)] text-white px-2 py-0.5 rounded hover:opacity-90"
+                    className="btn-primary px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest glow-accent"
                   >
                     OK
                   </button>
@@ -110,9 +130,10 @@ export default function KPITracker({ goals, isCompact = false }: Props) {
                     setEditingId(goal.id)
                     setTempValue(goal.currentValue?.toString() || '')
                   }}
-                  className="text-[10px] text-[var(--accent)] hover:underline uppercase font-bold"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl glass-sm text-[10px] font-black text-accent hover:btn-primary hover:text-white transition-all uppercase tracking-widest"
                 >
-                  Aggiorna
+                  Aggiorna Progressi
+                  <ChevronRight size={12} />
                 </button>
               )}
             </div>
