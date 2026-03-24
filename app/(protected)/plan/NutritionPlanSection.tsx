@@ -6,8 +6,9 @@ import { importNutritionPlanFromText, importNutritionPlanFromImage, deleteNutrit
 import {
   Utensils, Upload, FileText, Image, Type, X, Loader2,
   CheckCircle2, Trash2, ChevronDown, ChevronUp, Flame,
-  Beef, Wheat, Droplets, Clock, AlertCircle
+  Beef, Wheat, Droplets, Clock, AlertCircle, Info
 } from 'lucide-react'
+import MesoSettings from './MesoSettings'
 
 interface ActiveNutritionMeso {
   id: string
@@ -132,126 +133,125 @@ export default function NutritionPlanSection({ activeNutritionMeso }: Props) {
   // ── DISPLAY active nutrition plan ──────────────────────────────────────────
   if (activeNutritionMeso && !mode) {
     return (
-      <section className="bg-surface rounded-[2.5rem] border border-border overflow-hidden">
-        {/* Header */}
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-              style={{ background: 'color-mix(in srgb, var(--positive) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--positive) 25%, transparent)' }}>
-              <Utensils className="w-6 h-6 text-positive" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-positive mb-0.5">Piano Attivo</p>
-              <h3 className="font-black text-primary text-lg leading-tight">{activeNutritionMeso.name}</h3>
-              {activeNutritionMeso.objectives && (
-                <p className="text-xs text-muted mt-0.5 line-clamp-1 italic">{activeNutritionMeso.objectives}</p>
-              )}
-            </div>
+      <div className="space-y-10">
+        <section className="rounded-[3rem] p-10 card-elevated mesh-bg border border-border relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-12 opacity-[0.04] group-hover:rotate-12 group-hover:scale-110 transition-transform duration-1000">
+            <Utensils className="w-72 h-72" />
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMode('text')}
-              className="p-2.5 rounded-xl text-muted hover:text-primary transition-all border border-border hover:border-accent/30"
-              style={{ background: 'var(--bg-elevated)' }}
-              title="Aggiorna piano"
-            >
-              <Upload className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="p-2.5 rounded-xl text-muted hover:text-negative transition-all border border-border hover:border-negative/30"
-              style={{ background: 'var(--bg-elevated)' }}
-              title="Rimuovi piano"
-            >
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="p-2.5 rounded-xl transition-all border border-border"
-              style={{ background: expanded ? 'var(--accent)' : 'var(--bg-elevated)', color: expanded ? 'white' : 'var(--fg-muted)', borderColor: expanded ? 'var(--accent)' : 'var(--border-default)' }}
-            >
-              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
 
-        {/* Macro summary bar */}
-        {kpi && (
-          <div className="px-6 pb-4">
-            <div className="grid grid-cols-4 gap-3">
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+              <div className="flex items-center gap-5">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white glow-accent"
+                     style={{ background: 'linear-gradient(135deg, var(--positive), #10B981)' }}>
+                  <Utensils className="w-10 h-10" />
+                </div>
+                <div>
+                  <span className="badge badge-accent mb-1.5 animate-glow-breathe" style={{ background: 'var(--positive)', borderColor: 'var(--positive)' }}>
+                    Alimentazione Attiva
+                  </span>
+                  <h2 className="text-4xl font-black text-primary tracking-tighter leading-none">{activeNutritionMeso.name}</h2>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="text-right glass-sm p-4 rounded-2xl border border-border/50">
+                  <p className="text-[10px] font-black uppercase text-fg-subtle tracking-widest mb-1.5">Target Giornaliero</p>
+                  <p className="text-sm font-black text-primary num tracking-tight">
+                    {kpi?.kcalTarget ?? '—'} <span className="text-[10px] opacity-40 uppercase">kcal</span>
+                  </p>
+                </div>
+                <MesoSettings mesoId={activeNutritionMeso.id} mesoName={activeNutritionMeso.name} />
+              </div>
+            </div>
+
+            {/* Macros Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
               {[
-                { icon: Flame, label: 'Kcal', value: kpi.kcalTarget, unit: 'kcal', color: 'var(--warning)' },
-                { icon: Beef, label: 'Proteine', value: kpi.proteinG, unit: 'g', color: 'var(--accent2)' },
-                { icon: Wheat, label: 'Carboidrati', value: kpi.carbsG, unit: 'g', color: 'var(--warning)' },
-                { icon: Droplets, label: 'Grassi', value: kpi.fatG, unit: 'g', color: 'var(--accent)' },
-              ].map(({ icon: Icon, label, value, unit, color }) => (
-                <div key={label} className="p-3 rounded-2xl bg-base border border-border text-center">
-                  <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted">{label}</p>
-                  <p className="font-black text-primary text-sm">{value ?? '—'}<span className="text-[10px] text-muted font-medium ml-0.5">{unit}</span></p>
+                { label: 'Proteine', value: kpi?.proteinG, color: 'var(--accent)', icon: Beef, unit: 'g' },
+                { label: 'Carboidrati', value: kpi?.carbsG, color: 'var(--warning)', icon: Wheat, unit: 'g' },
+                { label: 'Grassi', value: kpi?.fatG, color: 'var(--fg-muted)', icon: Droplets, unit: 'g' },
+                { label: 'Kcal', value: kpi?.kcalTarget, color: 'var(--positive)', icon: Flame, unit: 'kcal' },
+              ].map((macro) => (
+                <div key={macro.label} className="glass-sm p-4 rounded-2xl border border-border/40 text-center surface-accent">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <macro.icon className="w-3 h-3" style={{ color: macro.color }} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-fg-subtle">{macro.label}</span>
+                  </div>
+                  <p className="text-xl font-black tracking-tight text-primary">
+                    {macro.value ?? '—'}<span className="text-[10px] font-bold opacity-40 ml-0.5">{macro.unit}</span>
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Expanded: meals + guidelines */}
-        {expanded && kpi && (
-          <div className="px-6 pb-6 space-y-5 border-t border-border pt-5">
-            {/* Meals */}
-            {kpi.meals && kpi.meals.length > 0 && (
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3" /> Pasti
-                </p>
-                <div className="space-y-2">
-                  {kpi.meals.map((meal, i) => (
-                    <div key={i} className="p-4 rounded-2xl bg-base border border-border">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-primary">{meal.name}</span>
-                          {meal.timeHint && (
-                            <span className="text-[10px] font-bold text-muted">{meal.timeHint}</span>
-                          )}
-                        </div>
-                        <span className="text-[10px] font-black text-warning">{meal.kcal} kcal</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {meal.foods.map((food, j) => (
-                          <span key={j} className="text-[10px] px-2 py-0.5 rounded-lg bg-elevated border border-border text-muted font-medium">
-                            {food}
-                          </span>
-                        ))}
-                      </div>
-                      {meal.notes && (
-                        <p className="text-[10px] text-muted mt-2 italic">{meal.notes}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+            <div className="glass-sm p-6 rounded-[2rem] border border-border/40 mb-10 surface-accent">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
+                  <Info className="w-4 h-4" /> Focus Nutrizionale
+                </h3>
+                <button 
+                  onClick={() => setMode('text')}
+                  className="btn-ghost px-3 py-1 text-[10px] font-bold flex items-center gap-1.5"
+                >
+                  <Upload className="w-3.5 h-3.5" /> Aggiorna
+                </button>
               </div>
-            )}
+              <p className="text-fg-muted text-sm leading-relaxed italic opacity-80">{activeNutritionMeso.objectives ?? 'Piano alimentare personalizzato basato sui tuoi obiettivi.'}</p>
+            </div>
 
-            {/* Guidelines */}
-            {kpi.guidelines && kpi.guidelines.length > 0 && (
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3" /> Linee Guida
-                </p>
-                <div className="space-y-1.5">
+            {/* Meals Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {kpi?.meals?.map((meal, idx) => (
+                <div
+                  key={idx}
+                  className="p-6 rounded-[2.5rem] card-interactive surface-accent group/card"
+                >
+                  <div className="flex justify-between items-start mb-5">
+                    <div className="w-12 h-12 rounded-2xl glass-sm flex items-center justify-center font-black text-accent group-hover/card:btn-primary group-hover/card:text-white transition-all shadow-md">
+                      {idx + 1}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-accent opacity-40" />
+                      <span className="text-[10px] font-black text-fg-subtle uppercase tracking-widest">{meal.timeHint || 'Pasto'}</span>
+                    </div>
+                  </div>
+                  <p className="font-black text-lg text-primary mb-1 tracking-tight">{meal.name}</p>
+                  <p className="text-[10px] text-positive uppercase font-black tracking-widest mb-5">{meal.kcal} kcal</p>
+                  
+                  <div className="space-y-2 opacity-60 group-hover/card:opacity-100 transition-opacity">
+                    {meal.foods.map((food, fidx) => (
+                      <p key={fidx} className="text-[10px] font-bold text-fg-muted truncate flex items-center gap-2.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-positive/40 inline-block" /> {food}
+                      </p>
+                    ))}
+                  </div>
+                  {meal.notes && (
+                    <p className="mt-4 text-[10px] text-muted italic opacity-60 line-clamp-2">{meal.notes}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Guidelines Section */}
+            {kpi?.guidelines && kpi.guidelines.length > 0 && (
+              <div className="mt-10 pt-10 border-t border-border/40">
+                <p className="divider-label mb-6">Linee Guida Tecnica</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {kpi.guidelines.map((g, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm text-muted">
-                      <span className="text-positive mt-0.5 shrink-0">✓</span>
-                      <span>{g}</span>
+                    <div key={i} className="flex items-start gap-4 p-4 rounded-2xl glass-sm border border-border/30">
+                      <div className="w-6 h-6 rounded-lg bg-positive/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-positive" />
+                      </div>
+                      <p className="text-xs text-muted leading-relaxed">{g}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        )}
-      </section>
+        </section>
+      </div>
     )
   }
 
