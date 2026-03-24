@@ -100,6 +100,7 @@ export async function importNutritionPlanFromText(text: string) {
   if (!data) return { error: 'Impossibile analizzare il piano alimentare. Controlla il testo e riprova.' }
 
   await saveNutritionPlan(userId, data)
+  await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } })
   revalidatePath('/plan')
   return { success: true, data }
 }
@@ -113,6 +114,7 @@ export async function importNutritionPlanFromImage(base64: string, mimeType: str
   if (!data) return { error: 'Impossibile leggere il piano dall\'immagine. Prova con un\'immagine più nitida.' }
 
   await saveNutritionPlan(userId, data)
+  await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } })
   revalidatePath('/plan')
   return { success: true, data }
 }

@@ -30,28 +30,35 @@ export async function analyzeAndImportPlanSmart(text: string) {
       response_format: { type: "json_object" }
     })
 
-    const { containsTraining, containsNutrition } = JSON.parse(detection.choices[0]?.message?.content || "{}")
+    const rawDetect = detection.choices[0]?.message?.content || "{}"
+    console.log("[IMPORT] detection raw:", rawDetect)
+    const { containsTraining, containsNutrition } = JSON.parse(rawDetect)
+    console.log("[IMPORT] containsTraining:", containsTraining, "containsNutrition:", containsNutrition)
 
     let trainingRes = null
     let nutritionRes = null
 
     if (containsTraining) {
       trainingRes = await analyzeAndImportPlan(text)
+      console.log("[IMPORT] trainingRes:", JSON.stringify(trainingRes))
     }
 
     if (containsNutrition) {
       nutritionRes = await importNutritionPlanFromText(text)
+      console.log("[IMPORT] nutritionRes:", JSON.stringify(nutritionRes))
     }
 
-    return {
+    const result = {
       success: true,
       importedTraining: containsTraining && trainingRes?.success,
       importedNutrition: containsNutrition && nutritionRes?.success,
       trainingError: trainingRes && !trainingRes.success ? trainingRes.error : null,
       nutritionError: nutritionRes && 'error' in nutritionRes ? (nutritionRes.error as string) : null
     }
+    console.log("[IMPORT] final result:", JSON.stringify(result))
+    return result
   } catch (error: any) {
-    console.error("Smart import error:", error)
+    console.error("[IMPORT] Smart import error:", error)
     return { success: false, error: error.message }
   }
 }
@@ -97,6 +104,7 @@ REGOLE:
     })
 
     const planData = JSON.parse(completion.choices[0]?.message?.content || "{}")
+    console.log("[IMPORT] planData.name:", planData.name, "plan days:", planData.plan?.length)
 
     // Inizia transazione DB
     const result = await prisma.$transaction(async (tx) => {
@@ -158,6 +166,12 @@ REGOLE:
       }
 
       return meso
+    })
+
+    // Segna onboarding completato (fondamentale dopo DB reset)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true }
     })
 
     revalidatePath("/plan")
