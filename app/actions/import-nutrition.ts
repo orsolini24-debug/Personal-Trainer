@@ -49,7 +49,7 @@ const EXTRACT_PROMPT = `Sei un nutrizionista esperto. Analizza questo piano alim
 async function parseWithAI(text: string): Promise<NutritionPlanData | null> {
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: EXTRACT_PROMPT },
         { role: 'user', content: text }

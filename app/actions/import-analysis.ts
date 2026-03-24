@@ -16,23 +16,22 @@ export async function analyzeAndImportPlanSmart(text: string) {
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   try {
-    const detectPrompt = `Analizza questo testo e determina se contiene:
-    1. Un PIANO DI ALLENAMENTO (esercizi, serie, ripetizioni, split A/B/C)
-    2. UN PIANO ALIMENTARE (pasti, calorie, macronutrienti, grammature)
-    3. ENTRAMBI
-    
-    Rispondi SOLO con un JSON:
-    {"containsTraining": boolean, "containsNutrition": boolean}`
+    // Singola chiamata leggera per rilevare il tipo di contenuto
+    const detectPrompt = `Analizza questo testo e rispondi SOLO con JSON:
+{"containsTraining": true/false, "containsNutrition": true/false}
+- containsTraining = true se ci sono esercizi, serie, ripetizioni, split A/B/C
+- containsNutrition = true se ci sono pasti, calorie, macronutrienti, grammature`
 
     const detection = await groq.chat.completions.create({
-      messages: [{ role: "user", content: detectPrompt + "\n\nTesto:\n" + text }],
-      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: detectPrompt + "\n\nTesto:\n" + text.slice(0, 1500) }],
+      model: "llama-3.1-8b-instant",
       temperature: 0.1,
+      max_tokens: 60,
       response_format: { type: "json_object" }
     })
 
     const { containsTraining, containsNutrition } = JSON.parse(detection.choices[0]?.message?.content || "{}")
-    
+
     let trainingRes = null
     let nutritionRes = null
 
@@ -91,8 +90,9 @@ REGOLE:
         { role: "system", content: systemPrompt },
         { role: "user", content: `Analizza questo piano: ${text}` }
       ],
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       temperature: 0.1,
+      max_tokens: 3000,
       response_format: { type: "json_object" }
     })
 
