@@ -74,8 +74,8 @@ export default function PlanScheduleWizard({ planId, planDays, initialTrainingDa
   const isAsynchronous = selectedDays.length > 0 && selectedDays.length < planDays.length
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-surface rounded-[2.5rem] border border-border overflow-hidden shadow-2xl animate-pop-in flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-surface rounded-[2.5rem] border border-border overflow-hidden shadow-2xl animate-pop-in flex flex-col max-h-[90vh] relative">
         
         {/* Header */}
         <div className="p-6 border-b border-border/50 flex items-center justify-between shrink-0">
