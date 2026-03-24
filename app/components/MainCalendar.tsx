@@ -12,9 +12,11 @@ import {
   getCalendarMonthData, getDayDetail, logPlannedSessionRetroactive,
   runDailyAnalysis,
   deleteSkippedSessions, deletePastPendingSessions,
+  deleteManualActivity,
   type CalendarDayData, type DayDetailData, type ManualActivitySummary
 } from '@/app/actions/calendar'
 import { markSessionSkipped, deletePlannedSession } from '@/app/actions/plans'
+import { deleteSession } from '@/app/actions/training'
 import { Trash2, CalendarX } from 'lucide-react'
 import AddActivitySheet from '@/app/components/AddActivitySheet'
 
@@ -121,6 +123,31 @@ export default function MainCalendar() {
       closeDrawer()
     } else {
       alert(res.error)
+    }
+  }
+
+  const handleDeleteWorkout = async (sessionId: string) => {
+    if (!confirm('Eliminare definitivamente questo allenamento e tutti i suoi dati?')) return
+    const res = await deleteSession(sessionId)
+    if (res.success) {
+      fetchMonthData(currentDate)
+      closeDrawer()
+    } else {
+      alert(res.error)
+    }
+  }
+
+  const handleDeleteManualActivityLocal = async (activityId: string) => {
+    if (!confirm('Eliminare questa attività extra?')) return
+    const res = await deleteManualActivity(activityId)
+    if (res.success) {
+      fetchMonthData(currentDate)
+      // Refresh detail if open
+      if (selectedDay) {
+        getDayDetail(selectedDay.date).then(setDayDetail)
+      }
+    } else {
+      alert('Errore durante l\'eliminazione')
     }
   }
 
@@ -388,13 +415,17 @@ export default function MainCalendar() {
 
                   {/* ── Completed workout ── */}
                   {dayDetail?.workout && (
-                    <WorkoutCard workout={dayDetail.workout} />
+                    <WorkoutCard 
+                      workout={dayDetail.workout} 
+                      onDelete={handleDeleteWorkout} 
+                    />
                   )}
 
                   {/* ── Manual activities ── */}
                   {(dayDetail?.manualActivities ?? selectedDay.manualActivities).length > 0 && (
                     <ManualActivitiesCard
                       activities={dayDetail?.manualActivities ?? selectedDay.manualActivities}
+                      onDelete={handleDeleteManualActivityLocal}
                     />
                   )}
 
@@ -624,17 +655,26 @@ function PlannedSessionCard({
   )
 }
 
-function WorkoutCard({ workout }: { workout: NonNullable<DayDetailData['workout']> }) {
+function WorkoutCard({ workout, onDelete }: { workout: NonNullable<DayDetailData['workout']>, onDelete: (id: string) => void }) {
   return (
     <div className="rounded-3xl border border-[#10B981]/20 overflow-hidden" style={{ background: 'color-mix(in srgb, #10B981 5%, transparent)' }}>
-      <div className="px-5 py-4 border-b border-[#10B981]/10 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-[#10B981] flex items-center justify-center">
-          <Check className="w-4 h-4 text-white" />
+      <div className="px-5 py-4 border-b border-[#10B981]/10 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#10B981] flex items-center justify-center">
+            <Check className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Allenamento Completato</p>
+            <p className="font-black text-primary">{workout.type} · {workout.exerciseCount} esercizi</p>
+          </div>
         </div>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Allenamento Completato</p>
-          <p className="font-black text-primary">{workout.type} · {workout.exerciseCount} esercizi</p>
-        </div>
+        <button
+          onClick={() => onDelete(workout.id)}
+          className="p-2 rounded-xl hover:bg-negative/10 text-muted hover:text-negative transition-all"
+          title="Elimina allenamento"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
       <div className="grid grid-cols-3 gap-px p-4 bg-base/10">
         {[
@@ -656,7 +696,7 @@ function WorkoutCard({ workout }: { workout: NonNullable<DayDetailData['workout'
   )
 }
 
-function ManualActivitiesCard({ activities }: { activities: ManualActivitySummary[] }) {
+function ManualActivitiesCard({ activities, onDelete }: { activities: ManualActivitySummary[], onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
   const shown = expanded ? activities : activities.slice(0, 2)
 
@@ -684,6 +724,13 @@ function ManualActivitiesCard({ activities }: { activities: ManualActivitySummar
                   {a.source === 'WATCH_IMPORT' ? '⌚ Importato' : a.source === 'IMAGE_OCR' ? '📷 OCR' : '✏️ Manuale'}
                 </p>
               </div>
+              <button
+                onClick={() => onDelete(a.id)}
+                className="p-2 rounded-xl hover:bg-negative/10 text-muted hover:text-negative transition-all shrink-0"
+                title="Elimina attività"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {/* Stats row */}
