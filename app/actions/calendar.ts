@@ -811,3 +811,49 @@ export async function logPlannedSessionRetroactive(params: {
   revalidatePath('/dashboard')
   return { success: true, workoutId: workout.id }
 }
+
+export async function deleteSkippedSessions() {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error('Non autorizzato')
+  const userId = session.user.id
+
+  try {
+    const result = await prisma.plannedSession.deleteMany({
+      where: {
+        userId,
+        status: 'SKIPPED'
+      }
+    })
+
+    revalidatePath('/calendar')
+    revalidatePath('/plan')
+    return { success: true, count: result.count }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deletePastPendingSessions() {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error('Non autorizzato')
+  const userId = session.user.id
+
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  try {
+    const result = await prisma.plannedSession.deleteMany({
+      where: {
+        userId,
+        status: 'PENDING',
+        scheduledDate: { lt: today }
+      }
+    })
+
+    revalidatePath('/calendar')
+    revalidatePath('/plan')
+    return { success: true, count: result.count }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}

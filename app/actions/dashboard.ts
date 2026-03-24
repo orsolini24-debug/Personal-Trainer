@@ -13,13 +13,17 @@ export async function getDashboardData() {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
-  const [recovery, nutrition, workout, biometric, profile, goals] = await Promise.all([
+  const [recovery, nutrition, workout, biometric, profile, goals, lastReport] = await Promise.all([
     prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
     prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
     prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: 'asc' } }),
     prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
     prisma.userProfile.findUnique({ where: { userId } }),
     getActiveGoals(),
+    prisma.aIReport.findFirst({
+      where: { userId, type: 'WEEKLY' },
+      orderBy: { date: 'desc' }
+    })
   ])
 
   // Recovery
@@ -66,6 +70,30 @@ export async function getDashboardData() {
   const dayName = today.toLocaleDateString('it-IT', { weekday: 'long' })
   const dateStr = today.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
 
+  // Streak Calculation (Sessions this week vs Target)
+  const monday = new Date(today)
+  const day = today.getUTCDay()
+  const diff = today.getUTCDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+  monday.setUTCDate(diff)
+  monday.setUTCHours(0, 0, 0, 0)
+
+  const [completedSessions, activePlan] = await Promise.all([
+    prisma.workoutSession.count({
+      where: {
+        userId,
+        date: { gte: monday, lte: new Date() }
+      }
+    }),
+    prisma.workoutPlan.findFirst({
+      where: { userId, isActive: true },
+      select: { daysPerWeek: true }
+    })
+  ])
+
+  const sessionsTarget = activePlan?.daysPerWeek ?? 5
+  const streakValue = String(completedSessions)
+  const streakUnit = `/ ${sessionsTarget} sessioni`
+
   return {
     userName: session.user.name?.split(' ')[0] || 'Atleta',
     dayName, dateStr,
@@ -85,5 +113,11 @@ export async function getDashboardData() {
     weightKg: biometric?.weightKg ?? null,
     athleteLabel, sportName,
     goals,
+    streakValue,
+    streakUnit,
+    lastReport: lastReport ? {
+      date: lastReport.date.toISOString(),
+      content: lastReport.content.slice(0, 150) + (lastReport.content.length > 150 ? '...' : '')
+    } : null,
   }
 }

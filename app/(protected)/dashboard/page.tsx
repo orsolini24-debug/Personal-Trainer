@@ -28,6 +28,9 @@ export default function DashboardPage() {
     coachMsg,
     weightKg, athleteLabel, sportName,
     goals,
+    streakValue,
+    streakUnit,
+    lastReport,
   } = data
 
   // Recovery color — only applies when data exists
@@ -388,6 +391,40 @@ export default function DashboardPage() {
         </div>
       </Link>
 
+      {/* ── WEEKLY REPORT SNIPPET (if exists) ── */}
+      {lastReport && (
+        <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
+          <div style={{
+            padding: '24px', borderRadius: '20px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <p style={{
+              fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em',
+              textTransform: 'uppercase', color: 'var(--accent)',
+              marginBottom: '12px', fontFamily: "'JetBrains Mono', monospace",
+            }}>
+              Weekly Report · {new Date(lastReport.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })}
+            </p>
+            <p style={{ 
+              fontSize: '13px', lineHeight: 1.6, color: 'var(--fg-primary)', 
+              margin: 0, opacity: 0.9, fontWeight: 500,
+              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
+              {lastReport.content.replace(/[*#]/g, '')}
+            </p>
+            <div style={{
+              marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px',
+              fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--accent)',
+            }}>
+              Leggi tutto <ArrowRight size={10} />
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* ═══════════════════════════════════════════
           STATS STRIP — single bar, no separate cards
       ═══════════════════════════════════════════ */}
@@ -403,7 +440,7 @@ export default function DashboardPage() {
         {[
           { href: '/body',     label: 'Peso',   value: weightKg ? String(weightKg) : '––', unit: weightKg ? 'kg' : '', shrink: false },
           { href: '/plan',     label: 'Livello', value: athleteLabel ?? '––',              unit: sportName ?? '',       shrink: true  },
-          { href: '/training', label: 'Streak', value: '4',                                unit: '/ 5 sessioni',        shrink: false },
+          { href: '/training', label: 'Streak', value: streakValue,                         unit: streakUnit,        shrink: false },
         ].map(({ href, label, value, unit, shrink }, i) => (
           <Link key={label} href={href} style={{ textDecoration: 'none' }}>
             <div

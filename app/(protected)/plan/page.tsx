@@ -18,6 +18,7 @@ import OnboardingWizard from "@/app/(protected)/onboarding/OnboardingWizard"
 import CoachInsights from "./CoachInsights"
 import NutritionPlanSection from "./NutritionPlanSection"
 import WeeklyCalendar from "@/app/components/WeeklyCalendar"
+import MesoSettings from "./MesoSettings"
 import type { PlanDayOption } from "@/app/components/WeeklyCalendar"
 import { getWeekCalendarData } from "@/app/actions/plans"
 
@@ -175,9 +176,7 @@ export default async function PlanPage() {
                           <h3 className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-2">
                             <Info className="w-4 h-4" /> Focus Tecnico
                           </h3>
-                          <button className="btn-ghost px-3 py-1 text-[10px] font-bold flex items-center gap-1.5">
-                            <Settings2 className="w-3.5 h-3.5" /> Modifica
-                          </button>
+                          <MesoSettings mesoId={activeMeso.id} mesoName={activeMeso.name} />
                         </div>
                         <p className="text-fg-muted text-sm leading-relaxed italic opacity-80">{activeMeso.objectives}</p>
                       </div>
