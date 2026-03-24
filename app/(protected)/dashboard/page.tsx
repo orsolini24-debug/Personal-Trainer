@@ -1,17 +1,15 @@
 'use client'
 
-// NOTE: This is a client component to enable hover animations.
-// Data fetching is done via server action imported below.
-// If you prefer server component, move the data fetch back and remove useState/useEffect.
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import KPITracker from '@/app/components/KPITracker'
 import { getDashboardData } from '@/app/actions/dashboard'
 
+type DashData = Awaited<ReturnType<typeof getDashboardData>>
+
 export default function DashboardPage() {
-  const [data, setData] = useState<Awaited<ReturnType<typeof getDashboardData>> | null>(null)
+  const [data, setData] = useState<DashData | null>(null)
 
   useEffect(() => {
     getDashboardData().then(setData)
@@ -21,7 +19,7 @@ export default function DashboardPage() {
 
   const {
     userName, dayName, dateStr,
-    score, scoreLabel, scoreColor, scoreBg,
+    score, scoreLabel, scoreBg,
     hrv, tsb, sleepH,
     workout,
     kcalActual, kcalTarget, kcalPct,
@@ -32,337 +30,506 @@ export default function DashboardPage() {
     goals,
   } = data
 
+  // Recovery — Suunto-style color logic
+  const hasScore = score > 0
+  // No-data state: deep tactical dark (mission control)
+  const recoveryBg   = hasScore ? scoreBg : '#07070F'
+  const textPrimary  = hasScore ? 'rgba(0,0,0,0.90)' : 'rgba(255,255,255,0.88)'
+  const textMuted    = hasScore ? 'rgba(0,0,0,0.40)' : 'rgba(255,255,255,0.28)'
+  const dividerColor = hasScore ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'
+
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', paddingBottom: '48px' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }}>
 
       {/* ── HEADER ── */}
-      <header style={{ marginBottom: '32px' }}>
+      <header style={{ padding: '4px 0 24px' }}>
         <p style={{
-          fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em',
+          fontSize: '10px', fontWeight: 700, letterSpacing: '0.16em',
           textTransform: 'uppercase', color: 'var(--fg-subtle)',
-          marginBottom: '4px',
+          marginBottom: '8px', fontFamily: "'JetBrains Mono', monospace",
         }}>
           {dayName} · {dateStr}
         </p>
-        <h1 style={{
-          fontFamily: "'Sora', sans-serif",
-          fontSize: 'clamp(2.2rem, 6vw, 3.5rem)',
-          fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1,
-          color: 'var(--fg-primary)',
-        }}>
-          {userName}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+          <h1 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: 'clamp(3rem, 8vw, 5rem)',
+            fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 0.9,
+            color: 'var(--fg-primary)', margin: 0,
+          }}>
+            {userName}
+          </h1>
+          {(athleteLabel || sportName) && (
+            <div style={{ textAlign: 'right', paddingBottom: '4px', flexShrink: 0 }}>
+              {sportName && (
+                <p style={{
+                  fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em',
+                  textTransform: 'uppercase', color: 'var(--accent)',
+                  fontFamily: "'JetBrains Mono', monospace", margin: 0,
+                }}>
+                  {sportName}
+                </p>
+              )}
+              {athleteLabel && (
+                <p style={{
+                  fontSize: '9px', fontWeight: 600, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', color: 'var(--fg-subtle)',
+                  fontFamily: "'JetBrains Mono', monospace", margin: '2px 0 0',
+                }}>
+                  {athleteLabel}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* ── HERO ROW: RECOVERY + SESSION ── */}
-      <div className="dash-hero-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-
-        {/* RECOVERY — colored fill card */}
-        <Link href="/recovery" style={{ textDecoration: 'none' }}>
-          <div className="dash-card-hover" style={{
-            background: scoreBg,
+      {/* ═══════════════════════════════════════════════════
+          RECOVERY — full-width Suunto-style hero band
+      ═══════════════════════════════════════════════════ */}
+      <Link href="/recovery" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
+        <div
+          className="dash-card-hover"
+          style={{
+            background: recoveryBg,
             borderRadius: '24px',
-            padding: '32px 28px',
-            minHeight: '220px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            transition: 'transform 0.2s var(--ease-expo-out), box-shadow 0.2s',
+            padding: 'clamp(28px, 4vw, 48px)',
             position: 'relative',
             overflow: 'hidden',
-          }}>
-            {/* Label */}
-            <p style={{
-              fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: score > 0 ? 'rgba(0,0,0,0.45)' : 'var(--fg-subtle)',
-            }}>Recupero</p>
+            cursor: 'pointer',
+          }}
+        >
+          {/* Tactical grid texture when no data */}
+          {!hasScore && (
+            <div style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),' +
+                'linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+            }} />
+          )}
 
-            {/* Giant score */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr auto',
+            gap: '32px',
+            alignItems: 'center',
+            position: 'relative',
+          }}>
+            {/* LEFT — score display */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', lineHeight: 1 }}>
+              <p style={{
+                fontSize: '10px', fontWeight: 700, letterSpacing: '0.16em',
+                textTransform: 'uppercase', color: textMuted,
+                marginBottom: '8px', fontFamily: "'JetBrains Mono', monospace",
+              }}>
+                Recupero
+              </p>
+
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', lineHeight: 1 }}>
                 <span style={{
                   fontFamily: "'Sora', sans-serif",
-                  fontSize: 'clamp(4.5rem, 12vw, 7rem)',
+                  fontSize: 'clamp(5.5rem, 15vw, 10rem)',
                   fontWeight: 900,
-                  letterSpacing: '-0.06em',
-                  color: score > 0 ? '#000' : 'var(--fg-subtle)',
+                  letterSpacing: '-0.07em',
+                  color: textPrimary,
                   fontVariantNumeric: 'tabular-nums',
+                  lineHeight: 0.88,
                 }}>
-                  {score > 0 ? score : '--'}
+                  {hasScore ? score : '–'}
                 </span>
-                {score > 0 && (
-                  <span style={{ fontSize: '1.4rem', fontWeight: 700, color: 'rgba(0,0,0,0.35)' }}>/100</span>
+                {hasScore && (
+                  <span style={{
+                    fontSize: 'clamp(1.1rem, 2.5vw, 1.6rem)',
+                    fontWeight: 700, color: textMuted,
+                    marginBottom: '8px', letterSpacing: '-0.03em',
+                  }}>
+                    /100
+                  </span>
                 )}
               </div>
+
               <p style={{
-                fontSize: '11px', fontWeight: 900, letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: score > 0 ? 'rgba(0,0,0,0.5)' : 'var(--fg-subtle)',
-                marginTop: '4px',
+                fontSize: '11px', fontWeight: 900, letterSpacing: '0.2em',
+                textTransform: 'uppercase', color: textMuted,
+                marginTop: '10px', fontFamily: "'Sora', sans-serif",
               }}>
-                {scoreLabel}
+                {hasScore ? scoreLabel : 'SYNC DATI'}
               </p>
             </div>
 
-            {/* HRV / Sonno strip */}
-            <div style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
+            {/* RIGHT — biometric readouts (Suunto data strip) */}
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: '0',
+              minWidth: '120px',
+            }}>
               {[
-                { label: 'HRV', value: hrv ? `${hrv}ms` : '--' },
-                { label: 'Sonno', value: sleepH ? `${sleepH}h` : '--' },
-                { label: 'TSB', value: tsb != null ? String(tsb) : '--' },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: score > 0 ? 'rgba(0,0,0,0.4)' : 'var(--fg-subtle)' }}>{label}</p>
-                  <p style={{ fontSize: '1rem', fontWeight: 800, color: score > 0 ? 'rgba(0,0,0,0.75)' : 'var(--fg-muted)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{value}</p>
+                { label: 'HRV', value: hrv ? `${hrv}` : '––', unit: 'ms' },
+                { label: 'SLEEP', value: sleepH ? `${sleepH}` : '––', unit: 'h' },
+                { label: 'TSB', value: tsb != null ? String(tsb) : '––', unit: '' },
+              ].map(({ label, value, unit }, i) => (
+                <div key={label} style={{
+                  display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', gap: '16px',
+                  padding: '10px 0',
+                  borderBottom: i < 2 ? `1px solid ${dividerColor}` : 'none',
+                }}>
+                  <span style={{
+                    fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em',
+                    textTransform: 'uppercase', color: textMuted,
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}>
+                    {label}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '1.2rem', fontWeight: 700,
+                      color: textPrimary, fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: '-0.02em',
+                    }}>
+                      {value}
+                    </span>
+                    {unit && (
+                      <span style={{ fontSize: '9px', fontWeight: 600, color: textMuted }}>
+                        {unit}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </Link>
+        </div>
+      </Link>
 
-        {/* SESSION — dark dramatic card */}
-        <div className="dash-card-hover" style={{
-          background: workout ? 'var(--fg-primary)' : 'var(--bg-elevated)',
-          borderRadius: '24px',
-          padding: '32px 28px',
-          minHeight: '220px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          transition: 'transform 0.2s var(--ease-expo-out)',
-          overflow: 'hidden',
-          position: 'relative',
-        }}>
+      {/* ═══════════════════════════════════════════════════
+          SESSION + NUTRITION — side by side
+      ═══════════════════════════════════════════════════ */}
+      <div
+        className="dash-2col"
+        style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          gap: '8px', marginBottom: '8px',
+        }}
+      >
+        {/* SESSION — always tactical dark (Nike workout card style) */}
+        <div
+          className="dash-card-hover"
+          style={{
+            background: '#080810',
+            borderRadius: '20px',
+            padding: 'clamp(22px, 3.5vw, 36px)',
+            display: 'flex', flexDirection: 'column',
+            justifyContent: 'space-between', minHeight: '210px',
+            position: 'relative', overflow: 'hidden',
+          }}
+        >
+          {/* Subtle cross-hatch background */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.035,
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),' +
+              'linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }} />
+
           <p style={{
-            fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: workout ? 'rgba(255,255,255,0.4)' : 'var(--fg-subtle)',
-          }}>Oggi</p>
+            fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em',
+            textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)',
+            fontFamily: "'JetBrains Mono', monospace", position: 'relative',
+          }}>
+            Oggi
+          </p>
 
           {workout ? (
-            <>
-              {/* Session type huge */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                <h2 style={{
-                  fontFamily: "'Sora', sans-serif",
-                  fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
-                  fontWeight: 900,
-                  letterSpacing: '-0.05em',
-                  lineHeight: 1.05,
-                  color: 'var(--bg-base)',
-                  textTransform: 'uppercase',
-                }}>
-                  {workout.type?.replace(/_/g, '\n')}
-                </h2>
-              </div>
-
-              {/* Meta + CTA */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              justifyContent: 'space-between', paddingTop: '10px', position: 'relative',
+            }}>
+              <h2 style={{
+                fontFamily: "'Sora', sans-serif",
+                fontSize: 'clamp(1.6rem, 4.5vw, 2.4rem)',
+                fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.95,
+                color: '#FFFFFF', textTransform: 'uppercase', margin: 0,
+              }}>
+                {workout.type?.replace(/_/g, ' ')}
+              </h2>
               <div>
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '14px', margin: '12px 0 14px' }}>
                   {workout.durationMin && (
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(0,0,0,0.4)', fontVariantNumeric: 'tabular-nums' }}>
-                      {workout.durationMin} min
+                    <span style={{
+                      fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}>
+                      {workout.durationMin}&thinsp;MIN
                     </span>
                   )}
                   {workout.trainingLoad && (
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(0,0,0,0.4)' }}>
-                      TL {workout.trainingLoad}
+                    <span style={{
+                      fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.35)',
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}>
+                      TL&thinsp;{workout.trainingLoad}
                     </span>
                   )}
                 </div>
                 <Link href="/training/active" style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   background: 'var(--accent)', color: '#fff',
-                  padding: '13px 18px', borderRadius: '12px',
-                  fontWeight: 800, fontSize: '13px', letterSpacing: '-0.01em',
-                  textDecoration: 'none',
-                  boxShadow: '0 4px 20px var(--glow-accent)',
+                  padding: '13px 18px', borderRadius: '10px',
+                  fontWeight: 800, fontSize: '12px', letterSpacing: '0.06em',
+                  textTransform: 'uppercase', textDecoration: 'none',
                 }}>
-                  Inizia <ArrowRight size={15} />
+                  Inizia ora <ArrowRight size={14} />
                 </Link>
               </div>
-            </>
+            </div>
           ) : (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              justifyContent: 'flex-end', position: 'relative',
+            }}>
               <p style={{
                 fontFamily: "'Sora', sans-serif",
-                fontSize: 'clamp(1.8rem, 5vw, 2.4rem)',
-                fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--fg-subtle)',
-                textTransform: 'uppercase', lineHeight: 1,
-              }}>Riposo</p>
-              <p style={{ fontSize: '13px', color: 'var(--fg-subtle)', marginTop: '8px', marginBottom: '20px' }}>
-                Nessuna sessione pianificata.
+                fontSize: 'clamp(2.2rem, 6vw, 3.2rem)',
+                fontWeight: 900, letterSpacing: '-0.06em',
+                color: 'rgba(255,255,255,0.10)',
+                textTransform: 'uppercase', lineHeight: 1, margin: '0 0 14px',
+              }}>
+                Riposo
               </p>
               <Link href="/training" style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: 'var(--accent)', textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                fontSize: '10px', fontWeight: 800, letterSpacing: '0.12em',
+                textTransform: 'uppercase', color: 'var(--accent)',
+                textDecoration: 'none',
               }}>
-                Programma <ChevronRight size={13} />
+                Pianifica <ChevronRight size={12} />
               </Link>
             </div>
           )}
         </div>
-      </div>
 
-      {/* ── NUTRITION STRIP ── */}
-      <Link href="/nutrition" style={{ textDecoration: 'none', display: 'block', marginBottom: '12px' }}>
-        <div className="dash-card-hover" style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-default)',
-          borderRadius: '20px',
-          padding: '24px 28px',
-          transition: 'border-color 0.2s, transform 0.2s var(--ease-expo-out)',
-        }}>
-          {/* Top row: label + kcal */}
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-subtle)' }}>
+        {/* NUTRITION — clean data card */}
+        <Link href="/nutrition" style={{ textDecoration: 'none' }}>
+          <div
+            className="dash-card-hover"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: '20px',
+              padding: 'clamp(22px, 3.5vw, 36px)',
+              minHeight: '210px',
+              display: 'flex', flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
+            <p style={{
+              fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em',
+              textTransform: 'uppercase', color: 'var(--fg-subtle)',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
               Nutrizione
             </p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-              <span style={{
-                fontFamily: "'Sora', sans-serif",
-                fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-0.04em',
-                color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums',
-              }}>{kcalActual}</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--fg-subtle)' }}>/ {kcalTarget} kcal</span>
+
+            {/* Kcal hero */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginBottom: '3px' }}>
+                <span style={{
+                  fontFamily: "'Sora', sans-serif",
+                  fontSize: 'clamp(2.4rem, 5.5vw, 3.4rem)',
+                  fontWeight: 900, letterSpacing: '-0.06em',
+                  color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums',
+                  lineHeight: 1,
+                }}>
+                  {kcalActual}
+                </span>
+                <span style={{
+                  fontSize: '11px', fontWeight: 600, color: 'var(--fg-subtle)',
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}>
+                  / {kcalTarget}
+                </span>
+              </div>
+              <p style={{
+                fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em',
+                textTransform: 'uppercase', color: 'var(--fg-subtle)',
+                fontFamily: "'JetBrains Mono', monospace", margin: '0 0 14px',
+              }}>
+                kcal
+              </p>
+
+              {/* Progress bar */}
+              <div style={{
+                height: '3px', background: 'var(--border-default)',
+                borderRadius: '2px', overflow: 'hidden', marginBottom: '16px',
+              }}>
+                <div style={{
+                  height: '100%', width: `${kcalPct}%`,
+                  background: kcalPct >= 95 ? 'var(--positive)' : kcalPct >= 60 ? 'var(--accent)' : 'var(--warning)',
+                  borderRadius: '2px',
+                  transition: 'width 1.4s cubic-bezier(0.16,1,0.3,1)',
+                }} />
+              </div>
+
+              {/* Macro chips */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px' }}>
+                {[
+                  { label: 'PRO', val: proActual, target: proteinTarget, color: 'var(--accent)' },
+                  { label: 'CARB', val: carbActual, target: carbsTarget, color: 'var(--warning)' },
+                  { label: 'FAT', val: fatActual, target: fatTarget, color: 'var(--fg-muted)' },
+                ].map(({ label, val, color }) => (
+                  <div key={label} style={{
+                    background: 'var(--bg-elevated)',
+                    borderRadius: '8px', padding: '7px 6px', textAlign: 'center',
+                  }}>
+                    <p style={{
+                      fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em',
+                      color: 'var(--fg-subtle)', marginBottom: '3px',
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}>
+                      {label}
+                    </p>
+                    <p style={{
+                      fontSize: '13px', fontWeight: 900, color,
+                      fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
+                      fontFamily: "'Sora', sans-serif",
+                    }}>
+                      {val}g
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        </Link>
+      </div>
 
-          {/* Fat progress bar */}
-          <div style={{ height: '5px', background: 'var(--border-subtle)', borderRadius: '3px', overflow: 'hidden', marginBottom: '18px' }}>
-            <div style={{
-              height: '100%',
-              width: `${kcalPct}%`,
-              background: kcalPct >= 95 ? 'var(--positive)' : kcalPct >= 60 ? 'var(--accent)' : 'var(--warning)',
-              borderRadius: '3px',
-              transition: 'width 1.2s var(--ease-expo-out)',
-            }} />
-          </div>
-
-          {/* Macros */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px' }}>
-            {[
-              { label: 'Proteine', val: proActual, target: proteinTarget, color: 'var(--accent)' },
-              { label: 'Carboidrati', val: carbActual, target: carbsTarget, color: 'var(--warning)' },
-              { label: 'Grassi', val: fatActual, target: fatTarget, color: 'var(--negative)' },
-            ].map(({ label, val, target, color }) => {
-              const pct = Math.min(100, Math.round((val / target) * 100))
-              return (
-                <div key={label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--fg-subtle)' }}>{label}</span>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--fg-muted)', fontVariantNumeric: 'tabular-nums' }}>{val}g</span>
-                  </div>
-                  <div style={{ height: '4px', background: 'var(--border-subtle)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '2px' }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </Link>
-
-      {/* ── COACH STRIP ── */}
-      <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '12px' }}>
+      {/* ═══════════════════════════════════════════════════
+          AI COACH STRIP
+      ═══════════════════════════════════════════════════ */}
+      <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '14px',
-          padding: '16px 20px',
-          borderRadius: '16px',
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '14px 20px', borderRadius: '14px',
           background: 'var(--accent-dim)',
-          border: '1px solid color-mix(in srgb, var(--accent) 18%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--accent) 14%, transparent)',
           transition: 'background 0.2s',
         }}>
           <div style={{
-            width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
+            width: '5px', height: '5px', borderRadius: '50%', flexShrink: 0,
             background: 'var(--accent)',
             boxShadow: '0 0 8px var(--glow-accent)',
             animation: 'pulse 2s infinite',
           }} />
-          <p style={{ flex: 1, fontSize: '13px', fontWeight: 500, color: 'var(--fg-muted)', lineHeight: 1.5, margin: 0 }}>
+          <p style={{
+            flex: 1, fontSize: '12px', fontWeight: 500,
+            color: 'var(--fg-muted)', lineHeight: 1.55, margin: 0,
+          }}>
             <span style={{ fontWeight: 800, color: 'var(--accent)' }}>Coach · </span>
             {coachMsg}
           </p>
-          <ChevronRight size={15} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <ChevronRight size={13} style={{ color: 'var(--accent)', flexShrink: 0 }} />
         </div>
       </Link>
 
-      {/* ── STATS ROW ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '40px' }}>
-        {/* Weight */}
-        <Link href="/body" style={{ textDecoration: 'none' }}>
-          <div className="dash-card-hover" style={{
-            background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-            borderRadius: '16px', padding: '18px 16px',
-            transition: 'transform 0.2s var(--ease-expo-out), border-color 0.2s',
-          }}>
-            <p style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: '6px' }}>Peso</p>
-            <p style={{
-              fontFamily: "'Sora', sans-serif", fontSize: '1.6rem', fontWeight: 900,
-              letterSpacing: '-0.05em', color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums',
-            }}>
-              {weightKg ?? '--'}
-            </p>
-            <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--fg-subtle)', marginTop: '2px' }}>kg</p>
-          </div>
-        </Link>
-
-        {/* Athlete */}
-        <Link href="/plan" style={{ textDecoration: 'none' }}>
-          <div className="dash-card-hover" style={{
-            background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-            borderRadius: '16px', padding: '18px 16px',
-            transition: 'transform 0.2s var(--ease-expo-out), border-color 0.2s',
-          }}>
-            <p style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: '6px' }}>Livello</p>
-            <p style={{
-              fontFamily: "'Sora', sans-serif", fontSize: '1.1rem', fontWeight: 900,
-              letterSpacing: '-0.04em', color: 'var(--fg-primary)', lineHeight: 1.1,
-              textTransform: 'uppercase',
-            }}>
-              {athleteLabel}
-            </p>
-            {sportName && <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--fg-subtle)', marginTop: '4px' }}>{sportName}</p>}
-          </div>
-        </Link>
-
-        {/* Streak dots */}
-        <Link href="/training" style={{ textDecoration: 'none' }}>
-          <div className="dash-card-hover" style={{
-            background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
-            borderRadius: '16px', padding: '18px 16px',
-            transition: 'transform 0.2s var(--ease-expo-out), border-color 0.2s',
-          }}>
-            <p style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: '10px' }}>Streak</p>
-            <div style={{ display: 'flex', gap: '5px', marginBottom: '6px' }}>
-              {[1,2,3,4,5].map(i => (
-                <div key={i} style={{
-                  width: '10px', height: '10px', borderRadius: '50%',
-                  background: i <= 4 ? 'var(--accent)' : 'var(--border-strong)',
-                  boxShadow: i <= 4 ? '0 0 6px var(--glow-accent)' : 'none',
-                }} />
-              ))}
+      {/* ═══════════════════════════════════════════════════
+          STATS STRIP — borderless cells (no card boxes)
+      ═══════════════════════════════════════════════════ */}
+      <div
+        className="dash-stats-strip"
+        style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+          border: '1px solid var(--border-default)',
+          borderRadius: '16px', overflow: 'hidden',
+          marginBottom: '36px',
+        }}
+      >
+        {[
+          {
+            href: '/body',
+            label: 'Peso',
+            value: weightKg ? String(weightKg) : '––',
+            unit: weightKg ? 'kg' : '',
+          },
+          {
+            href: '/plan',
+            label: 'Livello',
+            value: athleteLabel ?? '––',
+            unit: sportName ?? '',
+            shrink: true,
+          },
+          {
+            href: '/training',
+            label: 'Streak',
+            value: '4',
+            unit: '/ 5 sessioni',
+          },
+        ].map(({ href, label, value, unit, shrink }, i) => (
+          <Link key={label} href={href} style={{ textDecoration: 'none' }}>
+            <div
+              className="dash-stat-cell"
+              style={{
+                padding: '20px 18px',
+                borderRight: i < 2 ? '1px solid var(--border-default)' : 'none',
+              }}
+            >
+              <p style={{
+                fontSize: '8px', fontWeight: 700, letterSpacing: '0.14em',
+                textTransform: 'uppercase', color: 'var(--fg-subtle)',
+                marginBottom: '7px', fontFamily: "'JetBrains Mono', monospace",
+              }}>
+                {label}
+              </p>
+              <p style={{
+                fontFamily: "'Sora', sans-serif",
+                fontSize: shrink ? 'clamp(0.9rem, 2vw, 1.1rem)' : 'clamp(1.4rem, 3.5vw, 1.9rem)',
+                fontWeight: 900, letterSpacing: '-0.04em',
+                color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1.1, margin: 0,
+                textTransform: shrink ? 'uppercase' : 'none',
+              }}>
+                {value}
+              </p>
+              {unit && (
+                <p style={{
+                  fontSize: '9px', fontWeight: 600, color: 'var(--fg-subtle)',
+                  marginTop: '4px', fontFamily: "'JetBrains Mono', monospace",
+                }}>
+                  {unit}
+                </p>
+              )}
             </div>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--fg-muted)' }}>4 / 5 sessioni</p>
-          </div>
-        </Link>
+          </Link>
+        ))}
       </div>
 
-      {/* ── OBJECTIVES ── */}
+      {/* ═══════════════════════════════════════════════════
+          OBJECTIVES
+      ═══════════════════════════════════════════════════ */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', marginBottom: '14px',
+        }}>
           <h2 style={{
-            fontFamily: "'Sora', sans-serif", fontSize: '1rem', fontWeight: 900,
-            letterSpacing: '-0.03em', color: 'var(--fg-primary)',
-          }}>Obiettivi</h2>
-          <Link href="/plan" style={{
-            fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: 'var(--fg-subtle)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px',
+            fontFamily: "'Sora', sans-serif",
+            fontSize: 'clamp(0.9rem, 2vw, 1.1rem)',
+            fontWeight: 900, letterSpacing: '-0.03em',
+            color: 'var(--fg-primary)', margin: 0,
           }}>
-            Tutti <ChevronRight size={11} />
+            Obiettivi
+          </h2>
+          <Link href="/plan" style={{
+            fontSize: '9px', fontWeight: 800, letterSpacing: '0.14em',
+            textTransform: 'uppercase', color: 'var(--fg-subtle)',
+            textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px',
+            fontFamily: "'JetBrains Mono', monospace",
+          }}>
+            Tutti <ChevronRight size={10} />
           </Link>
         </div>
         <KPITracker goals={goals} />
@@ -373,23 +540,24 @@ export default function DashboardPage() {
 
 function DashboardSkeleton() {
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', paddingBottom: '48px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ height: '11px', width: '120px', borderRadius: '6px', background: 'var(--bg-elevated)', marginBottom: '8px' }} />
-        <div style={{ height: '48px', width: '200px', borderRadius: '10px', background: 'var(--bg-elevated)' }} />
+    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }}>
+      {/* Header skeleton */}
+      <div style={{ padding: '4px 0 24px' }}>
+        <div style={{ height: '10px', width: '120px', borderRadius: '5px', background: 'var(--bg-elevated)', marginBottom: '12px' }} />
+        <div style={{ height: '64px', width: '240px', borderRadius: '8px', background: 'var(--bg-elevated)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-        {[0,1].map(i => (
-          <div key={i} style={{ height: '220px', borderRadius: '24px', background: 'var(--bg-elevated)' }} />
+      {/* Recovery hero */}
+      <div style={{ height: '180px', borderRadius: '24px', background: 'var(--bg-elevated)', marginBottom: '8px' }} />
+      {/* Session + Nutrition */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+        {[0, 1].map(i => (
+          <div key={i} style={{ height: '210px', borderRadius: '20px', background: 'var(--bg-elevated)' }} />
         ))}
       </div>
-      <div style={{ height: '130px', borderRadius: '20px', background: 'var(--bg-elevated)', marginBottom: '12px' }} />
-      <div style={{ height: '48px', borderRadius: '16px', background: 'var(--bg-elevated)', marginBottom: '12px' }} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
-        {[0,1,2].map(i => (
-          <div key={i} style={{ height: '90px', borderRadius: '16px', background: 'var(--bg-elevated)' }} />
-        ))}
-      </div>
+      {/* Coach */}
+      <div style={{ height: '44px', borderRadius: '14px', background: 'var(--bg-elevated)', marginBottom: '8px' }} />
+      {/* Stats */}
+      <div style={{ height: '80px', borderRadius: '16px', background: 'var(--bg-elevated)', marginBottom: '36px' }} />
     </div>
   )
 }

@@ -1094,16 +1094,29 @@
 }
 
 /* ── Dashboard card hover lift ── */
+.dash-card-hover {
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1);
+}
 .dash-card-hover:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 .dash-card-hover:active {
-  transform: scale(0.985);
+  transform: scale(0.99);
   transition-duration: 80ms;
 }
-@media (max-width: 600px) {
-  .dash-hero-row {
+/* Stats strip cell hover */
+.dash-stat-cell {
+  transition: background 0.15s ease;
+}
+.dash-stat-cell:hover {
+  background: var(--bg-elevated);
+}
+@media (max-width: 640px) {
+  .dash-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .dash-stats-strip {
     grid-template-columns: 1fr !important;
   }
 }
