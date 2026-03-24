@@ -12,6 +12,7 @@ import {
 import { logSet, advanceExercise, finishSession, abandonSession } from '@/app/actions/active-session'
 import { askWorkoutAI, suggestExerciseAlternative, WorkoutAIMessage } from '@/app/actions/workout-ai'
 import { District } from '@prisma/client'
+import MuscleHeatmap from '@/app/components/MuscleHeatmap'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -880,8 +881,14 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
 
   // ─ Fine sessione ─
   if (showFinish) {
+    // Aggrega tutti i muscoli allenati durante la sessione
+    const allPrimary = Array.from(new Set(data.exercises.flatMap(e => e.primaryMuscles))) as District[]
+    const allSecondary = Array.from(new Set(
+      data.exercises.flatMap(e => e.secondaryMuscles).filter(m => !allPrimary.includes(m))
+    )) as District[]
+
     return (
-      <div className="flex flex-col h-full items-center justify-center p-6">
+      <div className="flex flex-col h-full items-center justify-center p-6 overflow-y-auto">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -893,6 +900,23 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
               {fmt(elapsedSecs)} · Vol: {totalVolume.toLocaleString()} kg
             </p>
           </div>
+
+          {/* Muscle heatmap post-workout */}
+          {(allPrimary.length > 0 || allSecondary.length > 0) && (
+            <div className="rounded-2xl p-4 flex flex-col items-center gap-3"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--fg-muted)' }}>
+                Muscoli allenati
+              </p>
+              <MuscleHeatmap
+                size="full"
+                showLabels={true}
+                primaryMuscles={allPrimary}
+                secondaryMuscles={allSecondary}
+              />
+            </div>
+          )}
+
           <div className="space-y-3">
             <label className="text-xs font-black uppercase tracking-wider block mb-1.5" style={{ color: 'var(--fg-muted)' }}>RPE (6–10)</label>
             <div className="flex gap-2">
@@ -1076,6 +1100,18 @@ export default function ActiveTracker({ data }: { data: TrackerData }) {
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Muscle heatmap (compact) */}
+        {(ex.primaryMuscles.length > 0 || ex.secondaryMuscles.length > 0) && (
+          <div className="flex justify-center py-1">
+            <MuscleHeatmap
+              size="compact"
+              showLabels={false}
+              primaryMuscles={ex.primaryMuscles}
+              secondaryMuscles={ex.secondaryMuscles}
+            />
+          </div>
+        )}
 
         {/* Exercise media */}
         <ExerciseMedia exercise={ex} />
