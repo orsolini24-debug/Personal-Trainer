@@ -226,16 +226,6 @@ REGOLE:
       data: { onboardingCompleted: true }
     })
 
-    // Auto-schedula la prima settimana se è un piano di allenamento
-    if (result.workoutPlan) {
-      const today = new Date()
-      const day = today.getUTCDay()
-      const diff = day === 0 ? -6 : 1 - day
-      today.setUTCDate(today.getUTCDate() + diff)
-      const weekStartISO = today.toISOString().split('T')[0]
-      await schedulePlanForWeek(result.workoutPlan.id, weekStartISO)
-    }
-
     revalidatePath("/plan")
     revalidatePath("/calendar")
     return { success: true, data: result.meso }

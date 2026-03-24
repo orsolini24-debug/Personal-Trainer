@@ -9,13 +9,14 @@ import {
 } from "lucide-react"
 import {
   getWeekCalendarData,
-  schedulePlanForWeek,
   assignSessionToDay,
   removeSessionFromDay,
   type WeekCalendarSession,
 } from "@/app/actions/plans"
+import PlanScheduleWizard from "./PlanScheduleWizard"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
 
 export type PlanDayOption = {
   id: string
@@ -148,10 +149,12 @@ export default function WeeklyCalendar({
   planId,
   planDays,
   initialSessions,
+  initialTrainingDays = []
 }: {
   planId: string | undefined
   planDays: PlanDayOption[]
   initialSessions: WeekCalendarSession[]
+  initialTrainingDays?: number[]
 }) {
   const todayISO = toISO(new Date())
 
@@ -161,7 +164,7 @@ export default function WeeklyCalendar({
   const [activePicker, setActivePicker]     = useState<string | null>(null)
   const [loadingDate, setLoadingDate]       = useState<string | null>(null)
   const [removingId, setRemovingId]         = useState<string | null>(null)
-  const [isAutoScheduling, setIsAutoScheduling] = useState(false)
+  const [isWizardOpen, setIsWizardOpen]     = useState(false)
 
   const monday    = addDays(getMonday(new Date()), weekOffset * 7)
   const mondayISO = toISO(monday)
@@ -199,12 +202,8 @@ export default function WeeklyCalendar({
     setRemovingId(null)
   }
 
-  const handleAutoSchedule = async () => {
-    if (!planId) return
-    setIsAutoScheduling(true)
-    await schedulePlanForWeek(planId, mondayISO)
-    await refreshWeek()
-    setIsAutoScheduling(false)
+  const handleAutoSchedule = () => {
+    setIsWizardOpen(true)
   }
 
   const isCurrentWeek = weekOffset === 0
@@ -246,18 +245,14 @@ export default function WeeklyCalendar({
           {planId && planDays.length > 0 && (
             <button
               onClick={handleAutoSchedule}
-              disabled={isAutoScheduling}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-105"
               style={{
                 background: "color-mix(in srgb, var(--accent2, var(--accent)) 10%, transparent)",
                 border: "1px solid color-mix(in srgb, var(--accent2, var(--accent)) 25%, transparent)",
                 color: "var(--accent2, var(--accent))",
               }}
             >
-              {isAutoScheduling
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <Sparkles className="w-3.5 h-3.5" />
-              }
+              <Sparkles className="w-3.5 h-3.5" />
               Auto-pianifica
             </button>
           )}
@@ -542,6 +537,19 @@ export default function WeeklyCalendar({
           Clicca + per assegnare · × per rimuovere
         </p>
       </div>
+
+      {/* ── Wizard ── */}
+      {isWizardOpen && planId && (
+        <PlanScheduleWizard
+          planId={planId}
+          planDays={planDays}
+          initialTrainingDays={initialTrainingDays}
+          onClose={() => {
+            setIsWizardOpen(false)
+            refreshWeek()
+          }}
+        />
+      )}
     </div>
   )
 }

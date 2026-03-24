@@ -151,6 +151,7 @@ export default async function PlanPage() {
                     planId={activeMeso.workoutPlans[0]?.id}
                     planDays={planDaysForCalendar}
                     initialSessions={weekSessions}
+                    initialTrainingDays={activeMeso.workoutPlans[0]?.trainingDays || []}
                   />
                 </div>
               )}

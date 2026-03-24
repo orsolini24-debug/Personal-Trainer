@@ -274,3 +274,83 @@ export async function schedulePlanForWeek(planId: string, weekStartISO: string) 
 
   return { success: true, created }
 }
+
+export interface ScheduleOptions {
+  planId: string
+  trainingDays: number[] // [1, 3, 5] = Lun, Mer, Ven (1 = Lun, 0 = Dom)
+  startDateISO: string   // "YYYY-MM-DD"
+  startSessionIndex: number // 0 = A, 1 = B...
+  weeksToSchedule?: number // Default: 4
+}
+
+export async function advancedSchedulePlan(options: ScheduleOptions) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: 'Non autenticato' }
+  const userId = session.user.id
+
+  const { planId, trainingDays, startDateISO, startSessionIndex, weeksToSchedule = 4 } = options
+
+  if (trainingDays.length === 0) return { error: 'Devi selezionare almeno un giorno di allenamento.' }
+
+  const plan = await prisma.workoutPlan.findFirst({
+    where: { id: planId, userId },
+    include: { planDays: { orderBy: { orderIndex: 'asc' } } },
+  })
+  if (!plan || plan.planDays.length === 0) return { error: 'Piano non trovato o senza giornate.' }
+
+  // 1. Aggiorna i giorni preferiti sul piano
+  await prisma.workoutPlan.update({
+    where: { id: planId },
+    data: { trainingDays }
+  })
+
+  // 2. Calcola le date da generare
+  const startDate = new Date(startDateISO + 'T00:00:00Z')
+  const endDate = new Date(startDate)
+  endDate.setUTCDate(endDate.getUTCDate() + (weeksToSchedule * 7))
+
+  // Trova le date già occupate in questo periodo
+  const existing = await prisma.plannedSession.findMany({
+    where: { userId, scheduledDate: { gte: startDate, lte: endDate } },
+    select: { scheduledDate: true },
+  })
+  const existingDates = new Set(existing.map(s => s.scheduledDate.toISOString().split('T')[0]))
+
+  const planDays = plan.planDays
+  let currentSessionIndex = startSessionIndex
+  let createdCount = 0
+
+  // Generiamo iterando giorno per giorno dal startDate al endDate
+  let currentDate = new Date(startDate)
+
+  while (currentDate <= endDate) {
+    const dayOfWeek = currentDate.getUTCDay() // 0 = Dom, 1 = Lun...
+    const dateStr = currentDate.toISOString().split('T')[0]
+
+    // Se oggi è uno dei giorni scelti dall'utente e non c'è già una sessione
+    if (trainingDays.includes(dayOfWeek) && !existingDates.has(dateStr)) {
+      const planDay = planDays[currentSessionIndex % planDays.length]
+      
+      try {
+        await prisma.plannedSession.create({
+          data: { 
+            userId, 
+            planId, 
+            planDayId: planDay.id, 
+            scheduledDate: new Date(currentDate) 
+          },
+        })
+        createdCount++
+        currentSessionIndex++ // Avanza alla sessione successiva solo se pianificata con successo
+      } catch (e) {
+        // Ignora conflitti se il db impedisce (es. unique constraints aggiuntivi)
+      }
+    }
+
+    // Avanza di un giorno
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1)
+  }
+
+  return { success: true, createdCount }
+}
+
