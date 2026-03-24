@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { addFoodItem, deleteFoodItem, saveMealAsTemplate, getMealTemplates, applyTemplate, deleteMealTemplate, addMeal } from "@/app/actions/nutrition"
 import { MealType } from "@prisma/client"
@@ -1071,6 +1071,18 @@ function FoodItemRow({ item }: { item: FoodItem }) {
 
 // ── AddFoodForm ───────────────────────────────────────────────────────────────
 
+// ── OpenFoodFacts product type ────────────────────────────────────────────────
+type OFFProduct = {
+  id: string
+  name: string
+  kcal: number   // per 100 g/ml
+  p: number
+  c: number
+  f: number
+}
+
+function round1(n: number) { return Math.round(n * 10) / 10 }
+
 function AddFoodForm({
   mealId,
   onClose,
@@ -1086,13 +1098,92 @@ function AddFoodForm({
   const [f,    setF]          = useState("")
   const [loading, setLoading] = useState(false)
 
+  // Autocomplete
+  const [suggestions,  setSuggestions]  = useState<OFFProduct[]>([])
+  const [showSugg,     setShowSugg]     = useState(false)
+  const [isSearching,  setIsSearching]  = useState(false)
+  // Stores per-100g base values of the selected food so we can rescale on qty change
+  const [basePer100g,  setBasePer100g]  = useState<OFFProduct | null>(null)
+  const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const skipSearchRef = useRef(false)  // prevents search when name is set programmatically
+
+  // ── Search OpenFoodFacts ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (skipSearchRef.current) { skipSearchRef.current = false; return }
+    if (name.trim().length < 2) { setSuggestions([]); setShowSugg(false); return }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const url =
+          `https://world.openfoodfacts.org/cgi/search.pl` +
+          `?search_terms=${encodeURIComponent(name.trim())}` +
+          `&search_simple=1&action=process&json=1` +
+          `&fields=product_name,nutriments&page_size=10&lc=it`
+        const res  = await fetch(url, { signal: AbortSignal.timeout(5000) })
+        const data = await res.json()
+        const prods: OFFProduct[] = (data.products ?? [])
+          .filter((pr: any) =>
+            pr.product_name &&
+            pr.nutriments?.['energy-kcal_100g'] != null
+          )
+          .slice(0, 6)
+          .map((pr: any, i: number) => ({
+            id:   String(i),
+            name: pr.product_name,
+            kcal: Math.round(pr.nutriments['energy-kcal_100g'] ?? 0),
+            p:    round1(pr.nutriments['proteins_100g']       ?? 0),
+            c:    round1(pr.nutriments['carbohydrates_100g']  ?? 0),
+            f:    round1(pr.nutriments['fat_100g']            ?? 0),
+          }))
+        setSuggestions(prods)
+        setShowSugg(prods.length > 0)
+      } catch { /* silently ignore network errors */ }
+      setIsSearching(false)
+    }, 450)
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [name])
+
+  // ── Rescale macros when qty changes (only when a DB food is selected) ─────
+  useEffect(() => {
+    if (!basePer100g) return
+    const g = parseFloat(qty) || 100
+    const r = g / 100
+    setKcal(String(Math.round(basePer100g.kcal * r)))
+    setP(String(round1(basePer100g.p * r)))
+    setC(String(round1(basePer100g.c * r)))
+    setF(String(round1(basePer100g.f * r)))
+  }, [qty, basePer100g])
+
+  // ── Select a suggestion ───────────────────────────────────────────────────
+  const selectSuggestion = (prod: OFFProduct) => {
+    skipSearchRef.current = true
+    setBasePer100g(prod)
+    setName(prod.name)
+    const g = parseFloat(qty) || 100
+    if (!qty) setQty("100")
+    const r = g / 100
+    setKcal(String(Math.round(prod.kcal * r)))
+    setP(String(round1(prod.p * r)))
+    setC(String(round1(prod.c * r)))
+    setF(String(round1(prod.f * r)))
+    setSuggestions([])
+    setShowSugg(false)
+  }
+
   const applyTemplate = (food: QuickFood) => {
+    skipSearchRef.current = true
+    setBasePer100g(null)
     setName(food.name)
     setQty(food.qty.toString())
     setKcal(food.kcal.toString())
     setP(food.p.toString())
     setC(food.c.toString())
     setF(food.f.toString())
+    setSuggestions([])
+    setShowSugg(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1110,6 +1201,7 @@ function AddFoodForm({
     })
 
     setName(""); setQty(""); setKcal(""); setP(""); setC(""); setF("")
+    setBasePer100g(null); setSuggestions([]); setShowSugg(false)
     setLoading(false)
     onClose?.()
   }
@@ -1146,23 +1238,59 @@ function AddFoodForm({
 
       <form onSubmit={handleSubmit} className="space-y-3">
 
-        {/* Alimento row */}
+        {/* Alimento row — con autocomplete */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
+          <div className="col-span-2 relative">
             <label
               className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5"
               style={{ color: "var(--fg-muted)" }}
             >
               Alimento *
+              {isSearching && (
+                <span className="ml-2 inline-block w-2.5 h-2.5 rounded-full border-2 border-current border-t-transparent animate-spin align-middle" />
+              )}
+              {basePer100g && (
+                <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: 'var(--positive-dim, rgba(16,185,129,0.15))', color: 'var(--positive)' }}>
+                  ✓ database
+                </span>
+              )}
             </label>
             <input
               type="text"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setBasePer100g(null) }}
+              onFocus={() => { if (suggestions.length > 0) setShowSugg(true) }}
+              onBlur={() => setTimeout(() => setShowSugg(false), 150)}
               className="input-field w-full px-3 py-2.5 text-sm"
-              placeholder="es. Pollo arrosto"
+              placeholder="Cerca alimento (es. Caffè espresso, Pollo…)"
+              autoComplete="off"
             />
+
+            {/* Dropdown suggerimenti */}
+            {showSugg && suggestions.length > 0 && (
+              <div
+                className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden shadow-xl z-50"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+              >
+                {suggestions.map((prod) => (
+                  <button
+                    key={prod.id}
+                    type="button"
+                    onMouseDown={() => selectSuggestion(prod)}
+                    className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-[var(--bg-elevated)]"
+                    style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--fg-primary)' }}
+                  >
+                    <span className="font-semibold block truncate">{prod.name}</span>
+                    <span className="text-[10px]" style={{ color: 'var(--fg-muted)' }}>
+                      {prod.kcal} kcal · P {prod.p}g · C {prod.c}g · F {prod.f}g &nbsp;
+                      <span style={{ color: 'var(--fg-subtle)' }}>/ 100g</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -1170,7 +1298,7 @@ function AddFoodForm({
               className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5"
               style={{ color: "var(--fg-muted)" }}
             >
-              Grammi
+              Grammi / ml
             </label>
             <input
               type="number"
@@ -1193,7 +1321,7 @@ function AddFoodForm({
               type="number"
               min="0"
               value={kcal}
-              onChange={(e) => setKcal(clampPositive(e.target.value))}
+              onChange={(e) => { setBasePer100g(null); setKcal(clampPositive(e.target.value)) }}
               className="input-field w-full px-3 py-2.5 text-sm"
               placeholder="0"
             />
@@ -1274,6 +1402,13 @@ function AddFoodForm({
             />
           </div>
         </div>
+
+        {/* Rescaling hint */}
+        {basePer100g && qty && (
+          <p className="text-[10px]" style={{ color: 'var(--fg-subtle)' }}>
+            Valori ricalcolati per {qty} g/ml (base: {basePer100g.kcal} kcal/100g)
+          </p>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2 pt-1">
