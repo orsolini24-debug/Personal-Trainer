@@ -1085,3 +1085,10 @@
   0%, 100% { box-shadow: 0 0 0 0 var(--glow-accent); }
   50%       { box-shadow: 0 0 32px 4px var(--glow-accent); }
 }
+
+/* ── Dashboard responsive grid ── */
+@media (max-width: 640px) {
+  .grid-responsive-1col {
+    grid-template-columns: 1fr !important;
+  }
+}
