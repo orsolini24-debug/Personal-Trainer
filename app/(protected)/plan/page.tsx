@@ -19,6 +19,7 @@ import CoachInsights from "./CoachInsights"
 import NutritionPlanSection from "./NutritionPlanSection"
 import WeeklyCalendar from "@/app/components/WeeklyCalendar"
 import MesoSettings from "./MesoSettings"
+import BulkDeleteButton from "./BulkDeleteButton"
 import type { PlanDayOption } from "@/app/components/WeeklyCalendar"
 import { getWeekCalendarData } from "@/app/actions/plans"
 
@@ -261,7 +262,10 @@ export default async function PlanPage() {
                 </div>
                 Archivio Mesocicli
               </h2>
-              <span className="badge badge-accent opacity-60">{archivedMesos.length} completati</span>
+              <div className="flex items-center gap-3">
+                <span className="badge badge-accent opacity-60">{archivedMesos.length} completati</span>
+                {archivedMesos.length > 0 && <BulkDeleteButton />}
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

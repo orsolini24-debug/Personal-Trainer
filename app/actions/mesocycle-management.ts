@@ -103,3 +103,68 @@ export async function deleteMesocycle(id: string) {
     return { success: false, error: error.message }
   }
 }
+
+/**
+ * Elimina massivamente tutti i mesocicli ARCHIVED, DRAFT o COMPLETED dell'utente.
+ */
+export async function bulkDeleteMesocycles() {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+  const userId = session.user.id
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Trova i mesocicli da eliminare
+      const mesos = await tx.mesocycle.findMany({
+        where: { 
+          userId, 
+          status: { in: [MesoStatus.ARCHIVED, MesoStatus.DRAFT, MesoStatus.COMPLETED] } 
+        },
+        select: { id: true },
+      })
+      const mesoIds = mesos.map(m => m.id)
+
+      if (mesoIds.length === 0) return
+
+      // 2. Trova i WorkoutPlan legati a questi mesocicli
+      const plans = await tx.workoutPlan.findMany({
+        where: { mesocycleId: { in: mesoIds } },
+        select: { id: true },
+      })
+      const planIds = plans.map(p => p.id)
+
+      // 3. Elimina PlannedSession legate ai piani
+      if (planIds.length > 0) {
+        await tx.plannedSession.deleteMany({
+          where: { planId: { in: planIds } },
+        })
+      }
+
+      // 4. Elimina i WorkoutPlan
+      if (planIds.length > 0) {
+        await tx.workoutPlan.deleteMany({
+          where: { id: { in: planIds } },
+        })
+      }
+
+      // 5. Scollega le sessioni reali
+      await tx.workoutSession.updateMany({
+        where: { mesocycleId: { in: mesoIds }, userId },
+        data: { mesocycleId: null },
+      })
+
+      // 6. Elimina i mesocicli
+      await tx.mesocycle.deleteMany({
+        where: { id: { in: mesoIds }, userId },
+      })
+    })
+
+    revalidatePath("/plan")
+    revalidatePath("/calendar")
+    revalidatePath("/training")
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
