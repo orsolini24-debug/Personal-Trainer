@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { importNutritionPlanFromText, importNutritionPlanFromImage, deleteNutritionPlan, NutritionPlanData } from '@/app/actions/import-nutrition'
 import {
@@ -34,6 +34,17 @@ export default function NutritionPlanSection({ activeNutritionMeso }: Props) {
   const [deleting, setDeleting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Load PDF.js dynamically
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js'
+    script.onload = () => {
+      // @ts-ignore
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js'
+    }
+    document.head.appendChild(script)
+  }, [])
+
   const kpi = activeNutritionMeso?.kpi as {
     kcalTarget?: number; proteinG?: number; carbsG?: number; fatG?: number
     meals?: { name: string; timeHint: string; kcal: number; foods: string[]; notes?: string }[]
@@ -55,28 +66,59 @@ export default function NutritionPlanSection({ activeNutritionMeso }: Props) {
     setLoading(false)
   }
 
-  const handleImageImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     setLoading(true)
     setError(null)
 
-    const reader = new FileReader()
-    reader.onload = async () => {
-      const dataUrl = reader.result as string
-      const [meta, base64] = dataUrl.split(',')
-      const mimeType = meta.match(/:(.*?);/)?.[1] ?? 'image/jpeg'
-      const res = await importNutritionPlanFromImage(base64, mimeType)
-      if ('error' in res) {
-        setError(res.error ?? null)
-      } else {
-        setMode(null)
-        router.refresh()
+    if (file.type === 'application/pdf') {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        try {
+          const typedarray = new Uint8Array(event.target?.result as ArrayBuffer)
+          // @ts-ignore
+          const pdf = await window.pdfjsLib.getDocument(typedarray).promise
+          let fullText = ""
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i)
+            const content = await page.getTextContent()
+            const strings = content.items.map((item: any) => item.str)
+            fullText += strings.join(" ") + "\n\n"
+          }
+          
+          const res = await importNutritionPlanFromText(fullText)
+          if ('error' in res) {
+            setError(res.error ?? null)
+          } else {
+            setMode(null)
+            router.refresh()
+          }
+        } catch (error) {
+          setError("Errore durante la lettura del PDF. Se è una scansione, prova a caricarlo come foto.")
+        }
+        setLoading(false)
       }
-      setLoading(false)
+      reader.readAsArrayBuffer(file)
+    } else {
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const dataUrl = reader.result as string
+        const [meta, base64] = dataUrl.split(',')
+        const mimeType = meta.match(/:(.*?);/)?.[1] ?? 'image/jpeg'
+        const res = await importNutritionPlanFromImage(base64, mimeType)
+        if ('error' in res) {
+          setError(res.error ?? null)
+        } else {
+          setMode(null)
+          router.refresh()
+        }
+        setLoading(false)
+      }
+      reader.readAsDataURL(file)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleDelete = async () => {
@@ -253,7 +295,7 @@ export default function NutritionPlanSection({ activeNutritionMeso }: Props) {
             type="file"
             accept="image/*,.pdf"
             className="hidden"
-            onChange={handleImageImport}
+            onChange={handleFileChange}
           />
         </div>
 
