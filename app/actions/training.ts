@@ -199,13 +199,35 @@ export async function closeSession(sessionId: string, data: { rpe?: number; note
 
 export async function deleteSession(id: string) {
   try {
-    await getUserId() // verify auth
-    await prisma.workoutSession.delete({
-      where: { id },
+    const userId = await getUserId() // verify auth
+    
+    await prisma.$transaction(async (tx) => {
+      // 1. Unlink from PlannedSession if any
+      await tx.plannedSession.updateMany({
+        where: { workoutSessionId: id, userId },
+        data: { 
+          status: 'PENDING',
+          workoutSessionId: null 
+        }
+      })
+
+      // 2. Delete ActiveSession if any
+      await tx.activeSession.deleteMany({
+        where: { workoutSessionId: id, userId }
+      })
+
+      // 3. Delete the WorkoutSession (Exercises and DistrictStress will cascade)
+      await tx.workoutSession.delete({
+        where: { id, userId },
+      })
     })
+
     revalidatePath("/training")
+    revalidatePath("/calendar")
+    revalidatePath("/dashboard")
     return { success: true }
   } catch (error: any) {
+    console.error("Delete session error:", error)
     return { success: false, error: error.message }
   }
 }
