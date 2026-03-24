@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import Groq from "groq-sdk"
 import { MesoStatus, SessionType } from "@prisma/client"
 import { importNutritionPlanFromText, parseNutritionPlanFromText, type NutritionPlanData } from "./import-nutrition"
+import { schedulePlanForWeek } from "./plans"
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "missing"
@@ -216,7 +217,7 @@ REGOLE:
         }
       }
 
-      return meso
+      return { meso, workoutPlan }
     })
 
     // Segna onboarding completato
@@ -225,8 +226,19 @@ REGOLE:
       data: { onboardingCompleted: true }
     })
 
+    // Auto-schedula la prima settimana se è un piano di allenamento
+    if (result.workoutPlan) {
+      const today = new Date()
+      const day = today.getUTCDay()
+      const diff = day === 0 ? -6 : 1 - day
+      today.setUTCDate(today.getUTCDate() + diff)
+      const weekStartISO = today.toISOString().split('T')[0]
+      await schedulePlanForWeek(result.workoutPlan.id, weekStartISO)
+    }
+
     revalidatePath("/plan")
-    return { success: true, data: result }
+    revalidatePath("/calendar")
+    return { success: true, data: result.meso }
   } catch (error: any) {
     console.error("Import error:", error)
     return { success: false, error: error.message }
