@@ -17,6 +17,14 @@ export async function getOrCreateNutritionDay(date: Date) {
     const d = new Date(date)
     d.setUTCHours(0, 0, 0, 0)
 
+    // Check for active nutrition plan
+    const activePlan = await prisma.mesocycle.findFirst({
+      where: { userId, status: "ACTIVE", planType: "NUTRITION_ONLY" },
+      orderBy: { startDate: 'desc' }
+    })
+
+    const planKpi = activePlan?.kpi as any
+
     // Check if it's a training day
     const session = await prisma.workoutSession.findFirst({
       where: {
@@ -39,17 +47,15 @@ export async function getOrCreateNutritionDay(date: Date) {
       include: { meals: { include: { foodItems: true } } }
     })
 
-    // Base default values
-    let baseKcal = 2200;
-    let baseCarbs = 200;
-    let baseProtein = 150;
-    let baseFat = 70;
+    // Base default values (prioritize Plan if exists)
+    let baseKcal = planKpi?.kcalTarget || 2200;
+    let baseCarbs = planKpi?.carbsG || 200;
+    let baseProtein = planKpi?.proteinG || 150;
+    let baseFat = planKpi?.fatG || 70;
 
-    // Optional dynamic calculation based on user info
-    if (user?.profile?.weightKg) {
-      // Very basic Mifflin-St Jeor estimate (assuming moderate activity)
-      // Men: 10 x weight (kg) + 6.25 x height (cm) - 5 x age (y) + 5
-      // Women: 10 x weight (kg) + 6.25 x height (cm) - 5 x age (y) - 161
+    // Optional dynamic calculation based on user info (only if no plan)
+    if (!planKpi && user?.profile?.weightKg) {
+      // ... (rest of dynamic logic)
       let bmr = 10 * user.profile.weightKg;
       if (user.profile.heightCm) bmr += 6.25 * user.profile.heightCm;
       
@@ -67,21 +73,18 @@ export async function getOrCreateNutritionDay(date: Date) {
         bmr += 5;
       }
 
-      // Multiply by activity factor (assume 1.55 for moderate)
       const tdee = Math.round(bmr * 1.55);
-      
-      // Adjust based on goal
       if (user.profile?.primaryGoal === "WEIGHT_LOSS") baseKcal = tdee - 500;
       else if (user.profile?.primaryGoal === "HYPERTROPHY") baseKcal = tdee + 300;
       else baseKcal = tdee;
 
-      baseProtein = Math.round(user.profile.weightKg * 2.0); // 2g/kg
-      baseFat = Math.round(user.profile.weightKg * 0.8); // 0.8g/kg
+      baseProtein = Math.round(user.profile.weightKg * 2.0); 
+      baseFat = Math.round(user.profile.weightKg * 0.8); 
       baseCarbs = Math.round((baseKcal - (baseProtein * 4) - (baseFat * 9)) / 4);
     }
 
-    const targetKcal = isTrainingDay ? baseKcal + 400 : baseKcal;
-    const targetCarbs = isTrainingDay ? baseCarbs + 100 : baseCarbs;
+    const targetKcal = isTrainingDay ? baseKcal + (planKpi ? 0 : 400) : baseKcal;
+    const targetCarbs = isTrainingDay ? baseCarbs + (planKpi ? 0 : 100) : baseCarbs;
 
     if (!day) {
       const newDay = await prisma.nutritionDay.create({
@@ -94,23 +97,49 @@ export async function getOrCreateNutritionDay(date: Date) {
         include: { meals: { include: { foodItems: true } } }
       })
       
-      // Auto-create meals
-      await prisma.meal.createMany({
-        data: [
-          { nutritionDayId: newDay.id, type: MealType.BREAKFAST },
-          { nutritionDayId: newDay.id, type: MealType.LUNCH },
-          { nutritionDayId: newDay.id, type: MealType.PRE_WORKOUT },
-          { nutritionDayId: newDay.id, type: MealType.DINNER },
-          { nutritionDayId: newDay.id, type: MealType.SNACK },
-        ]
-      })
+      // Map and create meals from plan if available
+      const MEAL_MAP: Record<string, MealType> = {
+        'colazione': MealType.BREAKFAST,
+        'pranzo': MealType.LUNCH,
+        'cena': MealType.DINNER,
+        'spuntino': MealType.SNACK,
+        'merenda': MealType.SNACK,
+        'pre-workout': MealType.PRE_WORKOUT,
+        'post-workout': MealType.POST_WORKOUT,
+      }
+
+      const mealsToCreate = []
+      if (planKpi?.meals) {
+        for (const m of planKpi.meals) {
+          const lowerName = m.name.toLowerCase()
+          let type = MealType.SNACK
+          for (const [key, val] of Object.entries(MEAL_MAP)) {
+            if (lowerName.includes(key)) { type = val; break; }
+          }
+          mealsToCreate.push({ 
+            nutritionDayId: newDay.id, 
+            type, 
+            suggestedFoods: m.foods || [] 
+          })
+        }
+      } else {
+        // Default standard meals
+        mealsToCreate.push(
+          { nutritionDayId: newDay.id, type: MealType.BREAKFAST, suggestedFoods: [] },
+          { nutritionDayId: newDay.id, type: MealType.LUNCH, suggestedFoods: [] },
+          { nutritionDayId: newDay.id, type: MealType.DINNER, suggestedFoods: [] },
+          { nutritionDayId: newDay.id, type: MealType.SNACK, suggestedFoods: [] },
+        )
+      }
+
+      await prisma.meal.createMany({ data: mealsToCreate })
 
       day = await prisma.nutritionDay.findUnique({
         where: { id: newDay.id },
         include: { meals: { include: { foodItems: true } } }
       })
-    } else if (day.isTrainingDay !== isTrainingDay || day.kcalTarget !== targetKcal) {
-      // Update targets if training day status changed
+    } else if (day.isTrainingDay !== isTrainingDay || (!planKpi && day.kcalTarget !== targetKcal)) {
+      // Update targets if training day status changed (and no fixed plan target)
       day = await prisma.nutritionDay.update({
         where: { id: day.id },
         data: {
@@ -215,6 +244,20 @@ export async function updateNutritionTargets(nutritionDayId: string, data: { kca
     const day = await prisma.nutritionDay.update({
       where: { id: nutritionDayId },
       data
+    })
+    revalidatePath("/nutrition")
+    return { success: true, data: day }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function updateWater(nutritionDayId: string, waterL: number) {
+  try {
+    await getUserId()
+    const day = await prisma.nutritionDay.update({
+      where: { id: nutritionDayId },
+      data: { waterL }
     })
     revalidatePath("/nutrition")
     return { success: true, data: day }

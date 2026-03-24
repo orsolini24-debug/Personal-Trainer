@@ -144,7 +144,8 @@ export default async function PlanPage() {
 
               {/* ── Mesocycle + Sidebar ── */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                <div className="lg:col-span-8 space-y-8 animate-rise-up" style={{ animationDelay: '300ms' }}>
+                <div className="lg:col-span-8 space-y-10 animate-rise-up" style={{ animationDelay: '300ms' }}>
+                  {/* Training Section */}
                   <section className="rounded-[3rem] p-10 card-elevated mesh-bg border border-border relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-12 opacity-[0.04] group-hover:rotate-12 group-hover:scale-110 transition-transform duration-1000">
                       <Target className="w-72 h-72" />
@@ -213,12 +214,15 @@ export default async function PlanPage() {
                       </div>
                     </div>
                   </section>
+
+                  {/* Nutrition Section (Moved here to be under training) */}
+                  <div className="animate-rise-up" style={{ animationDelay: '400ms' }}>
+                    <NutritionPlanSection activeNutritionMeso={activeNutritionMeso} />
+                  </div>
                 </div>
 
                 {/* Side Content */}
-                <div className="lg:col-span-4 space-y-8 animate-rise-up" style={{ animationDelay: '400ms' }}>
-                  <NutritionPlanSection activeNutritionMeso={activeNutritionMeso} />
-
+                <div className="lg:col-span-4 space-y-8 animate-rise-up" style={{ animationDelay: '500ms' }}>
                   <section className="rounded-[2.5rem] p-8 card-elevated mesh-bg border border-border">
                     <div className="divider-label mb-8">Roadmap</div>
                     <div className="p-8 rounded-[2rem] glass-sm border border-dashed border-border/60 text-center flex flex-col items-center gap-4">

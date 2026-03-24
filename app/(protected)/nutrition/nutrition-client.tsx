@@ -21,7 +21,11 @@ import {
   BookmarkCheck,
   X,
   Loader2,
+  Droplets,
+  GlassWater,
+  CheckCircle2,
 } from "lucide-react"
+import { updateWater } from "@/app/actions/nutrition"
 
 // ── TypeScript interfaces ─────────────────────────────────────────────────────
 
@@ -38,6 +42,7 @@ interface FoodItem {
 interface Meal {
   id: string
   type: MealType
+  suggestedFoods?: string[]
   foodItems: FoodItem[]
 }
 
@@ -48,6 +53,7 @@ interface NutritionDay {
   proteinG?: number | null
   carbsG?: number | null
   fatG?: number | null
+  waterL?: number
   targetProtein?: number | null
   targetCarbs?: number | null
   targetFat?: number | null
@@ -499,6 +505,13 @@ export default function NutritionClient({
       {/* ── Date navigator ── */}
       <DateNavigator date={date} onChange={handleDateChange} />
 
+      {/* ── Water Tracker ── */}
+      <WaterTracker 
+        dayId={initialDay.id} 
+        currentL={initialDay.waterL || 0} 
+        onUpdate={() => router.refresh()} 
+      />
+
       {/* ── Hero: calorie ring + macro bars ── */}
       <div
         className="surface-accent mesh-bg p-8 rounded-[2.5rem] border border-border-subtle flex flex-col sm:flex-row items-center gap-10 shadow-2xl relative overflow-hidden"
@@ -565,6 +578,72 @@ export default function NutritionClient({
         isTrainingDay={!!initialDay.isTrainingDay}
         onAdded={() => router.refresh()}
       />
+    </div>
+  )
+}
+
+// ── WaterTracker ──────────────────────────────────────────────────────────────
+
+function WaterTracker({
+  dayId,
+  currentL,
+  onUpdate,
+}: {
+  dayId: string
+  currentL: number
+  onUpdate: () => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const targetL = 2.5
+  const pct = Math.min(100, Math.round((currentL / targetL) * 100))
+
+  const handleAddWater = async (amount: number) => {
+    setLoading(true)
+    await updateWater(dayId, Math.max(0, currentL + amount))
+    setLoading(false)
+    onUpdate()
+  }
+
+  return (
+    <div className="bg-surface rounded-3xl p-6 border border-border flex items-center justify-between gap-6 group">
+      <div className="flex items-center gap-4 flex-1">
+        <div 
+          className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
+          style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}
+        >
+          <Droplets className="w-6 h-6 text-accent relative z-10" />
+          <div 
+            className="absolute bottom-0 left-0 right-0 bg-accent/20 transition-all duration-700"
+            style={{ height: `${pct}%` }}
+          />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-accent mb-0.5">Idratazione</p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl font-black text-primary num">{currentL.toFixed(1)}</span>
+            <span className="text-xs font-bold text-fg-subtle uppercase">/ {targetL}L</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleAddWater(0.25)}
+          disabled={loading}
+          className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent hover:bg-accent hover:text-white transition-all active:scale-90"
+          title="+250ml"
+        >
+          <GlassWater size={18} />
+        </button>
+        <button
+          onClick={() => handleAddWater(-0.25)}
+          disabled={loading || currentL <= 0}
+          className="w-10 h-10 rounded-xl bg-base border border-border flex items-center justify-center text-fg-subtle hover:text-negative hover:border-negative/30 transition-all active:scale-90 disabled:opacity-30"
+          title="-250ml"
+        >
+          <X size={16} />
+        </button>
+      </div>
     </div>
   )
 }
@@ -766,24 +845,43 @@ function MealSection({ meal }: { meal: Meal }) {
       {/* Expanded body */}
       {isOpen && (
         <div
-          className="px-4 pb-4 space-y-2"
+          className="px-4 pb-4 space-y-4"
           style={{ borderTop: "1px solid var(--border-subtle)" }}
         >
-          {/* Food items */}
-          {meal.foodItems.length === 0 ? (
-            <p
-              className="text-xs py-3 text-center"
-              style={{ color: "var(--fg-subtle)" }}
-            >
-              Nessun alimento — aggiungine uno qui sotto
-            </p>
-          ) : (
-            <ul className="space-y-1.5 pt-3">
-              {meal.foodItems.map((item) => (
-                <FoodItemRow key={item.id} item={item} />
-              ))}
-            </ul>
+          {/* Suggested Foods from Plan */}
+          {meal.suggestedFoods && meal.suggestedFoods.length > 0 && (
+            <div className="mt-4 p-4 rounded-2xl bg-accent/5 border border-accent/10">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-accent">Consigliati dal piano</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {meal.suggestedFoods.map((food, i) => (
+                  <span key={i} className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-base border border-border text-muted">
+                    {food}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
+
+          {/* Food items */}
+          <div className="space-y-2">
+            {meal.foodItems.length === 0 ? (
+              <p
+                className="text-xs py-3 text-center"
+                style={{ color: "var(--fg-subtle)" }}
+              >
+                Nessun alimento registrato — aggiungine uno qui sotto
+              </p>
+            ) : (
+              <ul className="space-y-1.5 pt-1">
+                {meal.foodItems.map((item) => (
+                  <FoodItemRow key={item.id} item={item} />
+                ))}
+              </ul>
+            )}
+          </div>
 
           {/* Add food toggle */}
           {showForm ? (

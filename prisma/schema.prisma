@@ -328,7 +328,6 @@ model ExerciseDefinition {
 }
 
 // ─── NUTRITION ───────────────────────────────────────────────────────────────
-
 model NutritionDay {
   id           String   @id @default(cuid())
   userId       String
@@ -339,6 +338,7 @@ model NutritionDay {
   proteinG     Float?
   carbsG       Float?
   fatG         Float?
+  waterL       Float    @default(0) // Acqua in litri
   isTrainingDay Boolean @default(false)
   createdAt    DateTime @default(now())
 
@@ -352,12 +352,10 @@ model Meal {
   nutritionDayId  String
   nutritionDay    NutritionDay @relation(fields: [nutritionDayId], references: [id], onDelete: Cascade)
   type            MealType
-  time            DateTime?
-  kcal            Int?
-  photoUrl        String?
+  suggestedFoods  String[]     // Alimenti suggeriti dal piano (solo visualizzazione)
   createdAt       DateTime     @default(now())
 
-  foodItems  FoodItem[]
+  foodItems FoodItem[]
 }
 
 model FoodItem {
