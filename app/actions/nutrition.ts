@@ -42,6 +42,10 @@ export async function getOrCreateNutritionDay(date: Date) {
       include: { profile: true }
     })
 
+    if (!user) {
+      return { success: false, error: "Utente non trovato nel database. Effettua il logout e rientra." }
+    }
+
     let day = await prisma.nutritionDay.findUnique({
       where: { userId_date: { userId, date: d } },
       include: { meals: { include: { foodItems: true } } }
