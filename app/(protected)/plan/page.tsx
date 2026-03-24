@@ -96,15 +96,13 @@ export default async function PlanPage() {
           <p className="divider-label mb-2">Centro di Preparazione</p>
           <h1 className="text-5xl font-black tracking-tighter text-accent-gradient">Plan Manager</h1>
         </div>
-        {!onboardingCompleted ? null : (
-          <div className="flex items-center gap-3">
-            <AIPanButton label="Nuova Programmazione" />
-            <PlanImportButton />
-            <a href="#archive" className="tap-target rounded-2xl glass-sm text-fg-muted hover:text-accent transition-all border border-border group" title="Vai all'Archivio">
-              <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </a>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <AIPanButton label="Nuova Programmazione" />
+          <PlanImportButton />
+          <a href="#archive" className="tap-target rounded-2xl glass-sm text-fg-muted hover:text-accent transition-all border border-border group" title="Vai all'Archivio">
+            <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </a>
+        </div>
       </div>
 
       {!onboardingCompleted ? (
