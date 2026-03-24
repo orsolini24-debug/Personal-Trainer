@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileType } from "lucide-react"
-import { analyzeAndImportPlan } from "@/app/actions/import-analysis"
+import { FileText, X, Loader2, Check, UploadCloud, Image as ImageIcon, FileType, Info } from "lucide-react"
+import { analyzeAndImportPlanSmart } from "@/app/actions/import-analysis"
 import { extractTextFromImage } from "@/app/actions/import-vision"
 import { useRouter } from "next/navigation"
 
@@ -31,14 +31,26 @@ export default function PlanImportButton() {
   const handleImport = async () => {
     if (!text.trim()) return
     setLoading(true)
-    const res = await analyzeAndImportPlan(text)
+    const res = await analyzeAndImportPlanSmart(text)
     setLoading(false)
     
     if (res.success) {
-      setIsOpen(false)
-      setText("")
-      alert("Piano importato e attivato con successo!")
-      router.refresh()
+      let msg = "Importazione completata!"
+      if (res.importedTraining && res.importedNutrition) msg = "Allenamento e Dieta importati con successo!"
+      else if (res.importedTraining) msg = "Allenamento importato con successo!"
+      else if (res.importedNutrition) msg = "Dieta importata con successo!"
+      else msg = "Nessun dato riconosciuto correttamente nel testo."
+
+      if (res.trainingError || res.nutritionError) {
+        msg += "\n\nNote:\n" + (res.trainingError ? `- Training: ${res.trainingError}\n` : "") + (res.nutritionError ? `- Dieta: ${res.nutritionError}` : "")
+      }
+
+      alert(msg)
+      if (res.importedTraining || res.importedNutrition) {
+        setIsOpen(false)
+        setText("")
+        router.refresh()
+      }
     } else {
       alert("Errore: " + res.error)
     }
@@ -123,6 +135,13 @@ export default function PlanImportButton() {
               <button onClick={() => setIsOpen(false)} style={{ color: 'var(--fg-muted)' }}>
                 <X className="w-6 h-6" />
               </button>
+            </div>
+
+            <div className="mb-6 p-4 rounded-2xl flex items-start gap-3 text-xs" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--fg-muted)' }}>
+              <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+              <p>
+                Puoi caricare foto o PDF sia di <strong>allenamenti</strong> che di <strong>diete</strong>. L'intelligenza artificiale riconoscerà automaticamente il contenuto e lo salverà nella sezione corretta.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">

@@ -28,7 +28,7 @@ export async function extractTextFromPDF(base64Data: string) {
           content: [
             { 
               type: "text", 
-              text: "Analizza questo documento PDF (convertito in immagine/data). Estrai tutto il testo dei giorni di allenamento, esercizi, serie e ripetizioni. Mantieni la struttura originale. Ritorna solo il testo." 
+              text: "Analizza questo documento PDF. Estrai tutto il testo: se è un allenamento estrai esercizi/serie/rep, se è un piano alimentare estrai pasti/alimenti/macros. Mantieni la struttura originale. Ritorna solo il testo." 
             },
             {
               type: "image_url",

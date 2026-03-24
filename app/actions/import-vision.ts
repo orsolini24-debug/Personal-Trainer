@@ -17,7 +17,7 @@ export async function extractTextFromImage(base64Image: string) {
         {
           role: "user",
           content: [
-            { type: "text", text: "Estrai tutto il testo leggibile da questa immagine di un piano di allenamento. Mantieni la struttura di giorni ed esercizi. Ritorna solo il testo estratto." },
+            { type: "text", text: "Estrai tutto il testo leggibile da questa immagine. Può trattarsi di un piano di allenamento (esercizi, serie, rep) o di un piano alimentare (pasti, alimenti, grammi, calorie). Mantieni la struttura originale. Ritorna solo il testo estratto." },
             {
               type: "image_url",
               image_url: {

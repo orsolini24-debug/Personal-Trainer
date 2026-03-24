@@ -5,10 +5,57 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import Groq from "groq-sdk"
 import { MesoStatus, SessionType } from "@prisma/client"
+import { importNutritionPlanFromText } from "./import-nutrition"
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "missing"
 })
+
+export async function analyzeAndImportPlanSmart(text: string) {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error("Unauthorized")
+
+  try {
+    const detectPrompt = `Analizza questo testo e determina se contiene:
+    1. Un PIANO DI ALLENAMENTO (esercizi, serie, ripetizioni, split A/B/C)
+    2. UN PIANO ALIMENTARE (pasti, calorie, macronutrienti, grammature)
+    3. ENTRAMBI
+    
+    Rispondi SOLO con un JSON:
+    {"containsTraining": boolean, "containsNutrition": boolean}`
+
+    const detection = await groq.chat.completions.create({
+      messages: [{ role: "user", content: detectPrompt + "\n\nTesto:\n" + text }],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.1,
+      response_format: { type: "json_object" }
+    })
+
+    const { containsTraining, containsNutrition } = JSON.parse(detection.choices[0]?.message?.content || "{}")
+    
+    let trainingRes = null
+    let nutritionRes = null
+
+    if (containsTraining) {
+      trainingRes = await analyzeAndImportPlan(text)
+    }
+
+    if (containsNutrition) {
+      nutritionRes = await importNutritionPlanFromText(text)
+    }
+
+    return {
+      success: true,
+      importedTraining: containsTraining && trainingRes?.success,
+      importedNutrition: containsNutrition && nutritionRes?.success,
+      trainingError: trainingRes && !trainingRes.success ? trainingRes.error : null,
+      nutritionError: nutritionRes && 'error' in nutritionRes ? (nutritionRes.error as string) : null
+    }
+  } catch (error: any) {
+    console.error("Smart import error:", error)
+    return { success: false, error: error.message }
+  }
+}
 
 export async function analyzeAndImportPlan(text: string) {
   const session = await auth()

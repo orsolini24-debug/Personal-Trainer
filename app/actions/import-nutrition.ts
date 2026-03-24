@@ -56,12 +56,12 @@ async function parseWithAI(text: string): Promise<NutritionPlanData | null> {
       ],
       temperature: 0.1,
       max_tokens: 2000,
+      response_format: { type: 'json_object' }
     })
     const raw = response.choices[0]?.message?.content ?? ''
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) return null
-    return JSON.parse(match[0]) as NutritionPlanData
-  } catch {
+    return JSON.parse(raw) as NutritionPlanData
+  } catch (error) {
+    console.error("parseWithAI error:", error)
     return null
   }
 }
@@ -81,12 +81,12 @@ async function parseImageWithAI(base64: string, mimeType: string): Promise<Nutri
       ],
       temperature: 0.1,
       max_tokens: 2000,
+      response_format: { type: 'json_object' }
     })
     const raw = response.choices[0]?.message?.content ?? ''
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) return null
-    return JSON.parse(match[0]) as NutritionPlanData
-  } catch {
+    return JSON.parse(raw) as NutritionPlanData
+  } catch (error) {
+    console.error("parseImageWithAI error:", error)
     return null
   }
 }
