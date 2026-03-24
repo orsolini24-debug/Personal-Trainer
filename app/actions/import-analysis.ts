@@ -162,6 +162,15 @@ REGOLE:
         }
       })
 
+      // Calcola trainingDays di default in base al numero di giornate (A, B, C...)
+      const numDays = planData.plan?.length || 3
+      let trainingDays = [1, 3, 5] // Default per 3 giorni
+      if (numDays === 1) trainingDays = [1]
+      else if (numDays === 2) trainingDays = [1, 4]
+      else if (numDays === 4) trainingDays = [1, 2, 4, 5]
+      else if (numDays === 5) trainingDays = [1, 2, 4, 5, 6]
+      else if (numDays >= 6) trainingDays = [1, 2, 3, 4, 5, 6]
+
       // 3. Crea WorkoutPlan
       const workoutPlan = await tx.workoutPlan.create({
         data: {
@@ -171,6 +180,8 @@ REGOLE:
           goal: planData.objectives || nutritionData?.strategy,
           source: 'IMPORTED',
           isActive: true,
+          trainingDays,
+          daysPerWeek: numDays,
         }
       })
 

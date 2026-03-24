@@ -232,8 +232,19 @@ export async function schedulePlanForWeek(planId: string, weekStartISO: string) 
   })
   const existingDates = new Set(existing.map(s => s.scheduledDate.toISOString().split('T')[0]))
 
-  const trainingDays = [...plan.trainingDays].sort((a, b) => a - b) // [1,3,5]
   const planDays = plan.planDays
+  let trainingDays = [...plan.trainingDays].sort((a, b) => a - b) // [1,3,5]
+  
+  // Se non ci sono giorni di allenamento definiti, usa un default basato sul numero di sessioni
+  if (trainingDays.length === 0) {
+    const num = planDays.length
+    if (num === 1) trainingDays = [1]
+    else if (num === 2) trainingDays = [1, 4]
+    else if (num === 4) trainingDays = [1, 2, 4, 5]
+    else if (num >= 5) trainingDays = [1, 2, 3, 4, 5, 6].slice(0, num)
+    else trainingDays = [1, 3, 5] // Default 3 giorni
+  }
+
   let dayIndex = totalBefore
   let created = 0
 
@@ -244,16 +255,18 @@ export async function schedulePlanForWeek(planId: string, weekStartISO: string) 
     date.setUTCDate(date.getUTCDate() + offset)
     const dateStr = date.toISOString().split('T')[0]
 
-    if (existingDates.has(dateStr)) { dayIndex++; continue }
+    // Se il giorno è già occupato, passiamo al prossimo giorno di allenamento 
+    // ma NON incrementiamo dayIndex perché non abbiamo "consumato" la sessione del piano
+    if (existingDates.has(dateStr)) continue
 
     const planDay = planDays[dayIndex % planDays.length]
-    dayIndex++
-
+    
     try {
       await prisma.plannedSession.create({
         data: { userId, planId, planDayId: planDay.id, scheduledDate: date },
       })
       created++
+      dayIndex++ // Incrementiamo solo se creata con successo
     } catch {
       // unique constraint — slot already taken by another session
     }
