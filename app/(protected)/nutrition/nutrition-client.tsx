@@ -24,6 +24,8 @@ import {
   Droplets,
   GlassWater,
   CheckCircle2,
+  Camera,
+  Sparkles,
 } from "lucide-react"
 import { updateWater } from "@/app/actions/nutrition"
 
@@ -1071,7 +1073,7 @@ function FoodItemRow({ item }: { item: FoodItem }) {
 
 // ── AddFoodForm ───────────────────────────────────────────────────────────────
 
-// ── OpenFoodFacts product type ────────────────────────────────────────────────
+// ── Food search result type ───────────────────────────────────────────────────
 type OFFProduct = {
   id: string
   name: string
@@ -1079,9 +1081,31 @@ type OFFProduct = {
   p: number
   c: number
   f: number
+  source?: 'local' | 'usda'
 }
 
 function round1(n: number) { return Math.round(n * 10) / 10 }
+
+/** Ridimensiona l'immagine a maxPx lato lungo e restituisce base64 senza prefisso data: */
+async function resizeAndEncode(file: File, maxPx: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+      resolve(dataUrl.split(',')[1])   // solo la parte base64
+    }
+    img.onerror = reject
+    img.src = url
+  })
+}
 
 function AddFoodForm({
   mealId,
@@ -1106,6 +1130,48 @@ function AddFoodForm({
   const [basePer100g,  setBasePer100g]  = useState<OFFProduct | null>(null)
   const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const skipSearchRef = useRef(false)  // prevents search when name is set programmatically
+  const photoInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Photo / AI vision
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [visionError, setVisionError] = useState<string | null>(null)
+
+  const handlePhoto = async (file: File) => {
+    setVisionError(null)
+    setIsAnalyzing(true)
+    try {
+      // Ridimensiona a max 1024px lato lungo per ridurre payload
+      const base64 = await resizeAndEncode(file, 1024)
+      const mimeType = file.type || 'image/jpeg'
+
+      const res = await fetch('/api/food-vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mimeType }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.food) {
+        setVisionError(data.error ?? 'Errore analisi foto')
+        return
+      }
+      const food = data.food
+      if (!food.name) { setVisionError('Cibo non riconoscibile'); return }
+
+      skipSearchRef.current = true
+      setBasePer100g(null)
+      setName(food.name)
+      setQty(String(food.qty || 100))
+      setKcal(String(food.kcal || 0))
+      setP(String(food.p || 0))
+      setC(String(food.c || 0))
+      setF(String(food.f || 0))
+      setSuggestions([]); setShowSugg(false)
+    } catch {
+      setVisionError('Errore di rete')
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
 
   // ── Search OpenFoodFacts ──────────────────────────────────────────────────
   useEffect(() => {
@@ -1195,6 +1261,48 @@ function AddFoodForm({
       style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)" }}
     >
 
+      {/* Input file nascosto per foto */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = '' }}
+      />
+
+      {/* Bottone analisi foto AI */}
+      <button
+        type="button"
+        onClick={() => photoInputRef.current?.click()}
+        disabled={isAnalyzing}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:opacity-60"
+        style={{
+          background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+          color: 'white',
+          boxShadow: '0 2px 12px color-mix(in srgb, var(--accent) 35%, transparent)',
+        }}
+      >
+        {isAnalyzing ? (
+          <>
+            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            Analisi in corso…
+          </>
+        ) : (
+          <>
+            <Camera className="w-4 h-4" />
+            Scatta / carica foto
+            <Sparkles className="w-3.5 h-3.5 opacity-80" />
+          </>
+        )}
+      </button>
+
+      {visionError && (
+        <p className="text-[11px] text-center font-medium" style={{ color: 'var(--negative)' }}>
+          {visionError}
+        </p>
+      )}
+
       {/* Quick-food chip grid */}
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--fg-subtle)" }}>
@@ -1265,10 +1373,20 @@ function AddFoodForm({
                     className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-[var(--bg-elevated)]"
                     style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--fg-primary)' }}
                   >
-                    <span className="font-semibold block truncate">{prod.name}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-semibold truncate flex-1">{prod.name}</span>
+                      {prod.source === 'local' && (
+                        <span className="shrink-0 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wide"
+                          style={{ background: 'rgba(99,102,241,0.15)', color: '#6366f1' }}>IT</span>
+                      )}
+                      {prod.source === 'usda' && (
+                        <span className="shrink-0 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wide"
+                          style={{ background: 'rgba(16,185,129,0.15)', color: 'var(--positive)' }}>DB</span>
+                      )}
+                    </div>
                     <span className="text-[10px]" style={{ color: 'var(--fg-muted)' }}>
-                      {prod.kcal} kcal · P {prod.p}g · C {prod.c}g · F {prod.f}g &nbsp;
-                      <span style={{ color: 'var(--fg-subtle)' }}>/ 100g</span>
+                      {prod.kcal} kcal · P {prod.p}g · C {prod.c}g · F {prod.f}g
+                      <span className="ml-1" style={{ color: 'var(--fg-subtle)' }}>/100g</span>
                     </span>
                   </button>
                 ))}
