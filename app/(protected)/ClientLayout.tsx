@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import HelpPanel from '@/components/HelpPanel'
 import ThemeToggle from '@/components/ThemeToggle'
+import { Session } from 'next-auth'
 
 const navItems = [
   { name: 'Dashboard',  href: '/dashboard',         icon: LayoutDashboard, exact: false },
@@ -83,7 +84,10 @@ function NavLink({ item, active, onClick }: { item: typeof navItems[0]; active: 
   )
 }
 
-function UserAvatar({ onLogout }: { onLogout: () => void }) {
+function UserAvatar({ session, onLogout }: { session: Session | null; onLogout: () => void }) {
+  const userName = session?.user?.name || 'Atleta'
+  const initial = userName.charAt(0).toUpperCase()
+
   return (
     <div
       className="flex items-center gap-3 px-2 py-2.5 mt-1"
@@ -104,7 +108,7 @@ function UserAvatar({ onLogout }: { onLogout: () => void }) {
             fontSize: '11px',
           }}
         >
-          G
+          {initial}
         </div>
         {/* Online dot */}
         <div
@@ -116,7 +120,7 @@ function UserAvatar({ onLogout }: { onLogout: () => void }) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold truncate leading-none" style={{ color: 'var(--fg-primary)' }}>Giorgio</p>
+        <p className="text-xs font-bold truncate leading-none" style={{ color: 'var(--fg-primary)' }}>{userName}</p>
         <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--fg-subtle)' }}>Atleta · Pro</p>
       </div>
       <button
@@ -131,7 +135,7 @@ function UserAvatar({ onLogout }: { onLogout: () => void }) {
   )
 }
 
-function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHelp: () => void; onClose?: () => void }) {
+function SidebarContent({ pathname, session, onHelp, onClose }: { pathname: string; session: Session | null; onHelp: () => void; onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full py-4 px-3 gap-1">
       {/* Logo */}
@@ -207,7 +211,7 @@ function SidebarContent({ pathname, onHelp, onClose }: { pathname: string; onHel
       </button>
 
       {/* User avatar + logout */}
-      <UserAvatar onLogout={() => signOut({ callbackUrl: '/login' })} />
+      <UserAvatar session={session} onLogout={() => signOut({ callbackUrl: '/login' })} />
     </div>
   )
 }
@@ -320,7 +324,7 @@ function getCurrentPageTitle(pathname: string): string {
   return found?.name ?? 'Performance Ecosystem'
 }
 
-export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
+export default function ProtectedLayout({ children, session }: { children: React.ReactNode; session: Session | null }) {
   const pathname = usePathname()
   const [showHelp, setShowHelp] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -344,7 +348,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           borderRight: '1px solid var(--border-subtle)',
         }}
       >
-        <SidebarContent pathname={pathname} onHelp={() => setShowHelp(true)} />
+        <SidebarContent pathname={pathname} session={session} onHelp={() => setShowHelp(true)} />
       </div>
 
       {/* Mobile: hamburger button */}
@@ -387,6 +391,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </button>
         <SidebarContent
           pathname={pathname}
+          session={session}
           onHelp={() => { setShowHelp(true); setMobileOpen(false) }}
           onClose={() => setMobileOpen(false)}
         />

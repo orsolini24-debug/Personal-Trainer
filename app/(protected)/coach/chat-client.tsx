@@ -71,12 +71,30 @@ export default function ChatClient() {
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
       let assistantMsg = ""
-      setMessages([...newMsgs, { role: "assistant", content: "" }])
+      
+      // Placeholder per il messaggio dell'assistente che verrà popolato in streaming
+      setMessages(prev => [...prev, { role: "assistant", content: "" }])
 
       if (reader) {
-        while (true) {
+        let streamActive = true
+        // Timeout di sicurezza: se non riceviamo nulla per 15s, interrompiamo
+        const timeout = setTimeout(() => {
+          if (assistantMsg === "") {
+            streamActive = false
+            reader.cancel()
+            setMessages(prev => [
+              ...prev.slice(0, -1),
+              { role: "assistant", content: "REI sta riscontrando un ritardo nella risposta. Prova a scriverle di nuovo tra un istante." }
+            ])
+          }
+        }, 15000)
+
+        while (streamActive) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            clearTimeout(timeout)
+            break
+          }
           assistantMsg += decoder.decode(value, { stream: true })
           setMessages(prev => [
             ...prev.slice(0, -1),
@@ -84,8 +102,9 @@ export default function ChatClient() {
           ])
         }
       }
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Errore di connessione. Riprova." }])
+    } catch (err) {
+      console.error("Chat error:", err)
+      setMessages(prev => [...prev, { role: "assistant", content: "Errore di connessione con REI. Riprova tra un momento." }])
     } finally {
       setLoading(false)
     }

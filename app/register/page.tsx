@@ -97,7 +97,7 @@ export default function RegisterPage() {
               <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Nome *</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                <input type="text" name="name" required placeholder="Giorgio"
+                <input type="text" name="name" required placeholder="Il tuo nome"
                   className="input-field w-full pl-12 pr-4 py-4 rounded-2xl font-medium" />
               </div>
             </div>

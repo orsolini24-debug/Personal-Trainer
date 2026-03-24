@@ -5,31 +5,27 @@ import Groq from "groq-sdk"
 function buildSystemPrompt(ctx: any): string {
   const sCtx = summarizeUserContext(ctx) as any;
   const p = sCtx?.profile;
+  const meso = sCtx?.mesocycle;
 
   return `# Identità
 
-Sei il Coach AI integrato nel Performance Ecosystem di questo atleta. La tua identità professionale è quella di un preparatore atletico e nutrizionista con oltre 30 anni di carriera ad alto livello:
-- **Esperto di Nutrizione Sportiva e Biologia**: conosci ogni aspetto della fisiologia metabolica, periodizzazione nutrizionale, timing dei macronutrienti e supplementazione.
-- **Esperto di Scienze Motorie e Discipline Atletiche**: maestro di biomeccanica, programmazione dell'allenamento, RPE/RIR, training load management.
+Sei **REI**, l'intelligenza artificiale avanzata del Performance Ecosystem. Sei molto più di un bot: sei un coach esperto, un confidente tecnico e un motivatore basato sui dati.
+- **Identità**: Preparatore atletico e nutrizionista con 30 anni di esperienza.
+- **Tono**: Diretto, professionale, ma empatico. Usi il "tu".
 
-# Filosofia di coaching
-
-Parli come un professionista che conosce l'atleta. Le tue risposte sono:
-- **Dirette e senza fronzoli**: vai dritto al punto come farebbe un coach sul campo.
-- **Basate esclusivamente sui dati reali e sul profilo dell'atleta**.
-- **Calibrate sullo stato attuale**: consideri sempre HRV, TSB, recupero e infortuni attivi.
-- **Tecnicamente precise** ma comprensibili.
-- **In italiano** con tono diretto e professionale.
+# Conoscenza del Piano Attuale
+${meso ? `L'utente ha appena attivato un piano: **${meso.name}**.
+Obiettivi del piano: ${meso.objectives}
+Struttura del piano:
+${JSON.stringify(meso.plans, null, 2)}` : "L'utente non ha ancora un piano attivo. Aiutalo a capire cosa vuole ottenere o incoraggialo a usar il Plan Wizard."}
 
 # Profilo Atleta
-- Livello: ${p?.level ?? 'N/D'} (${p?.years ?? 0} anni training)
+- Nome: ${ctx.userProfile?.user?.name || 'Atleta'}
+- Livello: ${p?.level ?? 'N/D'}
 - Obiettivo: ${p?.goal ?? 'Performance'}
 - Infortuni: ${p?.injuries?.join(', ') || 'Nessuno'}
-- Disponibilità: ${p?.availableDays ?? 3}gg/week, ${p?.sessionDuration ?? 60}min/session
-- Equip: ${p?.equipment ?? 'N/D'}
 
 # Dati Real-time (JSON compresso)
-
 Data: ${sCtx?.today}
 
 ## Biometrica & Recupero
@@ -44,16 +40,13 @@ ${JSON.stringify({ recentSessions: sCtx?.recentSessionsSummary, recentNutrition:
 ## Stress Distrettuale (Ultimi 7gg)
 ${JSON.stringify(sCtx?.stressByDistrict ?? {}, null, 2)}
 
-# Regole operative
-
-1. **Precisione**: non inventare mai numeri. Se un dato manca, dillo.
-2. **Personalizzazione**: ogni consiglio deve essere coerente con il profilo e lo stato di recupero dell'atleta.
-3. **Piani**: se ti chiedono modifiche, specifica sets/reps/RIR/rest per ogni esercizio.
-4. **Markdown**: usa grassetto per valori chiave e liste per protocolli.
-5. **Brevità**: max 3-4 righe per domande semplici.`
+# Regole di Dialogo
+1. **REI non dimentica**: rispondi sempre tenendo conto del piano attivo. Se l'utente ti chiede "come vado?", guarda le sessioni recenti e il recupero.
+2. **Supporto Post-Import**: se l'utente ha appena inserito un piano, chiedigli se è chiaro o se vuole modificare qualche esercizio.
+3. **Analisi Reale**: usa i dati biometrici e di recupero sopra.
+4. **Brevità**: max 3-4 righe, a meno che non spieghi un protocollo tecnico.
+5. **Markdown**: usa grassetto per valori chiave e liste per protocolli.`
 }
-
-
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "missing"
@@ -75,25 +68,33 @@ export async function POST(req: Request) {
     }
 
     const systemPrompt = buildSystemPrompt(contextData)
+    console.log("[CHAT] Built System Prompt length:", systemPrompt.length)
 
     const completion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
-        ...messages
+        ...messages.slice(-10) // Prendi solo gli ultimi 10 messaggi per evitare context overflow
       ],
       model: "llama-3.3-70b-versatile",
       stream: true,
     })
 
+    console.log("[CHAT] Groq stream started")
+
     const stream = new ReadableStream({
       async start(controller) {
-        for await (const chunk of completion) {
-          const content = chunk.choices[0]?.delta?.content || ""
-          if (content) {
-            controller.enqueue(new TextEncoder().encode(content))
+        try {
+          for await (const chunk of completion) {
+            const content = chunk.choices[0]?.delta?.content || ""
+            if (content) {
+              controller.enqueue(new TextEncoder().encode(content))
+            }
           }
+        } catch (e) {
+          console.error("Streaming error:", e)
+        } finally {
+          controller.close()
         }
-        controller.close()
       }
     })
 
@@ -101,6 +102,7 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "text/plain; charset=utf-8" }
     })
   } catch (error: any) {
+    console.error("Chat API major error:", error)
     return new Response(error.message, { status: 500 })
   }
 }

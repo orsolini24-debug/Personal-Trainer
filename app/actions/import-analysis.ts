@@ -118,6 +118,8 @@ STRUTTURA JSON RICHIESTA:
 REGOLE:
 - Se il testo è disordinato, usa la tua conoscenza per dedurre set/reps/rir logici.
 - Genera i giorni di allenamento trovati (A, B, C...).
+- Se trovi nomi di giorni della settimana (es. "Lunedì", "Martedì"), mappali SEMPRE in etichette progressive (A, B, C, D...) per il campo 'dayLabel'.
+- 'dayLabel' deve essere obbligatoriamente una di queste: A, B, C, D, E, V1, V2, OUTDOOR.
 - Ritorna SOLO il JSON.`
 
     const completion = await groq.chat.completions.create({
