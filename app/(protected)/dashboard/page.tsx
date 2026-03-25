@@ -52,7 +52,7 @@ export default function DashboardPage() {
     return d
   })
   const DAY_LABELS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
-  const sessionDateTimes = (weekSessionDates ?? []).map(iso => {
+  const sessionDateTimes = (weekSessionDates ?? []).map((iso: string) => {
     const d = new Date(iso); d.setHours(0,0,0,0); return d.getTime()
   })
 
