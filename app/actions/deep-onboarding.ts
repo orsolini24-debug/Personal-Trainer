@@ -281,7 +281,7 @@ export async function selectProposal(mesoId: string, optionId: number) {
         }
       })
       if (nutritionData.length > 0) {
-        await tx.dailyNutritionTarget.createMany({ data: nutritionData, skipDuplicates: true }).catch(() => {})
+        await tx.nutritionDay.createMany({ data: nutritionData, skipDuplicates: true }).catch(() => {})
       }
     })
 
