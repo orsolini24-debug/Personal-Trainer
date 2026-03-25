@@ -22,6 +22,7 @@ import MesoSettings from "./MesoSettings"
 import BulkDeleteButton from "./BulkDeleteButton"
 import type { PlanDayOption } from "@/app/components/WeeklyCalendar"
 import { getWeekCalendarData } from "@/app/actions/plans"
+import PlanChat from "./PlanChat"
 
 export default async function PlanPage() {
   const session = await auth()
@@ -106,13 +107,17 @@ export default async function PlanPage() {
           <p className="divider-label mb-2">Centro di Preparazione</p>
           <h1 className="text-5xl font-black tracking-tighter text-accent-gradient">Plan Manager</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <AIPanButton label="Nuova Programmazione" />
-          <PlanImportButton />
-          <a href="#archive" className="tap-target rounded-2xl glass-sm text-fg-muted hover:text-accent transition-all border border-border group" title="Vai all'Archivio">
-            <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          </a>
-        </div>
+        {/* Mostra i pulsanti di azione solo quando l'onboarding è completato,
+            per evitare che le overlay coprano i wizard di configurazione */}
+        {onboardingCompleted && (
+          <div className="flex items-center gap-3">
+            <AIPanButton label="Nuova Programmazione" />
+            <PlanImportButton />
+            <a href="#archive" className="tap-target rounded-2xl glass-sm text-fg-muted hover:text-accent transition-all border border-border group" title="Vai all'Archivio">
+              <Archive className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </a>
+          </div>
+        )}
       </div>
 
       {!onboardingCompleted ? (
@@ -249,6 +254,10 @@ export default async function PlanPage() {
                 <Sparkles className="w-72 h-72 text-accent" />
               </div>
               <div className="relative z-10">
+                {/* Alternativa rapida all'import sopra il wizard */}
+                <div className="flex justify-end mb-6 gap-3">
+                  <PlanImportButton />
+                </div>
                 <PlanWizard />
               </div>
             </section>
@@ -302,6 +311,11 @@ export default async function PlanPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* ── CONVERSATIONAL AI COACH (POST-GENERATION) ── */}
+      {(draftMeso || activeMeso) && (
+        <PlanChat mesoId={draftMeso?.id || activeMeso?.id || ""} />
       )}
     </div>
   )

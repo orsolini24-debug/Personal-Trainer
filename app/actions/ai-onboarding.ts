@@ -36,11 +36,18 @@ export async function chatWithPT(messages: { role: 'user' | 'assistant' | 'syste
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
 
-  const systemPrompt = `Sei un Personal Trainer d'élite. Fai un'intervista profonda. 
+  // Recupero info base se esistono per contestualizzare
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId: session.user.id }
+  })
+
+  const systemPrompt = `Sei l'Apex Performance Onboarder. Il tuo compito è profilare l'atleta per creare un piano perfetto.
   REGOLE:
-  1. Una domanda alla volta.
-  2. Approfondisci infortuni e carichi (es. i 100kg di panca citati).
-  3. Quando hai tutto, scrivi ###FINISH###.`
+  1. ADATTABILITÀ: Se l'utente vuole solo dimagrire, correre o non fa palestra, NON parlare di "carichi", "panca" o "sala pesi". Focalizzati sulla sua costanza, routine e obiettivi reali (es. mobilità, perdita peso).
+  2. UNA DOMANDA ALLA VOLTA: Non inondare l'utente di domande.
+  3. APPROFONDIMENTO: Chiedi della sua routine quotidiana (es. quante ore sta seduto), infortuni passati e attrezzatura a disposizione.
+  4. TONO: Professionale, d'élite, ma empatico e adattato allo sport dell'atleta.
+  5. CONCLUSIONE: Quando hai un quadro completo (Bio, Sport, Obiettivi, Routine, Logistica), scrivi ###FINISH###.`
 
   try {
     const completion = await groq.chat.completions.create({
@@ -58,12 +65,17 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
 
-  const extractionPrompt = `Estrai i dati in JSON. Sport ammessi: ${VALID_SPORTS.join(', ')}.`
+  const extractionPrompt = `Estrai i dati dall'intervista in JSON per DeepOnboardingData. 
+  REGOLE ESTRAZIONE:
+  - primarySport: scegli tra ${VALID_SPORTS.join(', ')}.
+  - equipmentLevel: valuta bene se l'utente ha detto di NON andare in palestra. In quel caso usa 'NONE' o 'BODYWEIGHT'. 
+  - dailyRoutine: estrai dettagli sulla sedentarietà (es. "10 ore al PC").
+  - experienceLevel: 'BEGINNER' se non si è mai allenato seriamente.`
 
   try {
     const completion = await groq.chat.completions.create({
       messages: [
-        { role: 'system', content: "Estrai JSON puro per DeepOnboardingData." },
+        { role: 'system', content: "Estrai JSON puro per DeepOnboardingData basandoti sull'intervista." },
         { role: 'user', content: `Chat:\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}\n\n${extractionPrompt}` }
       ],
       model: 'llama-3.3-70b-versatile',
@@ -77,36 +89,19 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
       ageYears: Math.max(1, Number(raw.ageYears) || 25),
       weightKg: Math.max(1, Number(raw.weightKg) || 70),
       heightCm: Math.max(1, Number(raw.heightCm) || 175),
-      primarySport: validateSport(raw.primarySport || 'PALESTRA'),
-      mainSports: Array.isArray(raw.mainSports) ? raw.mainSports.map(validateSport) : [validateSport(raw.primarySport || 'PALESTRA')],
+      primarySport: validateSport(raw.primarySport || 'OTHER'),
+      mainSports: Array.isArray(raw.mainSports) ? raw.mainSports.map(validateSport) : [validateSport(raw.primarySport || 'OTHER')],
       sportLevels: raw.sportLevels || {},
-      experienceLevel: raw.experienceLevel || 'INTERMEDIATE',
-      trainingYears: Number(raw.trainingYears) || 1,
+      experienceLevel: raw.experienceLevel || 'BEGINNER',
+      trainingYears: Number(raw.trainingYears) || 0,
       strengthRefs: raw.strengthRefs || {},
-      primaryGoal: raw.primaryGoal || 'Performance',
+      primaryGoal: raw.primaryGoal || 'Salute',
       isFollowingPlan: !!raw.isFollowingPlan,
       currentPlanText: raw.currentPlanText || "",
       targetEvent: raw.targetEvent || "",
-      dietaryType: raw.dietaryType || 'OMNIVORE',
-      eatingRoutine: {
-        mealsPerDay: Number(raw.eatingRoutine?.mealsPerDay) || 3,
-        snacks: !!raw.eatingRoutine?.snacks,
-        intermittentFasting: !!raw.eatingRoutine?.intermittentFasting
-      },
-      availableDays: Math.min(7, Math.max(1, Number(raw.availableDays) || 3)),
-      sessionDuration: Math.max(1, Number(raw.sessionDuration) || 60),
-      equipmentLevel: raw.equipmentLevel || 'FULL_GYM',
-      preferredSplit: raw.preferredSplit || "CUSTOM",
-      injuriesList: Array.isArray(raw.injuriesList) ? raw.injuriesList : [],
-      hasProfessionalData: false,
-      dailyRoutine: raw.dailyRoutine || "",
-      favoriteFoods: Array.isArray(raw.favoriteFoods) ? raw.favoriteFoods : [],
-      dislikedFoods: Array.isArray(raw.dislikedFoods) ? raw.dislikedFoods : [],
-      allergies: Array.isArray(raw.allergies) ? raw.allergies : []
+      dietaryPreferences: raw.dietaryPreferences || [],
     }
-
-    return await completeDeepOnboarding(sanitized)
-  } catch (e: any) {
-    return { error: e.message }
+  } catch {
+    return null
   }
 }

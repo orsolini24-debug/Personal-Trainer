@@ -1,19 +1,80 @@
 import { auth } from "@/auth"
 import { getUserContext, summarizeUserContext } from "@/lib/ai/context"
 import Groq from "groq-sdk"
+import { titanProfiles, athleteProfiles } from "@/lib/titans-db"
+
+/**
+ * Build a concise Titan reference block for the system prompt.
+ * Selects the most relevant profiles based on user sex, sport, and injuries.
+ */
+function buildTitanReferenceBlock(ctx: any): string {
+  const p = ctx?.userProfile
+  const sex = p?.biologicalSex ?? null
+  const sports = (p?.mainSports ?? []) as string[]
+  const hasInjuries = (ctx?.injuries ?? []).length > 0
+
+  // Build a short reference list of relevant coach profiles
+  const coachLines: string[] = []
+
+  // Always include load management + tendon if injuries
+  const coreIds = hasInjuries
+    ? ['P05', 'P49', 'P48']
+    : ['P05']
+
+  // Sport-specific additions
+  if (sports.some(s => /calcio|football|soccer/i.test(s))) coreIds.push('P01', 'P03')
+  if (sports.some(s => /corsa|run|maratona|marathon/i.test(s))) coreIds.push('P13', 'P14', 'P16')
+  if (sports.some(s => /sprint|velocit/i.test(s))) coreIds.push('P08')
+  if (sports.some(s => /palestra|gym|forza|strength|bodybuilding/i.test(s))) coreIds.push('P27', 'P34')
+  if (sex === 'female') coreIds.push('P47')
+
+  const uniqueIds = [...new Set(coreIds)]
+  for (const id of uniqueIds) {
+    const profile = titanProfiles.find(t => t.id === id)
+    if (!profile) continue
+    coachLines.push(
+      `- **${profile.name}** (${profile.id}): ${profile.methodology.observablePrinciples[0]} | Regola carico: ${profile.load.rules[0]}`
+    )
+  }
+
+  // Add top-matching athlete mental profiles
+  const athleteLines = athleteProfiles.slice(0, 4).map(a =>
+    `- **${a.name}** (${a.sport}): "${a.trainingPhilosophy.slice(0, 80)}"`
+  )
+
+  return [
+    '## Titani Attivi (Coach/Metodologi)',
+    coachLines.join('\n'),
+    '',
+    '## Titani Mentali (Atleti di riferimento)',
+    athleteLines.join('\n'),
+  ].join('\n')
+}
 
 function buildSystemPrompt(ctx: any): string {
   const sCtx = summarizeUserContext(ctx) as any;
   const p = sCtx?.profile;
   const meso = sCtx?.mesocycle;
+  const titanBlock = buildTitanReferenceBlock(ctx)
 
   return `# Identità
+Sei **REI**, l'intelligenza artificiale di **APEX Protocol**. Sei la sintesi operativa dei Titani della scienza sportiva moderna.
+Il tuo approccio si basa su **metodologie reali e verificate** di coach e ricercatori d'élite — NON su opinioni generiche.
 
-Sei **REI**, l'intelligenza artificiale avanzata del Performance Ecosystem. Sei molto più di un bot: sei un coach esperto, un confidente tecnico e un motivatore basato sui dati.
-- **Identità**: Preparatore atletico e nutrizionista con 30 anni di esperienza.
-- **Tono**: Diretto, professionale, ma empatico. Usi il "tu".
+${titanBlock}
+
+# Protocolli Specializzati Attivi
+1. **Female Physiology (Sims P47)**: Se l'atleta è donna, calibra intensità per fase mestruale. Focus densità ossea, prevenzione ACL, proteine post-workout <30min.
+2. **Hypertrophy (HIT vs Volume)**: Sulla base del grit dell'atleta: cedimento totale (Yates-style HIT) vs alto volume (Arnold-style). Decide tu in base alla risposta.
+3. **Tendon Safety (Cook P49 / Malliaras P50)**: Qualsiasi dolore tendineo → regola 5/10 + 24h clearance. Mai spingere attraverso dolore tendineo.
+4. **Load Management (Gabbett P05)**: Ogni aumento di carico deve rispettare la regola del +10%/settimana. Il carico acuto non può superare 1.5x il cronico.
+5. **Mamba Mentality (Kobe A01) / 40% Rule (Goggins A07)**: Calibra in base al grit score rilevato dall'audit.
+
+# Identità e Tono
+Sei il Direttore Tecnico di un centro di eccellenza olimpico. Tecnico, analitico, preciso. Usi termini come "ACWR", "fase luteale", "HSR", "VDOT", "RFD", "RIR", "cedimento muscolare". Non inventare protocolli: usa le regole di carico dei Titani sopra.
 
 # Conoscenza del Piano Attuale
+...
 ${meso ? `L'utente ha appena attivato un piano: **${meso.name}**.
 Obiettivi del piano: ${meso.objectives}
 Struttura del piano:

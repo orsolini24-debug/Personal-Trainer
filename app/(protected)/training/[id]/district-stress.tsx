@@ -9,7 +9,7 @@ const DISTRICT_MAP: Record<District, string> = {
   QUAD:       'Quadricipiti',
   HAMSTRING:  'Ischiocrurali',
   GLUTE:      'Glutei',
-  KNEE:       'Ginocchia',
+  KNEE:       'Ginocchio',
   LOWER_BACK: 'Lombari',
   UPPER_BACK: 'Dorsali',
   SHOULDER:   'Spalle',
@@ -32,61 +32,73 @@ export default function DistrictStressForm({ sessionId, initialStress }: { sessi
     await updateDistrictStress(sessionId, district, val)
   }
 
-  const getLevelStyle = (level: number) => {
+  const getLevelColor = (level: number) => {
     switch(level) {
-      case 1: return { label: 'Lieve', bg: 'var(--positive-dim)', text: 'var(--positive)', border: 'var(--positive)', glow: 'var(--glow-positive)' }
-      case 2: return { label: 'Medio', bg: 'var(--warning-dim)', text: 'var(--warning)', border: 'var(--warning)', glow: 'var(--glow-warning)' }
-      case 3: return { label: 'Alto', bg: 'var(--negative-dim)', text: 'var(--negative)', border: 'var(--negative)', glow: 'var(--glow-negative)' }
-      default: return { label: 'Nullo', bg: 'var(--bg-elevated)', text: 'var(--fg-subtle)', border: 'var(--border-default)', glow: 'transparent' }
+      case 1: return 'var(--positive)'
+      case 2: return 'var(--warning)'
+      case 3: return 'var(--negative)'
+      default: return 'var(--fg-muted)'
     }
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-      {Object.entries(DISTRICT_MAP).map(([d, label]) => {
-        const currentLevel = stress[d] || 0
-        const style = getLevelStyle(currentLevel)
-        
-        return (
-          <div key={d} className="space-y-3 animate-rise-up">
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{label}</span>
-              <span className="badge scale-75 origin-right" style={{ 
-                background: style.bg, 
-                color: style.text, 
-                borderColor: `color-mix(in srgb, ${style.text} 20%, transparent)` 
-              }}>
-                {style.label}
-              </span>
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-6 md:gap-x-8 md:gap-y-8">
+        {Object.entries(DISTRICT_MAP).map(([d, label]) => {
+          const currentLevel = stress[d] || 0
+          
+          return (
+            <div key={d} className="space-y-3 animate-rise-up">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted/80 ml-1">{label}</span>
+              
+              <div className="flex justify-between items-center gap-1.5 p-1 bg-base/40 rounded-full border border-border-subtle shadow-inner">
+                {[0, 1, 2, 3].map(level => {
+                  const isActive = currentLevel === level
+                  const color = getLevelColor(level)
+                  
+                  return (
+                    <button
+                      key={level}
+                      onClick={() => handleChange(d as District, level)}
+                      className={`relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full text-[10px] font-black transition-all duration-300 ${
+                        isActive ? 'shadow-lg scale-110 z-10' : 'opacity-20 hover:opacity-100 grayscale hover:grayscale-0'
+                      }`}
+                      style={{
+                        background: isActive ? (level === 0 ? 'var(--bg-elevated)' : color) : 'transparent',
+                        color: isActive ? (level === 0 ? 'var(--fg-muted)' : 'white') : 'var(--fg-muted)',
+                        boxShadow: isActive && level > 0 ? `0 0 15px color-mix(in srgb, ${color} 40%, transparent)` : 'none',
+                        border: isActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
+                      }}
+                    >
+                      {level}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            
-            <div className="flex gap-1.5 p-1.5 glass-sm rounded-2xl border border-border/40">
-              {[0, 1, 2, 3].map(level => {
-                const isActive = currentLevel === level
-                const levelInfo = getLevelStyle(level)
-                
-                return (
-                  <button
-                    key={level}
-                    onClick={() => handleChange(d as District, level)}
-                    className={`flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all duration-300 ${
-                      isActive ? 'shadow-xl scale-[1.05] z-10' : 'opacity-30 hover:opacity-100 grayscale hover:grayscale-0'
-                    }`}
-                    style={{
-                      background: isActive ? levelInfo.text : 'transparent',
-                      color: isActive ? 'white' : 'var(--fg-muted)',
-                      boxShadow: isActive ? `0 6px 16px color-mix(in srgb, ${levelInfo.text} 30%, transparent)` : 'none',
-                      border: isActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
-                    }}
-                  >
-                    {level === 0 ? 'OFF' : level}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
+
+      {/* Legenda */}
+      <div className="flex flex-wrap items-center justify-center gap-4 pt-6 border-t border-border/40">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-base border border-border" />
+          <span className="text-[10px] font-bold text-muted uppercase">0 Nullo</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-positive" />
+          <span className="text-[10px] font-bold text-muted uppercase">1 Lieve</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-warning" />
+          <span className="text-[10px] font-bold text-muted uppercase">2 Moderato</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-negative" />
+          <span className="text-[10px] font-bold text-muted uppercase">3 Intenso</span>
+        </div>
+      </div>
     </div>
   )
 }

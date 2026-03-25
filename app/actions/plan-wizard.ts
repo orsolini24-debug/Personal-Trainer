@@ -3,11 +3,77 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import Groq from "groq-sdk"
+import {
+  titanProfiles,
+  athleteProfiles,
+  getTitanById,
+  type TitanProfile,
+  type AthleteProfile,
+} from "@/lib/titans-db"
+import {
+  assessFeasibility,
+  buildTitanContextForPrompt,
+  type FeasibilityInput,
+  type ObjectiveType,
+} from "@/lib/feasibility"
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! })
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
+/**
+ * Extract a structured grit/capacity/time snapshot from the audit conversation.
+ * Used to feed the feasibility engine before plan generation.
+ */
+function extractAuditMetrics(chatHistory: Message[]): {
+  gritScore: number
+  trainingDaysPerWeek: number
+  hoursPerSession: number
+  sleepHoursAvg: number
+  nutritionCompliance: number
+  objectiveKeyword: string
+  weeksAvailable: number
+} {
+  const fullText = chatHistory.map(m => m.content).join(' ').toLowerCase()
+
+  // Grit score heuristic: infer from keywords (not only gym-centric)
+  let gritScore = 50
+  if (/cedimento|failure|kill|everything|tutto|mamba|goggins|massimo|limite|sofferenza|pain/.test(fullText)) gritScore = 85
+  else if (/volume|ripetiz|maniac|kobelike|lavoro|sempre|costanza|disciplina/.test(fullText)) gritScore = 75
+  else if (/moderato|pace|rilassato|calmo|steady|sostenibile|tranquillo/.test(fullText)) gritScore = 40
+
+  // Days/week
+  const daysMatch = fullText.match(/(\d)\s*(giorni|days|volte|sessions)\s*(a|per|\/)\s*(settimana|week)/)
+  const trainingDaysPerWeek = daysMatch ? Math.min(7, parseInt(daysMatch[1])) : 3
+
+  // Session duration heuristic
+  const hoursMatch = fullText.match(/(\d+\.?\d*)\s*(ore|hours?|h\b)/)
+  const hoursPerSession = hoursMatch ? Math.min(3, parseFloat(hoursMatch[1])) : 1
+
+  // Sleep
+  const sleepMatch = fullText.match(/(\d)\s*(ore|hours?)\s*(di\s*)?(sonno|sleep)/)
+  const sleepHoursAvg = sleepMatch ? parseInt(sleepMatch[1]) : 7
+
+  // Nutrition compliance keyword heuristic
+  let nutritionCompliance = 60
+  if (/dieta|nutrition|macro|preciso|ottimizzat|tracct|pesato|grammi/.test(fullText)) nutritionCompliance = 80
+  else if (/casual|libero|senza|minimal|ignore|pasticcio/.test(fullText)) nutritionCompliance = 30
+
+  // Objective keyword (last user message about goals)
+  const goalMessage = chatHistory.findLast(m => m.role === 'user')?.content.toLowerCase() ?? ''
+  const objectiveKeyword = goalMessage.slice(0, 80)
+
+  // Weeks available heuristic
+  const weeksMatch = fullText.match(/(\d+)\s*(settimane|weeks)/)
+  const weeksAvailable = weeksMatch ? Math.min(52, parseInt(weeksMatch[1])) : 16
+
+  return { gritScore, trainingDaysPerWeek, hoursPerSession, sleepHoursAvg, nutritionCompliance, objectiveKeyword, weeksAvailable }
+}
+
+/**
+ * Fase 1: AUDIT PSICOFISICO
+ * REI agisce come Head Coach per capire Grit, Capacity e Time.
+ */
 export async function chatPlanWizard(messages: Message[]) {
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
@@ -16,52 +82,26 @@ export async function chatPlanWizard(messages: Message[]) {
     where: { userId: session.user.id }
   })
 
-  const systemPrompt = `Sei un Performance Planner AI di élite specializzato in pianificazione atletica multisport.
-Il tuo compito è raccogliere tutte le informazioni necessarie per costruire un piano personalizzato.
+  const systemPrompt = `Sei l'APEX Performance Synthesizer. Il tuo compito è sottoporre l'atleta a un AUDIT PROFESSIONALE per generare un protocollo d'élite.
 
-PROFILO ATLETA ATTUALE:
-- Sesso: ${profile?.biologicalSex ?? 'non noto'}
-- Età: ${profile?.ageYears ?? 'non nota'} anni
-- Peso: ${profile?.weightKg ?? 'non noto'} kg
-- Sport principali: ${(profile?.mainSports ?? []).join(', ') || 'non specificati'}
-- Livello esperienza: ${profile?.experienceLevel ?? 'non noto'}
-- Giorni disponibili: ${profile?.availableDays ?? 'non specificati'}/settimana
-- Durata sessione: ${profile?.sessionDuration ?? 'non specificata'} min
-- Infortuni: ${profile?.injuriesList?.join(', ') || 'nessuno'}
+PROFILO UTENTE (IMPORTANTE):
+- Sesso: ${profile?.biologicalSex ?? 'N/D'}
+- Età: ${profile?.ageYears ?? 'N/D'} anni
+- Sport Primario: ${profile?.primarySport ?? 'N/D'}
+- Livello Esperienza: ${profile?.experienceLevel ?? 'N/D'}
+- Routine Quotidiana: ${profile?.dailyRoutine ?? 'N/D'}
+- Infortuni: ${profile?.injuriesList?.join(', ') || 'Nessuno'}
 
-COSA DEVI RACCOGLIERE (in modo conversazionale, non come questionario):
-1. OBIETTIVI MULTIPLI: possono essere combinati (es: "voglio dimagrire ma anche migliorare nel calcio e aumentare la forza")
-   - Obiettivo fisico (composizione corporea, forza, ipertrofia, resistenza)
-   - Obiettivo sportivo (performance in uno o più sport, gare specifiche)
-   - Obiettivo di salute (prevenzione infortuni, mobilità, energia)
-   - PRIORITÀ tra gli obiettivi
+IL TUO OBIETTIVO (Audit in 3 aree):
+1. **AUDIT MENTALE (GRIT)**: Capisci la determinazione. Se l'utente non fa palestra (es. vuole solo dimagrire o corre), NON fare domande su massimali di panca. Chiedi della sua costanza, della sua capacità di gestire la fatica nel SUO sport o nella vita quotidiana.
+2. **AUDIT FISICO (CAPACITY)**: Valuta la tolleranza al carico basandoti sulla sua routine (es. se sta 10 ore al PC, avrà problemi posturali/mobilità).
+3. **LOGISTICA (TIME SYNC)**: Capisci quanto tempo reale può dedicare considerando il suo stile di vita sedentario o attivo.
 
-2. SPORT E CALENDARIO GARE:
-   - Tutti gli sport praticati, frequenza settimanale di ognuno
-   - Gare/eventi in calendario con DATE precise
-   - Livello (amatoriale, agonistico, professionistico)
-
-3. TIPO DI PIANO DESIDERATO:
-   - Solo allenamento, solo alimentazione, o entrambi
-
-4. METRICHE ATTUALI SE NON NEL PROFILO:
-   - 1RM o stima per esercizi base (panca, squat, stacco, OHP)
-   - VO2max se noto, FTP se ciclista, pace se runner
-   - Peso attuale e obiettivo se body comp è un goal
-
-5. LIMITAZIONI E PREFERENZE:
-   - Infortuni attuali o cronici (oltre a quelli nel profilo)
-   - Attrezzatura disponibile
-   - Preferenze di allenamento
-
-TONO: parla come un coach esperto, non come un robot. Usa un linguaggio diretto e professionale.
-Fai domande aperte e follow-up intelligenti basate sulle risposte.
-NON fare domande già presenti nel profilo a meno che non siano incomplete.
-
-Quando hai raccolto TUTTE le informazioni necessarie, termina il tuo ultimo messaggio con:
-###READY###
-
-NON aggiungere mai ###READY### prima di aver compreso TUTTI i goal, sport, date gare e tipo di piano.`
+REGOLE DI DIALOGO:
+- Sintonizzati sullo SPORT dell'utente. Se l'utente è sedentario e vuole dimagrire, il tuo tono deve essere incoraggiante ma fermo, senza usare gergo da bodybuilding estremo.
+- NON dare nulla per scontato (es. accesso in palestra). Chiedi se ha attrezzatura o se si allena a casa.
+- Sii tecnico come un head coach olimpico, ma ADATTATO all'interlocutore.
+- Termina con ###READY### solo quando hai una mappa chiara di Grit, Capacity e Time.`
 
   const response = await groq.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
@@ -76,38 +116,101 @@ NON aggiungere mai ###READY### prima di aver compreso TUTTI i goal, sport, date 
   return { response: response.choices[0]?.message?.content ?? '' }
 }
 
+/**
+ * Fase 2: GENERAZIONE SINTETIZZATA
+ * Combina i metodi dei Titani in base all'audit.
+ */
 export async function generatePlanFromWizard(chatHistory: Message[], planType: 'FULL' | 'TRAINING_ONLY' | 'NUTRITION_ONLY') {
   const session = await auth()
   if (!session?.user?.id) return { error: 'Unauthorized' }
   const userId = session.user.id
 
   const profile = await prisma.userProfile.findUnique({ where: { userId } })
+  const latestBiometric = await prisma.biometricLog.findFirst({
+    where: { userId },
+    orderBy: { date: 'desc' }
+  })
   const activeInjuries = await prisma.injury.findMany({
     where: { userId, status: { not: 'RESOLVED' } }
   })
 
   const conversationSummary = chatHistory.map(m => `${m.role === 'user' ? 'ATLETA' : 'COACH'}: ${m.content}`).join('\n')
 
-  const systemPrompt = `Sei un Performance Planner AI. Analizza la conversazione e genera 3 proposte di mesociclo.
+  const bfPct = latestBiometric?.fatPct ?? profile?.bodyFatPct
+  const weightKg = latestBiometric?.weightKg ?? profile?.weightKg
+  const leanMass = (weightKg && bfPct) ? Math.round(weightKg * (1 - bfPct / 100) * 10) / 10 : null
 
-PROFILO:
-- Sport: ${(profile?.mainSports ?? []).join(', ')}
-- Peso: ${profile?.weightKg}kg, Età: ${profile?.ageYears}
-- Giorni: ${profile?.availableDays}/sett, Durata: ${profile?.sessionDuration}min
-- Infortuni attivi: ${activeInjuries.map(i => i.district).join(', ') || 'nessuno'}
-- Tipo piano: ${planType}
+  // ── Feasibility Engine ────────────────────────────────────────────────────
+  const auditMetrics = extractAuditMetrics(chatHistory)
 
-CONVERSAZIONE DI INTAKE:
+  // Infer objective type from conversation
+  const objText = auditMetrics.objectiveKeyword
+  let detectedObjectiveType: ObjectiveType = 'CUSTOM'
+  if (/maratona|marathon|corsa|running|10k|5k|gara/.test(objText)) detectedObjectiveType = 'RACE_PREP'
+  else if (/forza|squat|deadlift|strength|powerlifting/.test(objText)) detectedObjectiveType = 'STRENGTH'
+  else if (/muscolo|ipertrofia|massa|hypertrophy|bodybuilding/.test(objText)) detectedObjectiveType = 'HYPERTROPHY'
+  else if (/dimagr|grasso|peso|weight loss|fat|perdita/.test(objText)) detectedObjectiveType = 'WEIGHT_LOSS'
+  else if (/calcio|football|soccer|sport/.test(objText)) detectedObjectiveType = 'SPORT_PERFORMANCE'
+  else if (/endurance|aerobic|ciclismo|cycling|triathlon/.test(objText)) detectedObjectiveType = 'ENDURANCE'
+  else if (/infortun|rehab|dolore|prevenzione/.test(objText)) detectedObjectiveType = 'INJURY_PREVENTION'
+  else if (/ricomposi|body recomp/.test(objText)) detectedObjectiveType = 'BODY_RECOMPOSITION'
+
+  // Determine if gym access is likely based on profile and audit
+  const hasGymAccess = profile?.equipmentLevel === 'GYM' || 
+                       profile?.primarySport === 'PALESTRA' || 
+                       /palestra|gym|pesi|macchine/.test(conversationSummary.toLowerCase())
+
+  const feasibilityInput: FeasibilityInput = {
+    objectiveType: detectedObjectiveType,
+    objectiveDescription: auditMetrics.objectiveKeyword,
+    weeksAvailable: auditMetrics.weeksAvailable,
+    experienceYears: profile?.trainingYears ?? 0,
+    trainingDaysPerWeek: auditMetrics.trainingDaysPerWeek,
+    hoursPerSession: auditMetrics.hoursPerSession,
+    gritScore: auditMetrics.gritScore,
+    ageYears: profile?.ageYears ?? undefined,
+    biologicalSex: (profile?.biologicalSex as 'male' | 'female' | 'other' | undefined) ?? undefined,
+    bodyFatPct: bfPct ?? undefined,
+    weightKg: weightKg ?? undefined,
+    activeInjuries: activeInjuries.map(i => i.district ?? '').filter(Boolean),
+    sleepHoursAvg: auditMetrics.sleepHoursAvg,
+    nutritionCompliance: auditMetrics.nutritionCompliance,
+    hasGymAccess,
+  }
+
+  const feasibility = assessFeasibility(feasibilityInput)
+  const titanContext = buildTitanContextForPrompt(feasibility)
+
+  const systemPrompt = `Sei l'APEX Performance Synthesizer. Analizza l'Audit Psicofisico e genera 3 proposte di protocollo SINTETIZZATE dai metodi dei Titani.
+
+PROFILO ATLETA REALE:
+- Sesso: ${profile?.biologicalSex ?? 'N/D'}, Età: ${profile?.ageYears ?? 'N/D'} anni
+- Peso: ${weightKg ?? 'N/D'} kg, BF%: ${bfPct ?? 'N/D'}%
+- Sport principale: ${profile?.primarySport || 'non specificato'}
+- Livello: ${profile?.experienceLevel || 'beginner'}
+- Routine: ${profile?.dailyRoutine || 'N/D'}
+- Infortuni: ${activeInjuries.map(i => i.district).join(', ') || 'nessuno'}
+- Accesso Palestra: ${hasGymAccess ? 'SÌ' : 'NO (Allenamento a casa/outdoor richiesto)'}
+
+CONVERSAZIONE DI AUDIT:
 ${conversationSummary}
 
-Genera ESATTAMENTE questo JSON (nient'altro):
+${titanContext}
+
+REGOLE DI SINTESI (Genera 3 opzioni):
+1. **COERENZA TOTALE**: Se l'utente non ha accesso alla palestra o il suo sport è il running/sedentario, NON proporre esercizi con bilancieri pesanti. Usa corpo libero, corsa, camminata o esercizi posturali.
+2. **VOLUME REALISTICO**: Per un utente sedentario (es. 10h al PC), non proporre piani estenuanti da 6 giorni. Inizia gradualmente (2-3 giorni).
+3. **FUSIONE TITANI**: Ogni proposta DEVE dichiarare la sintesi con i nomi reali dei Titani forniti nel contesto sopra.
+4. **OBIETTIVI**: Definisci obiettivi (goals) che siano coerenti con la richiesta dell'utente (es. perdita peso, non massimale di panca).
+
+Genera ESATTAMENTE questo JSON:
 {
   "goals": [
     {
-      "type": "STRENGTH|HYPERTROPHY|ENDURANCE|WEIGHT_LOSS|WEIGHT_GAIN|BODY_RECOMPOSITION|SPORT_PERFORMANCE|RACE_PREP|MOBILITY|INJURY_PREVENTION|NUTRITION_ONLY|TRAINING_ONLY|CUSTOM",
-      "sport": "PALESTRA|SOCCER|RUNNING|...(SportType enum o null)",
-      "description": "descrizione specifica e misurabile",
-      "targetValue": 100.0,
+      "type": "STRENGTH|HYPERTROPHY|ENDURANCE|WEIGHT_LOSS|WEIGHT_GAIN|BODY_RECOMPOSITION|SPORT_PERFORMANCE|RACE_PREP|MOBILITY|INJURY_PREVENTION|CUSTOM",
+      "sport": "PALESTRA|SOCCER|RUNNING|WALKING|...",
+      "description": "descrizione specifica",
+      "targetValue": 75.0,
       "currentValue": 80.0,
       "unit": "kg",
       "targetDate": "2026-06-01",
@@ -116,42 +219,33 @@ Genera ESATTAMENTE questo JSON (nient'altro):
   ],
   "proposals": [
     {
-      "name": "Nome Strategia (es: Forza + Performance Calcio)",
-      "strategy": "Descrizione strategica di 2-3 frasi. Cita metodi di allenamento specifici: periodizzazione (lineare, DUP, blocchi), progressione dei carichi (RIR-based per Mike Israetel, ACWR per Banister), principi di overreaching controllato.",
-      "pros": ["Pro 1", "Pro 2", "Pro 3"],
-      "cons": ["Con 1", "Con 2"],
+      "id": 1,
+      "name": "Nome Sintesi",
+      "strategy": "Perché questi Titani? Come aiutano un utente con questa routine specifica?",
+      "pros": ["Pro 1"], "cons": ["Con 1"],
       "isRecommended": true,
       "planType": "${planType}",
-      "trainingDays": [1, 3, 5, 6],
+      "trainingDays": [1, 3, 5],
       "weeksTotal": 4,
       "mesocycle": {
         "name": "Nome mesociclo",
-        "objectives": "Obiettivi tecnici dettagliati con metodi accademici citati",
-        "kpi": { "primaryGoal": "descrizione KPI principale", "secondaryGoals": [] },
+        "objectives": "Obiettivi sintetizzati",
         "plan": [
           {
             "dayLabel": "A",
-            "focus": "Lower Body — Forza/Ipertrofia",
+            "focus": "Focus",
             "exercises": [
-              {
-                "name": "Nome Esercizio",
-                "sets": 4,
-                "repsMin": 4,
-                "repsMax": 6,
-                "targetRir": 2,
-                "restSec": 180,
-                "notes": "Nota tecnica specifica, progressione prevista"
-              }
+              { "name": "Esercizio", "sets": 3, "repsMin": 8, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "Nota tecnica" }
             ]
           }
         ]
       },
       "nutritionPlan": {
-        "kcalTarget": 2400,
-        "proteinGPerKg": 2.0,
-        "carbsGPerKg": 3.5,
-        "fatGPerKg": 1.0,
-        "strategy": "Descrizione strategia nutrizionale con riferimento a metodi (p. es. carb periodization, nutrient timing)"
+        "kcalTarget": 2000,
+        "proteinGPerKg": 1.6,
+        "carbsGPerKg": 2.0,
+        "fatGPerKg": 0.8,
+        "strategy": "Strategia nutrizionale Titano-based"
       }
     }
   ]
@@ -163,22 +257,19 @@ Genera ESATTAMENTE questo JSON (nient'altro):
       messages: [{ role: 'user', content: systemPrompt }],
       temperature: 0.3,
       max_tokens: 4000,
+      response_format: { type: "json_object" }
     })
 
-    const raw = response.choices[0]?.message?.content ?? ''
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) return { error: 'Parse error' }
+    const data = JSON.parse(response.choices[0]?.message?.content || "{}")
 
-    const data = JSON.parse(match[0])
-
-    // Save goals
+    // Salvataggio Obiettivi
     if (data.goals?.length) {
       await prisma.athleteGoal.updateMany({
         where: { userId, isActive: true },
         data: { isActive: false }
       })
       await prisma.athleteGoal.createMany({
-        data: data.goals.map((g: { type: string; sport: string; description: string; targetValue: number; currentValue: number; unit: string; targetDate: string; priority: number }, i: number) => ({
+        data: data.goals.map((g: any, i: number) => ({
           userId,
           type: g.type,
           sport: g.sport || null,
@@ -187,32 +278,10 @@ Genera ESATTAMENTE questo JSON (nient'altro):
           currentValue: g.currentValue,
           unit: g.unit,
           targetDate: g.targetDate ? new Date(g.targetDate) : null,
-          priority: g.priority ?? (i + 1),
-          isActive: true,
-        }))
+        })),
       })
     }
-
-    // Create draft mesocycle with proposals
-    const today = new Date()
-    const endDate = new Date(today)
-    endDate.setDate(endDate.getDate() + 28)
-
-    await prisma.mesocycle.create({
-      data: {
-        userId,
-        name: `Piano ${new Date().toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}`,
-        startDate: today,
-        endDate,
-        status: 'DRAFT',
-        aiProposals: data.proposals,
-        generatedFor: data.goals,
-        planType,
-      }
-    })
-
-    return { success: true }
-  } catch (e) {
-    return { error: String(e) }
+  } catch {
+    return null
   }
 }

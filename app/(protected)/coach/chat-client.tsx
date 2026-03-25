@@ -31,27 +31,34 @@ function renderMarkdown(text: string) {
 
 export default function ChatClient() {
   const { data: session } = useSession()
-  const storageKey = `coach_chat_${session?.user?.id ?? ''}`
+  const userId = session?.user?.id ?? ''
+  const storageKey = `coach_chat_${userId}`
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  // Previene la sovrascrittura di localStorage durante l'idratazione iniziale
+  const [hydrated, setHydrated] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // ① Carica dalla localStorage non appena l'userId è disponibile
   useEffect(() => {
-    if (!session?.user?.id) return
+    if (!userId) return
     try {
       const saved = localStorage.getItem(storageKey)
       if (saved) setMessages(JSON.parse(saved))
-    } catch { /* corrupt storage — start fresh */ }
-  }, [session?.user?.id])
+    } catch { /* storage corrotto — ricomincia da capo */ }
+    setHydrated(true)
+  }, [userId, storageKey])
 
+  // ② Salva nella localStorage SOLO dopo l'idratazione iniziale, per non
+  //    sovrascrivere i messaggi precedenti con l'array vuoto iniziale
   useEffect(() => {
-    if (!session?.user?.id) return
+    if (!userId || !hydrated) return
     localStorage.setItem(storageKey, JSON.stringify(messages))
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, session?.user?.id])
+  }, [messages, userId, hydrated, storageKey])
 
   const send = async (text: string) => {
     if (!text.trim() || loading) return
@@ -71,7 +78,14 @@ export default function ChatClient() {
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
       let assistantMsg = ""
-      
+
+      if (!reader) {
+        // Caso raro: risposta senza body stream
+        setMessages(prev => [...prev, { role: "assistant", content: "Risposta non ricevuta. Riprova." }])
+        setLoading(false)
+        return
+      }
+
       // Placeholder per il messaggio dell'assistente che verrà popolato in streaming
       setMessages(prev => [...prev, { role: "assistant", content: "" }])
 

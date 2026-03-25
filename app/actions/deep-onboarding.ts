@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import Groq from 'groq-sdk'
 import { SportType, MesoStatus, SessionType } from '@prisma/client'
+import { titanProfiles, getTitansForObjective } from '@/lib/titans-db'
 
 export interface DeepOnboardingData {
   biologicalSex: string
@@ -107,17 +108,73 @@ export async function generateAITripleProposal() {
   const profile = await prisma.userProfile.findUnique({ where: { userId } })
   if (!profile) throw new Error("Profile not found")
 
+  // Select relevant Titans based on objective and sport
+  const relevantTitans = getTitansForObjective(profile.primaryGoal || 'fitness')
+    .concat(getTitansForObjective(profile.primarySport || 'palestra'))
+    .slice(0, 8) // Max 8 to keep prompt size manageable
+  
+  // Dedup by ID
+  const uniqueTitans = Array.from(new Set(relevantTitans.map(t => t.id)))
+    .map(id => relevantTitans.find(t => t.id === id))
+
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'missing' })
 
-  const prompt = `Sei un preparatore atletico d'élite. Genera 3 proposte di Mesociclo per questo atleta:
-  ${JSON.stringify(profile, null, 2)}
+  const prompt = `Sei un preparatore atletico d'élite. Genera 3 proposte di Mesociclo basate su una FUSIONE LOGICA e SINFRETICA delle metodologie dei "Titani" forniti.
   
-  REGOLE:
-  - Genera un JSON con "proposals" [3 opzioni].
-  - Ogni opzione deve avere: name, strategy, pros, cons, isRecommended, mesocycle (name, objectives, plan [days]), nutritionPlan.
-  - I dayLabel nel plan devono essere solo: A, B, C, D, V1, V2, OUTDOOR, OTHER.
-  - Adatta il piano agli infortuni citati (es. crociato).
-  `
+  LIBRERIA TITANI DISPONIBILE PER QUESTO ATLETA:
+  ${JSON.stringify(uniqueTitans.map(t => ({ 
+    id: t?.id, 
+    name: t?.name, 
+    discipline: t?.discipline, 
+    principles: t?.methodology.observablePrinciples,
+    loadRules: t?.load.rules
+  })), null, 2)}
+
+  DATI ATLETA:
+  ${JSON.stringify({
+    goal: profile.primaryGoal,
+    sport: profile.primarySport,
+    experience: profile.experienceLevel,
+    equipment: profile.equipmentLevel,
+    availability: profile.availableDays,
+    duration: profile.sessionDuration,
+    injuries: profile.injuriesList,
+    routine: profile.dailyRoutine
+  }, null, 2)}
+  
+  REGOLE TECNICHE DI GENERAZIONE:
+  1. HYBRID FUSION: Non limitarti a 1 o 2 Titani. Se l'atleta è multisport o ha obiettivi complessi (es. Forza + Endurance + Longevità), fondi TUTTE le metodologie necessarie (anche 5 o più) in un'unica visione coerente. 
+  2. SINERGIA LOGICA: La fusione deve avere senso fisiologico. Ad esempio, usa la Zona 2 di Attia/San Millán come base, ma integra la forza esplosiva di Bosco o la mobilità di McGill se il profilo lo richiede.
+  3. ADATTAMENTO REALE: Rispetta rigorosamente l'attrezzatura e la routine quotidiana dell'atleta.
+  4. QUALITÀ ASSOLUTA: La programmazione risultante deve essere la migliore possibile, bilanciata per evitare interferenze negative tra sistemi energetici.
+  
+  FORMATO JSON RICHIESTO:
+  {
+    "proposals": [
+      {
+        "id": 1,
+        "name": "Nome Strategia (es. 'Apex Hybrid: Longevità, Forza & Endurance')",
+        "titanIds": ["P51", "P18", "P48", "P34", "P06"], // Includi TUTTI i Titani usati per la fusione
+        "strategy": "Spiegazione tecnica della sinergia creata tra i diversi Titani",
+        "pros": [], "cons": [],
+        "isRecommended": true,
+        "mesocycle": {
+          "name": "...",
+          "objectives": "...",
+          "plan": [
+            { "dayLabel": "A", "focus": "...", "exercises": [{ "name": "...", "sets": 3, "repsMin": 8, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "..." }] }
+          ]
+        },
+        "nutritionPlan": {
+          "trainingDayKcal": 2000,
+          "enduranceDayKcal": 2200,
+          "restDayKcal": 1800,
+          "macros": { "p": 120, "c": 200, "f": 60 },
+          "strategy": "..."
+        }
+      }
+    ]
+  }`
 
   try {
     const completion = await groq.chat.completions.create({
@@ -140,6 +197,7 @@ export async function generateAITripleProposal() {
     revalidatePath('/plan')
     return { success: true, draftId: draft.id, proposals: res.proposals }
   } catch (e: any) {
+    console.error("Proposal Generation Error:", e)
     return { success: false, error: e.message }
   }
 }
@@ -219,16 +277,17 @@ export async function selectProposal(mesoId: string, optionId: number) {
           proteinG: Number(selected.nutritionPlan.macros?.p) || 150,
           carbsG: Number(selected.nutritionPlan.macros?.c) || 250,
           fatG: Number(selected.nutritionPlan.macros?.f) || 70,
-          isTrainingDay: d % 2 === 0
+          isTrainingDay: d % 2 === 0,
         }
       })
-      await tx.nutritionDay.createMany({ data: nutritionData, skipDuplicates: true })
+      if (nutritionData.length > 0) {
+        await tx.dailyNutritionTarget.createMany({ data: nutritionData, skipDuplicates: true }).catch(() => {})
+      }
     })
 
     revalidatePath('/plan')
-    revalidatePath('/nutrition')
     return { success: true }
   } catch (e: any) {
-    return { success: false, error: e.message }
+    return { success: false, error: (e as Error).message }
   }
 }

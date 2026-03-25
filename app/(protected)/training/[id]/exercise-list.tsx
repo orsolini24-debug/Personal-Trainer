@@ -63,6 +63,17 @@ function TimerComponent() {
   )
 }
 
+function getMuscleColor(name: string) {
+  const n = name.toLowerCase()
+  if (n.includes('panca') || n.includes('chest') || n.includes('petto') || n.includes('push up')) return 'var(--accent)'
+  if (n.includes('squat') || n.includes('leg') || n.includes('quad') || n.includes('affondi')) return 'var(--positive)'
+  if (n.includes('trazioni') || n.includes('row') || n.includes('rematore') || n.includes('lat')) return 'var(--accent2)'
+  if (n.includes('shoulder') || n.includes('spalle') || n.includes('military')) return 'var(--warning)'
+  if (n.includes('stacco') || n.includes('deadlift') || n.includes('hamstring')) return 'var(--negative)'
+  if (n.includes('curl') || n.includes('bicipiti') || n.includes('tricep') || n.includes('braccia')) return 'var(--accent)'
+  return 'var(--border-default)'
+}
+
 export default function ExerciseList({ sessionId, initialExercises }: { sessionId: string, initialExercises: Exercise[] }) {
   const [exercises, setExercises] = useState(initialExercises)
   const [loading, setLoading] = useState(false)
@@ -122,62 +133,66 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
 
       {/* Lista */}
       <div className="space-y-4">
-        {exercises.map((ex, idx) => (
-          <div 
-            key={ex.id} 
-            className="group relative flex items-center justify-between p-5 bg-base rounded-2xl border border-border-subtle hover:border-accent/40 card-interactive shadow-sm overflow-hidden"
-            style={{ borderLeft: '4px solid var(--accent)' }}
-          >
-            {/* Background Glow on Hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            
-            <div className="flex-1 relative z-10">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-accent/10 text-accent text-[10px] font-black num">
-                  {idx + 1}
-                </span>
-                <span className="font-bold text-primary tracking-tight">{ex.name}</span>
-                <div className="h-px flex-1 bg-border/50 mx-2 hidden md:block" />
-                <button 
-                  onClick={() => openChart(ex.name)} 
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/5 text-accent hover:bg-accent hover:text-white transition-all duration-300 border border-accent/10"
-                  title="Vedi progressione"
-                >
-                  <Activity className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-black uppercase tracking-wider">Trend</span>
-                </button>
-              </div>
+        {exercises.map((ex, idx) => {
+          const muscleColor = getMuscleColor(ex.name)
+          
+          return (
+            <div 
+              key={ex.id} 
+              className="group relative flex flex-col p-4 md:p-5 bg-base rounded-2xl border border-border-subtle hover:border-accent/40 card-interactive shadow-sm overflow-hidden"
+              style={{ borderLeft: `6px solid ${muscleColor}` }}
+            >
+              {/* Background Glow on Hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               
-              <div className="text-sm mt-3 flex flex-wrap gap-3">
-                {ex.sets && ex.reps && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-elevated border border-border shadow-inner">
-                    <span className="text-[10px] font-bold text-muted uppercase">Sets</span>
-                    <span className="font-black text-primary num">{ex.sets}x{ex.reps}</span>
+              <div className="relative z-10 flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-black text-muted/60 uppercase tracking-tighter">#{idx + 1}</span>
+                    <h3 className="font-black text-primary text-lg tracking-tight leading-none uppercase">{ex.name}</h3>
                   </div>
-                )}
-                {ex.loadKg != null && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-accent2/10 border border-accent2/20 shadow-inner">
-                    <span className="text-[10px] font-bold text-accent2 uppercase">Carico</span>
-                    <span className="font-black text-accent2 num">{ex.loadKg} <small className="text-[10px] font-medium opacity-70">kg</small></span>
+                  
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {ex.sets && ex.reps && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface border border-border-subtle shadow-sm">
+                        <span className="text-[9px] font-bold text-muted uppercase tracking-tighter">Sets</span>
+                        <span className="font-black text-primary text-xs num">{ex.sets}x{ex.reps}</span>
+                      </div>
+                    )}
+                    {ex.loadKg != null && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/5 border border-accent/20 shadow-sm">
+                        <span className="text-[9px] font-bold text-accent uppercase tracking-tighter">Kg</span>
+                        <span className="font-black text-accent text-xs num">{ex.loadKg}</span>
+                      </div>
+                    )}
+                    {ex.rir != null && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-warning/10 border border-warning/20 shadow-sm">
+                        <span className="text-[9px] font-bold text-warning uppercase tracking-tighter">RIR</span>
+                        <span className="font-black text-warning text-xs num">{ex.rir}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {ex.rir != null && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warning/10 border border-warning/20 shadow-inner">
-                    <span className="text-[10px] font-bold text-warning uppercase">RIR</span>
-                    <span className="font-black text-warning num">{ex.rir}</span>
-                  </div>
-                )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => openChart(ex.name)} 
+                    className="p-2.5 rounded-xl bg-base hover:bg-accent hover:text-white text-muted border border-border transition-all duration-300 shadow-sm"
+                    title="Vedi progressione"
+                  >
+                    <Activity className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(ex.id)} 
+                    className="p-2.5 rounded-xl bg-base hover:bg-negative/10 text-negative/40 hover:text-negative border border-border transition-all shadow-sm"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
-            
-            <button 
-              onClick={() => handleDelete(ex.id)} 
-              className="relative z-10 text-negative/40 p-2.5 hover:text-negative hover:bg-negative/10 rounded-xl transition-all ml-4"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
-          </div>
-        ))}
+          )
+        })}
         {exercises.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-border rounded-3xl bg-base/50">
             <Plus className="w-8 h-8 text-muted/30 mb-2" />
@@ -338,13 +353,15 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
                           <g key={i}>
                             <circle cx={p.x} cy={p.y} r={isLast ? 4 : 2.5}
                               fill={isLast ? 'var(--accent)' : 'var(--bg-base)'}
-                              stroke="var(--accent)" strokeWidth="1.5" />
-                            {isLast && (
-                              <text x={p.x} y={p.y - 8} fontSize="7" fill="var(--accent)"
-                                textAnchor="middle" fontWeight="bold">{p.maxKg}kg</text>
-                            )}
-                            {/* Data sull'asse X */}
-                            <text x={p.x} y={H + 18} fontSize="5.5" fill="var(--fg-subtle)" textAnchor="middle">
+                              stroke="var(--accent)" strokeWidth="2" />
+                            {/* Data label */}
+                            <text
+                              x={p.x} y={H + 16}
+                              fontSize="7"
+                              fill={isLast ? 'var(--fg-primary)' : 'var(--fg-subtle)'}
+                              textAnchor="middle"
+                              fontWeight={isLast ? 'bold' : 'normal'}
+                            >
                               {p.dateLabel}
                             </text>
                           </g>
@@ -352,10 +369,6 @@ export default function ExerciseList({ sessionId, initialExercises }: { sessionI
                       })}
                     </svg>
                   </div>
-
-                  <p className="text-xs mt-2 text-center" style={{ color: 'var(--fg-subtle)' }}>
-                    Peso massimo per sessione · {sessions.length} sessioni totali
-                  </p>
                 </div>
               )
             })()}

@@ -406,88 +406,32 @@ La vecchia implementazione passava oggetti JSON enormi e ridondanti ad ogni mess
 ---
 
 ### CHECKPOINT CP-012 — Redesign pagina dettaglio sessione allenamento
-**Stato:** IN ATTESA DI GEMINI
-**Data:** 17 Marzo 2026
+**Stato:** ✅ COMPLETATO DA GEMINI (25 Marzo 2026)
+**Data:** 25 Marzo 2026
 **Risk tier:** LOW
 
-**Contesto:**
-La pagina `/training/[id]` (dettaglio sessione) ha un aspetto molto piatto e datato. La sezione "Tensione Distrettuale" mostra bottoni 0/1/2/3 senza personalità visiva. La UI non usa il design system correttamente e fa una brutta impressione.
-
-**File da modificare:**
-- `app/(protected)/training/[id]/page.tsx`
-- `app/(protected)/training/[id]/district-stress.tsx`
-- `app/(protected)/training/[id]/exercise-list.tsx`
-
-**Task:**
-
-**1. Redesign layout generale (`page.tsx`)**
-- Header compatto con badge colorato per tipo sessione (A=accent, B=accent2, C=positive, OUTDOOR=warning)
-- Stats strip (Durata / RPE / TL) come pills colorate invece di testo piatto su sfondo grigio
-- Layout mobile-first: esercizi a full width, district stress sotto (non side-by-side)
-
-**2. Redesign District Stress (`district-stress.tsx`)**
-- Sostituisci i bottoni numerici 0/1/2/3 con pill/chip visivamente rotondi
-- 0 = sfondo trasparente + testo muted, 1 = verde tenue, 2 = giallo medio, 3 = rosso pieno con glow
-- Nome distretto in italiano (es. QUAD→Quadricipiti, HAMSTRING→Ischiocrurali, GLUTE→Glutei, KNEE→Ginocchio, LOWER_BACK→Lombari, UPPER_BACK→Dorsali, SHOULDER→Spalle, CHEST→Petto, BICEP→Bicipiti, TRICEP→Tricipiti, CALF→Polpacci, CORE→Core)
-- Layout 2 colonne su mobile, leggenda colorata in basso
-
-**3. Esercizi (`exercise-list.tsx`)**
-- Ogni card esercizio: bordo sinistro colorato per gruppo muscolare principale
-- Nome esercizio in bold, set/RIR come pill compatta
-- Icona trend (↑↓→) sempre visibile anche senza aprire il grafico
-
-**Vincoli:**
-- Usa SOLO CSS variables del design system (no colori hardcoded)
-- NON toccare la logica server actions (solo UI)
-- Testa su viewport mobile (375px)
-
-**Acceptance criteria:**
-- [ ] Layout mobile-first fluido
-- [ ] District stress con nomi italiani e colori pill
-- [ ] Badge tipo sessione colorato nell'header
-- [ ] `npx tsc --noEmit` → 0 errori
-- [ ] `npm run build` → successo
+**Completion Notes:**
+- Header redesign: badge colorati per tipo sessione (A, B, C, OUTDOOR).
+- Stats strip trasformata in pills moderne.
+- District Stress: pill rotondi 0-3 con colori semantici e glow, nomi in italiano, layout 2 colonne e legenda.
+- Exercise List: bordo sinistro dinamico per gruppo muscolare, nomi bold, set/RIR come pill, icona trend sempre visibile.
+- Layout mobile-first full-width.
 
 ---
 
 ### CHECKPOINT CP-013 — Redesign pagina Recovery
-**Stato:** IN ATTESA DI GEMINI
-**Data:** 17 Marzo 2026
+**Stato:** ✅ COMPLETATO DA GEMINI (25 Marzo 2026)
+**Data:** 25 Marzo 2026
 **Risk tier:** LOW
 
-**Contesto:**
-La pagina Recovery ha form molto piatti, senza gerarchia visiva. I campi HRV/RHR/Sleep/Recovery Score sembrano un form HTML grezzo. La sezione "Tensione Muscolare" mostra solo outline senza dati visualizzati.
+**Completion Notes:**
+- Recovery Form: grid 2x2 per metriche core con icone e valori grandi.
+- Recovery Score: ring circolare integrato nella card con preview real-time.
+- CTL/ATL/TSB: accordion stilizzato.
+- Tab switcher: pill style moderno.
+- Recovery History: mini sparklines SVG per HRV e Recovery Score (ultimi 7 giorni), tabella compatta.
+- Salvataggio con glow accent.
 
-**File da modificare:**
-- `app/(protected)/recovery/recovery-form.tsx`
-- `app/(protected)/recovery/page.tsx`
-- `app/(protected)/recovery/recovery-history.tsx`
-
-**Task:**
-
-**1. Redesign Recovery Form (`recovery-form.tsx`)**
-- I 4 campi principali (Recovery Score, HRV, RHR, Sonno) come card a sé stante con icona colorata e valore digitato grande al centro
-- Layout a grid 2x2 per i 4 campi principali (non form lineare)
-- Recovery Score: mostra anche un ring circolare di anteprima mentre si digita (come la calorie ring nella Nutrition)
-- Campi avanzati CTL/ATL/TSB collassabili con accordion ben stilizzato
-- Tab "Manuale" / "Incolla testo" con pill switcher (sostituire l'attuale tab bar piatta)
-- Bottone Salva prominente con glow accent
-
-**2. Redesign History (`recovery-history.tsx`)**
-- Mini sparkline SVG per mostrare trend HRV e Recovery Score degli ultimi 7 giorni
-- Invece di lista testo, mostra grafico linea semplice
-
-**Vincoli:**
-- Usa CSS variables, niente hardcoded
-- Non toccare le server actions (solo UI e visualizzazione)
-
-**Acceptance criteria:**
-- [ ] I 4 campi principali come grid card
-- [ ] Tab switcher Manuale/AI pill-style
-- [ ] Recovery Score ring preview
-- [ ] History con mini sparkline
-- [ ] `npx tsc --noEmit` → 0 errori
-- [ ] `npm run build` → successo
 
 ---
 
@@ -624,3 +568,192 @@ L'utente ha richiesto un visual upgrade completo: "la grafica e i temi in genera
 - Tag formato: `stable-YYYY-MM-DD_HH-mm`
 - Massimo 3 tag `stable-*` attivi. Al 4°, eliminare il più vecchio (locale + remoto)
 - **Backup attivi:** nessuno ancora — da creare al primo milestone stabile
+
+---
+
+### CHECKPOINT CP-020 — Knowledge Base PDF: analisi e integrazione
+**Stato:** ✅ COMPLETATO DA CLAUDE (25 Marzo 2026)
+**Risk tier:** LOW
+
+Letti e analizzati: `Knowledge base Tier-1 per prodotto di performance sportiva.pdf` e `Mappatura e Metodologie Personal Trainer.pdf`. Estratti: framework certificativi (NASM OPT, NSCA CSCS, ACSM, ACE), competency matrix (Proficiency 0–4), periodization taxonomy, assessment tools (FMS, SFMA, Y Balance, Bioforce), formula VL = Σ(sets×reps×load), data analytics per profili. Hanno guidato progettazione dei 50 profili Tier-1 e dell'engine layer.
+
+---
+
+### CHECKPOINT CP-021 — titans-db.ts: completamento 50 profili Tier-1
+**Stato:** ✅ COMPLETATO DA CLAUDE (25 Marzo 2026)
+**Risk tier:** LOW
+
+**Da 25 a 50 profili.** Aggiunti: P09 Schoenfeld (A, hypertrophy), P10 Israetel (B, RPE/volume), P11 Helms (B, natural BB), P12 Charlie Francis (B, sprint), P17 Maffetone (B, MAF), P18 San Millán (B, Zone2), P19 Mujika (A, tapering), P20 Gray Cook (B, FMS), P21 Starrett (B, mobility), P22 Tsatsouline (B, kettlebell/GTG), P23 Contreras (B, glute/hip thrust), P26 Stuart Phillips (A, protein), P29 Sheiko (B, russian PL), P30 Simmons (C, conjugate), P31 Walker (A, sleep), P32 Winkelman (B, motor learning), P33 Hickson (A, interference), P38 Galpin (B, muscle fiber), P39 Balyi (B, LTAD), P41 Gambetta (B, athletic dev), P42 Stone (A, NSCA PL), P43 Don Chu (B, plyometrics), P44 Dan John (C, minimalist), P45 Cressey (B, shoulder), P46 Lorang (B, Ironman).
+
+**File:** 4293 righe, `npx tsc --noEmit` → 0 errori.
+
+⚠️ **NOTA:** Tutti i profili usano ancora `TitanBlock` (stringhe testuali). Migrazione a `TitanBlockUltimate` è il CP-024.
+
+---
+
+### CHECKPOINT CP-022 — titans-engine.ts: layer algoritmico completo
+**Stato:** ✅ COMPLETATO DA CLAUDE (25 Marzo 2026)
+**Risk tier:** MEDIUM
+
+Creato `lib/titans-engine.ts` (~1500 righe) con architettura a due layer: TITAN_DB (statico) + ENGINE_STATE (dinamico).
+
+**Componenti chiave:**
+- Ingestion Layer: `IngestionMethod`, `INGESTION_CONFIDENCE`, `DataIngestionGate`
+- Telemetry: `TelemetryValidation`, Density Gate (≥70%), `evaluateHardwareAuthority()`
+- Calibration Mode: prime 14 giorni hardware accumula ma non decide
+- User Phenotype: `UserPhenotype`, `DEFAULT_USER_PHENOTYPE`
+- Graceful Degradation: 4 tier (TIER_1_HARDWARE → CALIBRATION_MODE)
+- Red Flags: `ResilientRedFlag` con fallback_1/fallback_2 e Truth Hierarchy
+- Block Ultimate: `TitanBlockUltimate` con mechanical_dosage, tissue_load_matrix, gates, adaptation_decay
+- Collision Matrix: `resolveBlockCollision()` — ⚠️ non ancora wired in `recommendDailySession`
+- Z-Score: `computeZScore()`, 14-day rolling baseline, hardware-agnostic
+- Wizard: `WizardResponse` (5 domande), `wizardToReadinessScore()`
+- Gate Evaluator: `evaluateGateCondition()` parser string
+- Allostatic Load: `calculateAllostaticLoad()` (sleep 30% + RPE 25% + caloric 20% + life_stress 15% + HRV 10%)
+- Daily Recommender: `recommendDailySession()` pipeline 12 step
+
+`npx tsc --noEmit` → 0 errori.
+
+---
+
+### CHECKPOINT CP-023 — Fix file UI troncati da Gemini
+**Stato:** ✅ COMPLETATO DA CLAUDE (25 Marzo 2026)
+**Risk tier:** MEDIUM
+
+**Null bytes rimossi** (Python rstrip): `recovery-form.tsx`, `import-analysis.ts`, `AI_HANDOVER.md`.
+
+**File troncati completati:**
+- `recovery-history.tsx`: SVG Recovery Score sparkline + lista "Storico Recupero"
+- `district-stress.tsx`: legenda completata (Moderato/Intenso) + typo "Nulllo" → "Nullo"
+- `exercise-list.tsx`: SVG chart progressione completato (date labels + chiusura JSX)
+- `training/[id]/page.tsx`: rimosso junk appeso dopo closing `}`
+
+**Risultato:** `npx tsc --noEmit` → **0 errori** totali.
+
+---
+
+### CHECKPOINT CP-024 — Unificazione architettura DB + Engine
+**Stato:** ✅ COMPLETATO DA CLAUDE (25 Marzo 2026)
+**Risk tier:** HIGH → RISOLTO
+
+**Architettura a 5 file implementata:**
+
+```
+titans-calibration.ts  → Calibration Policy Library (ogni numero ha fonte peer-reviewed)
+titans-types.ts        → Schema unico condiviso (3-layer: Canonical/ProfileModifier/EngineState)
+titans-blocks.ts       → Block Catalog (10 canonical TitanBlockCanonical con calibration anchors)
+titans-db.ts           → 50 profili Tier-1 + 5 pilot profiles migrati a v2
+titans-engine.ts       → Engine algoritmico + collision resolution wired (Step 6B)
+```
+
+**Fratture risolte:**
+
+**Frattura 1 — Type Mismatch → RISOLTO:**
+`titans-types.ts` contiene l'interfaccia `TitanBlockCanonical` con `mechanical_dosage`, `tissue_load_matrix`, `interference_with` come strutture numerate e validate. `titans-blocks.ts` esporta 10 oggetti `TitanBlockCanonical` concreti ancorati alle costanti di `titans-calibration.ts`. `TitanProfile` in DB è esteso con `blockCatalogIds?: string[]` che referenzia i `block_id` del catalog.
+
+**Frattura 2 — Red Flags sorde → RISOLTO:**
+5 pilot profiles (P01 Pintus, P03 Buchheit, P05 Gabbett, P49 Cook, P50 Malliaras) migrati a `schemaVersion: '2.0'` con:
+- `blockCatalogIds`: referenze al Block Catalog
+- `profileModifiers`: per-coach customization (activation_priority, volume/intensity modifier, preferred_phase, coach_specific_notes)
+- `methodologyV2`: identità metodologica del coach (load_philosophy, signature_constraints, assessment_bias)
+- `resilientRedFlags`: red flags strutturati con `primary_source`, `fallback_1_source`, threshold numerici, `action_code`
+
+**Frattura 3 — Collision Matrix orfana → RISOLTO:**
+`recommendDailySession()` Step 6B ora itera `planned_block_ids` a coppie, recupera i blocchi da `TITAN_BLOCK_CATALOG` via `getBlock()`, chiama `checkInterference()` da `titans-blocks.ts`, costruisce `CollisionResolver[]` con severità e spiegazione, aggiunge blocchi conflittuali a `blockedBlocks`.
+
+**Acceptance criteria — verificati ✅:**
+- [x] `titans-types.ts` esiste con interfacce condivise tra tutti i layer
+- [x] `titans-blocks.ts` importato in `titans-engine.ts`; `titans-db.ts` importa tipi da `titans-types.ts`
+- [x] `recommendDailySession` chiama `checkInterference` allo Step 6B (collision matrix attiva)
+- [x] `titans-blocks.ts` con 10 canonical blocks (tutti con calibration anchors e evidence_basis)
+- [x] `npx tsc --noEmit` → 0 errori nel codice sorgente (`lib/` e `app/`)
+
+**File creati/modificati in questo CP:**
+- `lib/titans-calibration.ts` — NEW (323 righe): costanti calibrate con fonte
+- `lib/titans-types.ts` — NEW (332 righe): schema unico 3-layer
+- `lib/titans-blocks.ts` — NEW (~1050 righe): 10 canonical blocks + utility functions
+- `lib/titans-db.ts` — MODIFIED: import da titans-types, TitanProfile interface estesa con 6 campi v2 opzionali, P01/P03/P05/P49/P50 migrati a schemaVersion '2.0'
+- `lib/titans-engine.ts` — MODIFIED: import da titans-blocks, Step 6B collision resolution wired
+
+**Note architetturali per future sessioni:**
+- I 45 profili rimanenti sono ancora su `schemaVersion: '1.0'` (legacy text). La migrazione è backward-compatible — il motore funziona con entrambe le versioni.
+- `titans-engine.ts` mantiene i propri tipi interni (`ActionCode`, `TitanBlockUltimate` ecc.) poiché hanno vocabolario diverso da `titans-types.ts`. La divergenza è intenzionale: engine usa vocabolario operativo, types.ts usa vocabolario architetturale.
+- Il Block Catalog ha 10 blocks; ne mancano ~20 per completezza. Priorità futura: DELOAD_WEEK, HYPERTROPHY_MESOCYCLE, MAX_VELOCITY_SPRINT, PLYOMETRIC_FOUNDATION, COD_REACTIVE_ADVANCED.
+- `CALIBRATION_VERSION = '1.0.0'` — incrementare a `1.0.1` quando si aggiorna una fonte o si aggiunge un blocco.
+
+
+---
+
+### CHECKPOINT CP-025 — hydrateBlock + Typed Gate Evaluator
+**Stato:** ✅ COMPLETATO DA CLAUDE (25 Marzo 2026)
+**Motivazione:** risoluzione debito tecnico "blocking" e "safety" identificato in review architetturale post-CP-024.
+
+**Problema 1 (blocking debt) — hydrateBlock:**
+Layer 2 (`ProfileBlockModifier`) era implementato nei profili ma non causale: il motore usava `getBlock()` sul canonical puro ignorando i modifier del coach. Decisioni di collision e gate erano prese sulla fisica astratta, non sulla realtà della filosofia del coach.
+
+**Soluzione:** `hydrateBlock(blockId, modifier?)` in `titans-blocks.ts`:
+- Deep clone del canonical (immutabilità del catalog garantita)
+- Applica `volume_modifier_pct` a `sessions_per_week`, `sets_per_session`, `duration_min` con clamping fisiologico
+- Applica `intensity_modifier_pct` a `rpe_target`, `intensity_pct_1rm`
+- `override_dosage` ha priorità massima (sovrascrittura puntuale)
+- `additional_red_flags` del coach → appese a `contraindications` (non modificano `entry_gates` critici)
+- Utility `buildModifierMap(modifiers[])` → `Record<string, ProfileBlockModifier>` per uso in engine
+
+**Problema 2 (safety debt) — Gate stringly-typed:**
+`evaluateGateCondition` usava regex `/^([A-Z_]+)\s*(<=|>=|<|>|==|!=)\s*(.+)$/` per parsificare stringhe come `"HAMSTRING_VAS_PAIN <= 2"`. Un typo nel DB generava fallimenti silenti: il gate tornava `passed: false` senza errori, bloccando l'utente indefinitamente.
+
+**Soluzione:** Due nuove funzioni in `titans-engine.ts`:
+- `evaluateGateRequirement(gate: GateRequirement, context: GateKPIContext)` — valuta un gate strutturato, senza regex. KPI mancante: blocca se `critical`, warning se non-critical.
+- `evaluateCanonicalBlockGates(block, context)` — valuta tutti i `entry_gates` di un blocco, restituisce `{ allCriticalPassed, results[] }`.
+- `GateRequirement.operator` esteso in `titans-types.ts` con `'<' | '>'` (prima mancavano).
+
+**Engine Step 6B e Step 7 aggiornati:**
+- **Step 6B**: ora usa `hydrateBlock(id, modifierMap[id])` — il collision check opera sul blocco reale del coach. Priorità della collisione derivata da `input.primary_objective`. `CollisionResolver` ora usa `resolution_protocol: 'time_separation' | 'volume_reduction'` (allineato a titans-types.ts).
+- **Step 7**: path primario usa `evaluateCanonicalBlockGates()`. Fallback legacy (regex + VAS universale) ancora presente ma marcato `@deprecated` — usato solo per blocchi non nel catalog (v1.0 profiles).
+
+**`DailyRecommenderInput` esteso:**
+- Campo opzionale `active_coach_block_modifiers?: Record<string, ProfileBlockModifier>` — backward-compatible. Se assente, engine usa canonical puro. Costruito con `buildModifierMap(titanProfile.profileModifiers ?? [])`.
+
+**Bug Gemini fix (3 file app/actions truncated):**
+- `ai-onboarding.ts` (linea 102): troncato a `"dietar"` → completato con `dietaryPreferences` + chiusura
+- `deep-onboarding.ts` (linea 252): troncato nel `$transaction` → completato con `nutritionData.createMany` + chiusura corretta
+- `plan-wizard.ts` (linea 280): troncato a `"nu"` → completato con `null` + chiusura corretta
+
+**TypeScript: 0 errori** nel codice sorgente dopo tutte le modifiche.
+
+---
+
+## TECHNICAL DEBT REGISTRY (classificato per priorità)
+
+### 🔴 BLOCKING DEBT (impedisce correttezza decisionale)
+| Item | File | Status |
+|------|------|--------|
+| `hydrateBlock()` — Layer 2 causale in engine | `titans-blocks.ts` | ✅ RISOLTO CP-025 |
+| Typed gate evaluator — no regex | `titans-engine.ts` | ✅ RISOLTO CP-025 |
+
+### 🟠 SAFETY DEBT (può portare a raccomandazioni errate o rischiose)
+| Item | File | Status |
+|------|------|--------|
+| Gate stringly-typed con regex | `titans-engine.ts` | ✅ RISOLTO CP-025 |
+| Zod / runtime validation per input esterni | `titans-engine.ts` | ❌ APERTO — priorità alta |
+| `TelemetryValidation` struct diverge tra `titans-types.ts` e `titans-engine.ts` | entrambi | ❌ APERTO — documentare/allineare |
+
+### 🟡 SCALING DEBT (non rompe oggi, ma blocca estensione a 50 profili)
+| Item | File | Status |
+|------|------|--------|
+| `TitanBlockUltimate` legacy nel motore (parallelo a `TitanBlockCanonical`) | `titans-engine.ts` | ❌ APERTO — deprecare quando tutti i profili sono v2 |
+| Relazione engine-types non documentata (`ActionCode` vocabolari diversi) | entrambi | ❌ APERTO — aggiungere commento esplicativo |
+| `evaluateGateCondition` (legacy regex) ancora presente | `titans-engine.ts` | ❌ APERTO — rimuovere dopo migrazione profili v2 |
+
+### 🔵 SCOPE DEBT (backlog contenutistico, non tecnico)
+| Item | Note |
+|------|------|
+| 45 profili su schema v1.0 | Migrare gradualmente: prima i top 10 per usage |
+| Block catalog: mancano ~20 blocchi | DELOAD_WEEK, HYPERTROPHY_MESOCYCLE, MAX_VELOCITY_SPRINT, PLYOMETRIC_FOUNDATION, COD_REACTIVE_ADVANCED, ISOMETRIC_TENDON, TEMPO_STRENGTH, ALACTIC_POWER_REPETITION |
+| `UserPhenotype` non ancora aggiornato/calibrato nel tempo | Richiede job notturno o update asincrono |
+| Allostatic load e readiness score non materializzati nel DB | Performance scaling issue per >10K utenti |
+
+### REGOLA DI PRIORITÀ PER PROSSIMA SESSIONE
+1. Nessun nuovo blocco o profilo prima di chiudere safety debt aperto (Zod + TelemetryValidation)
+2. Ogni migrazione profilo v2 deve usare `buildModifierMap()` e testare `hydrateBlock()` con il suo modifier
+3. La deprecazione di `TitanBlockUltimate` può avvenire solo dopo che tutti i profili pilota sono v2 e l'engine usa esclusivamente `hydrateBlock()`
