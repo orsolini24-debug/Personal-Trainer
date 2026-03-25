@@ -202,8 +202,8 @@ export interface ProfileBlockModifier {
   activation_priority:      1 | 2 | 3 | 4 | 5  // 1=core, 5=optional
   progression_bias:         ProgressionBias
   volume_modifier_pct:      number           // -50 a +50 rispetto al canonical
-  intensity_modifier_pct:   number           // -20 a +20 rispetto al canonical
-  preferred_phase:          'preseason' | 'in_season' | 'off_season' | 'any'
+  intensity_modifier_pct?:  number           // -20 a +20 rispetto al canonical
+  preferred_phase?:         'preseason' | 'in_season' | 'off_season' | 'any'
   override_dosage?:         Partial<MechanicalDosage>  // override puntuale
   coach_specific_notes:     string           // perché questo coach usa questo blocco così
   additional_red_flags?:    OverrideRule[]   // trigger extra specifici del coach
