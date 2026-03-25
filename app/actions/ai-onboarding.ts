@@ -89,8 +89,9 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
       ageYears: Math.max(1, Number(raw.ageYears) || 25),
       weightKg: Math.max(1, Number(raw.weightKg) || 70),
       heightCm: Math.max(1, Number(raw.heightCm) || 175),
-      primarySport: validateSport(raw.primarySport || 'OTHER'),
-      mainSports: Array.isArray(raw.mainSports) ? raw.mainSports.map(validateSport) : [validateSport(raw.primarySport || 'OTHER')],
+      hasProfessionalData: false,
+      primarySport: validateSport(raw.primarySport || 'PALESTRA'),
+      mainSports: Array.isArray(raw.mainSports) ? raw.mainSports.map(validateSport) : [validateSport(raw.primarySport || 'PALESTRA')],
       sportLevels: raw.sportLevels || {},
       experienceLevel: raw.experienceLevel || 'BEGINNER',
       trainingYears: Number(raw.trainingYears) || 0,
@@ -99,8 +100,19 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
       isFollowingPlan: !!raw.isFollowingPlan,
       currentPlanText: raw.currentPlanText || "",
       targetEvent: raw.targetEvent || "",
-      dietaryPreferences: raw.dietaryPreferences || [],
+      dietaryType: raw.dietaryType || raw.dietaryPreferences?.[0] || "OMNIVORE",
+      eatingRoutine: raw.eatingRoutine || { mealsPerDay: 3, snacks: true, intermittentFasting: false },
+      favoriteFoods: raw.favoriteFoods || [],
+      dislikedFoods: raw.dislikedFoods || [],
+      allergies: raw.allergies || [],
+      dailyRoutine: raw.dailyRoutine || "",
+      availableDays: Number(raw.availableDays) || 3,
+      sessionDuration: Number(raw.sessionDuration) || 60,
+      equipmentLevel: raw.equipmentLevel || "GYM",
+      preferredSplit: raw.preferredSplit || "FULL_BODY",
+      injuriesList: raw.injuriesList || [],
     }
+    return sanitized
   } catch {
     return null
   }
