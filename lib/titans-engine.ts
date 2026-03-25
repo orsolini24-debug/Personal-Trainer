@@ -540,6 +540,8 @@ export interface CollisionResolver {
    * Es: obiettivo STRENGTH → il blocco forza mantiene il 100%, lo sprint si degrada.
    */
   priority_block_id: string
+  sacrificed_block_id?: string
+  separation_hours?: number
   /** Descrizione della risoluzione applicata per log/debug */
   resolution_explanation: string
 }
@@ -1672,7 +1674,7 @@ export function recommendDailySession(
           collisionResolutions.push({
             active_block_ids:       [idA, idB],
             conflict_detected:      true,
-            resolution_protocol:    conflict.severity === 'critical' ? 'time_separation' : 'volume_reduction',
+            resolution_protocol:    conflict.severity === 'critical' ? 'SEPARATE_BY_48H' : 'DEGRADE_SECONDARY',
             priority_block_id:      priorityId,
             sacrificed_block_id:    sacrificedId,
             separation_hours:       conflict.severity === 'critical' ? 48 : 24,

@@ -4575,6 +4575,8 @@ export const titanProfiles: TitanProfile[] = [
       {
         block_id:               'HIIT_TEAM_SPORT',
         activation_priority:    2,
+        progression_bias:       'intensity_first',
+        volume_modifier_pct:    0,
         override_dosage: {
           rpe_target: [9, 10], // Attia vuole intensità massima per spingere il VO2max
         },
@@ -4684,12 +4686,13 @@ export const titanProfiles: TitanProfile[] = [
         block_id:               'BODYWEIGHT_STRENGTH',
         activation_priority:    1,
         progression_bias:       'intensity_first', // Kavadlo preferisce cambiare leva invece di fare 1000 rep
+        volume_modifier_pct:    0,
         coach_specific_notes:   'Enfasi sulla tensione totale (irradiation). Passare alla variante successiva appena si raggiungono 12 rep pulite.',
       },
     ],
     methodologyV2: {
       load_philosophy:        'Padronanza del peso corporeo attraverso progressioni di leva e tensione muscolare costante.',
-      preferred_progression:  'leverage_shift',
+      preferred_progression:  'intensity_first',
       block_selection_logic:  'Push → Pull → Squat → Core. Ogni sessione include una componente di abilità (balance/isometria).',
       assessment_bias:        ['Pullup rep max', 'Pistol squat quality', 'L-sit duration'],
       signature_constraints:  ['Niente pesi esterni se non strettamente necessario', 'ROM completo obbligatorio', 'Training "all\'aperto" preferito'],
@@ -4791,12 +4794,14 @@ export const titanProfiles: TitanProfile[] = [
       {
         block_id:               'AEROBIC_POWER',
         activation_priority:    1,
+        progression_bias:       'autoregulatory',
+        volume_modifier_pct:    0,
         coach_specific_notes:   'Jamieson usa il Cardiac Power per alzare il soffitto aerobico senza affaticamento neurale eccessivo.',
       },
     ],
     methodologyV2: {
       load_philosophy:        'Sviluppo dei sistemi energetici guidato dalla fisiologia (HRV) per massimizzare la performance in sport intermittenti.',
-      preferred_progression:  'readiness_guided',
+      preferred_progression:  'autoregulatory',
       block_selection_logic:  'Costruzione base (CO) → Sviluppo Alactico → Capacità Lattica (solo peak). HRV domina la scelta quotidiana.',
       assessment_bias:        ['HRV', 'RHR', '12-min Run test', 'HR Recovery'],
       signature_constraints:  ['Niente HIIT su giorni HRV Rossi', 'Aerobic base come prerequisito per anaerobico', 'Conditioning integrato con sessioni tecniche MMA'],
@@ -4897,12 +4902,14 @@ export const titanProfiles: TitanProfile[] = [
       {
         block_id:               'HRV_RECOVERY',
         activation_priority:    1,
+        progression_bias:       'volume_first',
+        volume_modifier_pct:    0,
         coach_specific_notes:   'Wim Hof usa l\'esposizione al freddo come booster per il recupero e il tono vagale.',
       },
     ],
     methodologyV2: {
       load_philosophy:        'Utilizzo dello stress ormetico controllato per potenziare la resilienza biologica e mentale.',
-      preferred_progression:  'duration_first',
+      preferred_progression:  'volume_first',
       block_selection_logic:  'Respiro al mattino → Freddo post-doccia → Mindset costante. Integrato come routine di supporto.',
       assessment_bias:        ['Retention time', 'Cold tolerance', 'HRV baseline'],
       signature_constraints:  ['MAI respirazione in acqua', 'Freddo separato da ipertrofia pesante', 'Ascolto del feedback corporeo sopra ogni tabella'],
@@ -4996,12 +5003,14 @@ export const titanProfiles: TitanProfile[] = [
       {
         block_id:               'SKILL_ACQUISITION',
         activation_priority:    1,
+        progression_bias:       'intensity_first',
+        volume_modifier_pct:    0,
         coach_specific_notes:   'Kotler usa la sfida tecnica costante (4% rule) per indurre lo stato di Flow durante l\'apprendimento.',
       },
     ],
     methodologyV2: {
       load_philosophy:        'Ottimizzazione neurobiologica della performance attraverso l\'induzione dello stato di Flow e il ciclo di recupero.',
-      preferred_progression:  'complexity_first',
+      preferred_progression:  'intensity_first',
       block_selection_logic:  'Deep Training (Sfida) → Release (Distacco) → Active Recovery. Ogni sessione è "distraction-free".',
       assessment_bias:        ['Flow time', 'Hooper Index', 'Skill complexity level'],
       signature_constraints:  ['Niente smartphone durante il training', 'Recupero attivo obbligatorio post-sessione flow', 'Sfida regolata sul 4% sopra il livello attuale'],

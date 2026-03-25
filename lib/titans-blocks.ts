@@ -1315,7 +1315,7 @@ export function hydrateBlock(
   // ── Applica intensity_modifier_pct ─────────────────────────────────────
   // Modifica: rpe_target, intensity_pct_1rm
   // Limiti: RPE 1–10, intensità 30–100%
-  const intFactor = 1 + (modifier.intensity_modifier_pct / 100)
+  const intFactor = 1 + ((modifier.intensity_modifier_pct ?? 0) / 100)
   applyTupleFactor(hydrated.mechanical_dosage, 'rpe_target',        intFactor, [1, 10])
   applyTupleFactor(hydrated.mechanical_dosage, 'intensity_pct_1rm', intFactor, [30, 100])
 
