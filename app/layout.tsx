@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="it" data-theme="cobalt">
+    <html lang="it" data-theme="performance">
       <body className={`${inter.variable} ${sora.variable} ${inter.className}`}>
         <Providers>{children}</Providers>
       </body>

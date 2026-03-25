@@ -84,26 +84,135 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
     KNEE:       'var(--fg-subtle)',
   }
 
+  // Group by primary muscle (only when no district filter active)
+  type ExDef = typeof exercises[0]
+  const grouped: { district: District; label: string; color: string; items: ExDef[] }[] = []
+
+  if (!districtFilter && !q && !equipFilter) {
+    const DISTRICT_ORDER: District[] = ['CHEST', 'SHOULDER', 'TRICEP', 'BICEP', 'UPPER_BACK', 'LOWER_BACK', 'CORE', 'QUAD', 'HAMSTRING', 'GLUTE', 'CALF', 'KNEE']
+    DISTRICT_ORDER.forEach(d => {
+      const items = exercises.filter(ex => ex.primaryMuscles.includes(d))
+      if (items.length > 0) grouped.push({ district: d, label: DISTRICT_LABELS[d], color: districtColors[d], items })
+    })
+    // Catch-all for exercises not in any group above
+    const allGrouped = grouped.flatMap(g => g.items.map(i => i.id))
+    const ungrouped = exercises.filter(ex => !allGrouped.includes(ex.id))
+    if (ungrouped.length > 0) grouped.push({ district: 'CORE', label: 'Altri', color: 'var(--fg-muted)', items: ungrouped })
+  }
+
+  const renderExCard = (ex: ExDef, idx: number) => (
+    <details
+      key={ex.id}
+      className="rounded-2xl overflow-hidden group transition-all"
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        animationDelay: `${idx * 40}ms`,
+      }}>
+      <summary className="flex items-center gap-3 px-4 py-3.5 cursor-pointer list-none select-none">
+        {/* Thumb or equipment icon */}
+        {ex.mediaUrl
+          ? <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-bg-elevated">
+              <img src={ex.mediaUrl} alt={ex.nameIt || ex.name} className="w-full h-full object-cover" />
+            </div>
+          : <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${equipColors[ex.equipment]}`}>
+              <Dumbbell className="w-5 h-5" />
+            </div>
+        }
+
+        <div className="flex-1 min-w-0">
+          <p className="font-black text-sm truncate" style={{ color: 'var(--fg-primary)' }}>
+            {ex.nameIt || ex.name}
+          </p>
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <span className="text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide"
+              style={{ background: 'var(--bg-elevated)', color: 'var(--fg-muted)' }}>
+              {EQUIPMENT_LABELS[ex.equipment]}
+            </span>
+            {ex.isCompound && (
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide"
+                style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>
+                Multi
+              </span>
+            )}
+          </div>
+        </div>
+
+        <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" style={{ color: 'var(--fg-subtle)' }} />
+      </summary>
+
+      <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        {/* Muscle chips */}
+        <div className="flex flex-wrap gap-1.5 pt-2">
+          {ex.primaryMuscles.map(m => (
+            <span key={m} className="text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider"
+              style={{ background: `color-mix(in srgb, ${districtColors[m]} 12%, transparent)`, color: districtColors[m] }}>
+              {DISTRICT_LABELS[m]}
+            </span>
+          ))}
+          {ex.secondaryMuscles.map(m => (
+            <span key={m} className="text-[9px] font-medium px-2 py-1 rounded-lg uppercase tracking-wider"
+              style={{ background: 'var(--bg-elevated)', color: 'var(--fg-subtle)' }}>
+              {DISTRICT_LABELS[m]}
+            </span>
+          ))}
+        </div>
+
+        {(ex.descriptionIt || ex.description) && (
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
+            {ex.descriptionIt || ex.description}
+          </p>
+        )}
+
+        {(ex.tipsIt || ex.tips) && (
+          <div className="px-3 py-2.5 rounded-xl"
+            style={{ background: 'color-mix(in srgb, var(--positive) 8%, var(--bg-elevated))', border: '1px solid rgba(52,211,153,0.2)' }}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles className="w-3 h-3" style={{ color: 'var(--positive)' }} />
+              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Coach tip</span>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--fg-primary)' }}>{ex.tipsIt || ex.tips}</p>
+          </div>
+        )}
+
+        {ex.mediaUrls && ex.mediaUrls.length > 0 && (
+          <div className="grid grid-cols-2 gap-2">
+            {ex.mediaUrls.slice(0, 2).map((url, i) => (
+              <div key={i} className="rounded-xl overflow-hidden aspect-[4/3]">
+                <img src={url} alt={`${ex.name} ${i}`} className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </details>
+  )
+
   return (
-    <div className="space-y-10 max-w-5xl mx-auto pb-24 animate-page">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 stagger">
-        <div>
-          <p className="divider-label mb-2">Database</p>
-          <h1 className="text-5xl font-black tracking-tighter text-accent-gradient">
+    <div className="max-w-2xl mx-auto pb-24">
+
+      {/* ── Header ── */}
+      <div className="px-4 pt-6 pb-4">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'var(--accent)' }}>
+          Database
+        </p>
+        <div className="flex items-end justify-between">
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--fg-primary)' }}>
             Libreria Esercizi
           </h1>
-          <p className="mt-2 text-fg-muted font-bold text-sm opacity-60">
-            <span className="num text-accent">{exercises.length}</span> movimenti catalogati per la tua performance.
-          </p>
+          <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--fg-muted)' }}>
+            {exercises.length}
+          </span>
         </div>
       </div>
 
-      <div className="animate-rise-up" style={{ animationDelay: '100ms' }}>
+      {/* ExerciseTranslator */}
+      <div className="px-4 mb-4">
         <ExerciseTranslator />
       </div>
 
-      {/* Filtri client-side */}
-      <div className="animate-rise-up" style={{ animationDelay: '200ms' }}>
+      {/* Filters */}
+      <div className="px-4 mb-5">
         <LibraryFilters
           districtLabels={DISTRICT_LABELS}
           equipmentLabels={EQUIPMENT_LABELS}
@@ -113,101 +222,39 @@ export default async function ExerciseLibraryPage({ searchParams }: Props) {
         />
       </div>
 
-      {/* Grid esercizi */}
+      {/* Exercises */}
       {exercises.length === 0 ? (
-        <div className="text-center py-24 rounded-[3rem] glass-sm border border-border/50 border-dashed mesh-bg animate-blur-in">
-          <div className="w-20 h-20 rounded-3xl glass flex items-center justify-center mx-auto mb-6 opacity-20">
-            <Dumbbell className="w-10 h-10" />
-          </div>
-          <p className="text-fg-muted font-black tracking-tight uppercase text-xs opacity-50">Nessun esercizio trovato per questi filtri.</p>
+        <div className="mx-4 text-center py-16 rounded-2xl"
+          style={{ background: 'var(--bg-surface)', border: '1px dashed var(--border-default)' }}>
+          <Dumbbell className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--fg-subtle)', opacity: 0.4 }} />
+          <p className="text-sm font-bold" style={{ color: 'var(--fg-muted)' }}>Nessun esercizio trovato.</p>
+        </div>
+      ) : grouped.length > 0 ? (
+        /* Grouped view */
+        <div className="px-4 space-y-6">
+          {grouped.map(({ label, color, items }) => (
+            <div key={label}>
+              {/* Category header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-2 h-5 rounded-full shrink-0" style={{ background: color }} />
+                <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--fg-muted)' }}>
+                  {label}
+                </p>
+                <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
+                <span className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--fg-subtle)' }}>
+                  {items.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {items.map((ex, idx) => renderExCard(ex, idx))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 stagger">
-          {exercises.map((ex, idx) => (
-            <details
-              key={ex.id}
-              className="rounded-[2.5rem] overflow-hidden group transition-all duration-500 card-interactive surface-accent"
-              style={{ animationDelay: `${idx * 50}ms` }}
-            >
-              <summary className="flex items-center gap-5 px-6 py-5 cursor-pointer list-none select-none">
-                {/* Equipment badge */}
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border-2 transition-transform group-hover:scale-110 ${equipColors[ex.equipment]}`}>
-                  <Dumbbell className="w-5 h-5" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <p className="font-black text-lg text-primary tracking-tight group-hover:text-accent transition-colors">
-                      {ex.nameIt || ex.name}
-                    </p>
-                    {ex.isCompound && (
-                      <span className="badge badge-accent scale-90 origin-left animate-glow-breathe">
-                        Multiarticolare
-                      </span>
-                    )}
-                  </div>
-                  {/* Primary muscles */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {ex.primaryMuscles.map(m => (
-                      <span key={m} className="text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border"
-                        style={{ background: `${districtColors[m]}15`, color: districtColors[m], borderColor: `${districtColors[m]}30` }}>
-                        {DISTRICT_LABELS[m]}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="w-10 h-10 rounded-2xl glass-sm flex items-center justify-center text-fg-subtle group-hover:btn-primary transition-all">
-                  <ChevronDown className="w-5 h-5 shrink-0 transition-transform group-open:rotate-180" />
-                </div>
-              </summary>
-
-              <div className="px-6 pb-8 pt-2 space-y-6 animate-blur-in">
-                <div className="h-px w-full bg-border-subtle" />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-[1.5rem] glass-sm surface-accent border border-border/40">
-                    <p className="text-[10px] uppercase font-black text-fg-subtle tracking-widest mb-1.5 opacity-60">Attrezzatura</p>
-                    <p className="text-sm font-black text-primary tracking-tight">{EQUIPMENT_LABELS[ex.equipment]}</p>
-                  </div>
-                  <div className="p-4 rounded-[1.5rem] glass-sm surface-accent border border-border/40">
-                    <p className="text-[10px] uppercase font-black text-fg-subtle tracking-widest mb-1.5 opacity-60">Livello</p>
-                    <p className="text-sm font-black text-primary tracking-tight">{ex.difficulty}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="divider-label text-[9px]">Esecuzione Tecnica</div>
-                  <div className="text-xs leading-relaxed text-fg-muted glass-sm p-5 rounded-[2rem] border border-border/40 italic opacity-80">
-                    {ex.descriptionIt || ex.description || "Nessuna istruzione dettagliata disponibile."}
-                  </div>
-                </div>
-
-                {(ex.tipsIt || ex.tips) && (
-                  <div className="text-xs leading-relaxed p-5 rounded-[2rem] surface-accent border border-positive/30 relative overflow-hidden mesh-bg">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkles size={14} className="text-positive" />
-                      <span className="font-black uppercase tracking-widest text-[10px] text-positive">Coach Insights</span>
-                    </div>
-                    <span className="text-fg-primary font-bold opacity-80 leading-relaxed block">{ex.tipsIt || ex.tips}</span>
-                  </div>
-                )}
-
-                {ex.mediaUrls && ex.mediaUrls.length > 0 && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {ex.mediaUrls.map((url, i) => (
-                      <div key={i} className="rounded-[2rem] overflow-hidden border-2 border-border/50 aspect-[3/4] relative group/img glass-heavy shadow-2xl">
-                        <img src={url} alt={`${ex.name} ${i}`} className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110" />
-                        <div className="absolute bottom-4 left-4 px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest glass shadow-xl" style={{ color: 'var(--fg-primary)' }}>
-                          Pos. {i === 0 ? 'Start' : 'End'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </details>
-          ))}
+        /* Flat search results */
+        <div className="px-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {exercises.map((ex, idx) => renderExCard(ex, idx))}
         </div>
       )}
     </div>

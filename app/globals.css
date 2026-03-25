@@ -350,6 +350,26 @@
   color-scheme: light;
 }
 
+/* ── T9: PERFORMANCE (BuiltDifferent-inspired · Warm-dark + Gold) ── */
+[data-theme="performance"], [data-theme="performance-dark"] {
+  --bg-base:    #09090A; --bg-surface: #0F0F10; --bg-elevated: #1A1A1B; --bg-input: #0F0F10; --bg-sidebar: #060607;
+  --fg-primary: #F5F0E8; --fg-muted: #888480; --fg-subtle: #444240;
+  --accent:     #F5C200; --accent-dim: rgba(245,194,0,0.15); --accent-on: #000000;
+  --accent2:    #D4A200; --accent2-dim: rgba(212,162,0,0.15);
+  --positive:   #34D399; --positive-dim: rgba(52,211,153,0.12);
+  --negative:   #F87171; --negative-dim: rgba(248,113,113,0.12);
+  --warning:    #FB923C; --warning-dim: rgba(251,146,60,0.12);
+  --border-default: rgba(255,255,255,0.08); --border-subtle: rgba(255,255,255,0.04); --border-strong: rgba(245,194,0,0.25);
+  --sidebar-active-border: #F5C200;
+  --glow-accent: rgba(245,194,0,0.40); --glow-positive: rgba(52,211,153,0.35); --glow-negative: rgba(248,113,113,0.35);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.5);
+  --shadow-lg: 0 20px 48px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.5);
+  --shadow-xl: 0 40px 80px rgba(0,0,0,0.8), 0 16px 32px rgba(0,0,0,0.55);
+  --background: var(--bg-base); --foreground: var(--fg-primary);
+  color-scheme: dark;
+}
+
 /* ================================================================
    TYPOGRAPHY — Variable font · Tabular nums · Optical sizing
    ================================================================ */

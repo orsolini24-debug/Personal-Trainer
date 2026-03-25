@@ -16,17 +16,18 @@ import { Session } from 'next-auth'
 const navItems = [
   { name: 'Dashboard',  href: '/dashboard',         icon: LayoutDashboard, exact: false },
   { name: 'Training',   href: '/training',          icon: Dumbbell,        exact: true  },
-  { name: 'Calendario', href: '/calendar',          icon: CalendarDays,    exact: false },
   { name: 'Nutrition',  href: '/nutrition',         icon: Utensils,        exact: false },
-  { name: 'Recovery',   href: '/recovery',          icon: HeartPulse,      exact: false },
   { name: 'Coach',      href: '/coach',             icon: MessageCircle,   exact: false },
+  { name: 'Recovery',   href: '/recovery',          icon: HeartPulse,      exact: false },
   { name: 'Body',       href: '/body',              icon: Activity,        exact: false },
+  { name: 'Calendario', href: '/calendar',          icon: CalendarDays,    exact: false },
   { name: 'Plan',       href: '/plan',              icon: Calendar,        exact: false },
   { name: 'Libreria',   href: '/training/library',  icon: BookOpen,        exact: false },
 ]
 
-const PRIMARY_NAV = navItems.slice(0, 4)
-const MORE_NAV = navItems.slice(4)
+// 5 primary tabs for mobile bottom nav
+const PRIMARY_NAV = navItems.slice(0, 5)
+const MORE_NAV = navItems.slice(5)
 
 function isActive(item: typeof navItems[0], pathname: string) {
   return item.exact
@@ -351,10 +352,10 @@ export default function ProtectedLayout({ children, session }: { children: React
         <SidebarContent pathname={pathname} session={session} onHelp={() => setShowHelp(true)} />
       </div>
 
-      {/* Mobile: hamburger button */}
+      {/* Mobile: hamburger button — hidden on mobile since we have tab bar, only shows on tablet if needed */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-xl"
+        className="hidden fixed top-4 left-4 z-50 p-2 rounded-xl"
         style={{
           background: 'var(--bg-elevated)',
           border: '1px solid var(--border-default)',
@@ -412,7 +413,7 @@ export default function ProtectedLayout({ children, session }: { children: React
           style={{
             height: 'calc(3.25rem + env(safe-area-inset-top, 0px))',
             paddingTop: 'env(safe-area-inset-top, 0px)',
-            paddingLeft: '4rem',
+            paddingLeft: '1rem',
             paddingRight: '1rem',
             borderBottom: '1px solid var(--border-subtle)',
             backdropFilter: 'blur(40px) saturate(160%)',
@@ -446,96 +447,60 @@ export default function ProtectedLayout({ children, session }: { children: React
         </main>
       </div>
 
-      {/* Mobile Bottom Nav — iOS 2026 pill tab bar */}
+      {/* Mobile Bottom Nav — 5-tab pill bar */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-30"
         style={{
-          background: 'color-mix(in srgb, var(--bg-sidebar) 92%, transparent)',
+          background: 'color-mix(in srgb, var(--bg-sidebar) 94%, transparent)',
           borderTop: '1px solid var(--border-subtle)',
-          backdropFilter: 'blur(48px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(48px) saturate(180%)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          backdropFilter: 'blur(48px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+          paddingBottom: 'env(safe-area-inset-bottom, 4px)',
         }}
       >
-        <div className="flex items-stretch justify-around px-2 pt-2 pb-1">
+        <div className="flex items-center justify-around px-1 pt-1.5 pb-0.5" style={{ gap: '2px' }}>
           {PRIMARY_NAV.map((item) => {
             const active = isActive(item, pathname)
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-center gap-1 flex-1"
-                style={{ color: active ? 'var(--accent)' : 'var(--fg-subtle)' }}
+                className="flex flex-col items-center flex-1 transition-all active:scale-95"
+                style={{ color: active ? 'var(--accent)' : 'var(--fg-subtle)', gap: '3px' }}
               >
-                {/* Pill behind icon when active */}
-                <div
-                  style={{
-                    padding: '5px 16px',
-                    borderRadius: '12px',
-                    background: active
-                      ? 'color-mix(in srgb, var(--accent) 14%, var(--bg-elevated))'
-                      : 'transparent',
-                    transition: 'all 220ms cubic-bezier(0.16,1,0.3,1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <item.icon size={21} strokeWidth={active ? 2.3 : 1.7} />
+                {/* Solid pill on active — BuiltDifferent-style */}
+                <div style={{
+                  width: '100%',
+                  maxWidth: '60px',
+                  padding: '6px 0',
+                  borderRadius: '14px',
+                  background: active ? 'var(--accent)' : 'transparent',
+                  transition: 'all 250ms cubic-bezier(0.16,1,0.3,1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: active ? `0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent)` : 'none',
+                }}>
+                  <item.icon
+                    size={20}
+                    strokeWidth={active ? 2.4 : 1.6}
+                    style={{ color: active ? 'var(--accent-on)' : 'inherit', transition: 'color 200ms' }}
+                  />
                 </div>
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: active ? 700 : 500,
-                    letterSpacing: '0.02em',
-                    lineHeight: 1,
-                    paddingBottom: '4px',
-                  }}
-                >
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: active ? 800 : 500,
+                  letterSpacing: active ? '0.04em' : '0.02em',
+                  lineHeight: 1,
+                  paddingBottom: '4px',
+                  color: active ? 'var(--accent)' : 'var(--fg-subtle)',
+                  transition: 'all 200ms',
+                }}>
                   {item.name}
                 </span>
               </Link>
             )
           })}
-
-          {/* More button */}
-          {(() => {
-            const moreActive = MORE_NAV.some((item) => isActive(item, pathname))
-            return (
-              <button
-                onClick={() => setMoreOpen(true)}
-                className="flex flex-col items-center gap-1 flex-1"
-                style={{ color: moreActive ? 'var(--accent)' : 'var(--fg-subtle)' }}
-              >
-                <div
-                  style={{
-                    padding: '5px 16px',
-                    borderRadius: '12px',
-                    background: moreActive
-                      ? 'color-mix(in srgb, var(--accent) 14%, var(--bg-elevated))'
-                      : 'transparent',
-                    transition: 'all 220ms cubic-bezier(0.16,1,0.3,1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <MoreHorizontal size={21} strokeWidth={1.7} />
-                </div>
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: moreActive ? 700 : 500,
-                    letterSpacing: '0.02em',
-                    lineHeight: 1,
-                    paddingBottom: '4px',
-                  }}
-                >
-                  Altro
-                </span>
-              </button>
-            )
-          })()}
         </div>
       </nav>
     </div>

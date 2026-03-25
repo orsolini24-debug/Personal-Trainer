@@ -77,22 +77,47 @@ export async function getDashboardData() {
   monday.setUTCDate(diff)
   monday.setUTCHours(0, 0, 0, 0)
 
-  const [completedSessions, activePlan] = await Promise.all([
+  const [completedSessions, activePlan, weekSessionsWithDates, recentPRs, weightHistory] = await Promise.all([
     prisma.workoutSession.count({
-      where: {
-        userId,
-        date: { gte: monday, lte: new Date() }
-      }
+      where: { userId, date: { gte: monday, lte: new Date() } }
     }),
     prisma.workoutPlan.findFirst({
       where: { userId, isActive: true },
       select: { daysPerWeek: true }
-    })
+    }),
+    prisma.workoutSession.findMany({
+      where: { userId, date: { gte: monday, lte: new Date() } },
+      select: { date: true, type: true },
+      orderBy: { date: 'asc' },
+    }),
+    prisma.workoutSet.findMany({
+      where: {
+        exercise: { workoutSession: { userId } },
+        isPR: true,
+        loggedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+      select: { weightKg: true, repsActual: true, exercise: { select: { name: true } } },
+      take: 5,
+    }).catch(() => []),
+    prisma.biometricLog.findMany({
+      where: { userId, weightKg: { not: null } },
+      orderBy: { date: 'desc' },
+      take: 8,
+      select: { date: true, weightKg: true },
+    }),
   ])
 
   const sessionsTarget = activePlan?.daysPerWeek ?? 5
   const streakValue = String(completedSessions)
   const streakUnit = `/ ${sessionsTarget} sessioni`
+
+  // Weight delta vs 7 days ago
+  const currentWeight = weightHistory[0]?.weightKg ?? null
+  const olderWeight = weightHistory.find(w => {
+    const diff = (today.getTime() - new Date(w.date).getTime()) / (1000 * 60 * 60 * 24)
+    return diff >= 5
+  })?.weightKg ?? null
+  const weightDelta = currentWeight && olderWeight ? Math.round((currentWeight - olderWeight) * 10) / 10 : null
 
   return {
     userName: session.user.name?.split(' ')[0] || 'Atleta',
@@ -115,6 +140,16 @@ export async function getDashboardData() {
     goals,
     streakValue,
     streakUnit,
+    weekSessionDates: weekSessionsWithDates.map(s => s.date.toISOString()),
+    weekSessionsCount: completedSessions,
+    weekSessionsTarget: sessionsTarget,
+    recentPRs: recentPRs.map(pr => ({
+      exerciseName: (pr.exercise as { name: string }).name,
+      weightKg: pr.weightKg,
+      repsActual: pr.repsActual,
+    })),
+    currentWeight,
+    weightDelta,
     lastReport: lastReport ? {
       date: lastReport.date.toISOString(),
       content: lastReport.content.slice(0, 150) + (lastReport.content.length > 150 ? '...' : '')

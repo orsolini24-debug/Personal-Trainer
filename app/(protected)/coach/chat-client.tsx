@@ -141,65 +141,97 @@ export default function ChatClient() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 min-h-0 custom-scrollbar">
 
-        {/* Empty state */}
+        {/* Empty state — BD-style coach intro card */}
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center gap-8 animate-blur-in">
-            <div className="text-center">
-              <div
-                className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 mesh-bg animate-glow-breathe"
-                style={{ border: '1px solid var(--accent)' }}
-              >
-                <Brain className="w-10 h-10" style={{ color: 'var(--accent)' }} />
+          <div className="h-full flex flex-col items-center justify-center gap-6 px-4 animate-blur-in">
+            {/* Coach card */}
+            <div className="w-full max-w-sm rounded-3xl overflow-hidden"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+              {/* Top accent bar */}
+              <div className="h-1" style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent2), transparent)' }} />
+              <div className="p-5">
+                <div className="flex items-center gap-4 mb-4">
+                  {/* Coach avatar */}
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 relative"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+                      boxShadow: '0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent)',
+                    }}>
+                    <Brain className="w-7 h-7" style={{ color: 'var(--accent-on)' }} />
+                    {/* Online dot */}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                      style={{ background: 'var(--positive)', border: '2px solid var(--bg-elevated)' }}>
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-lg font-black tracking-tight" style={{ color: 'var(--fg-primary)' }}>REI</p>
+                    <p className="text-[11px] font-bold" style={{ color: 'var(--accent)' }}>Coach AI · Online</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--fg-muted)' }}>Performance & Nutrizione</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
+                  Ciao! Sono REI, il tuo coach AI. Analizzo i tuoi dati biometrici, allenamenti e nutrizione per guidarti verso i tuoi obiettivi.
+                </p>
               </div>
-              <h2 className="font-black text-2xl tracking-tight text-accent-gradient">Coach AI</h2>
-              <p className="text-sm mt-2 opacity-70 max-w-[240px] mx-auto leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
-                Analizzo i tuoi dati biometrici, allenamenti e nutrizione per guidarti.
-              </p>
             </div>
-            <div className="w-full max-w-sm grid grid-cols-1 gap-2.5">
-              <p className="divider-label text-[9px] mb-1">Suggerimenti</p>
+
+            {/* Quick questions */}
+            <div className="w-full max-w-sm space-y-2">
+              <p className="text-[10px] font-black uppercase tracking-widest px-1" style={{ color: 'var(--fg-subtle)' }}>
+                Domande frequenti
+              </p>
               {SUGGESTED.map((s, i) => (
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="group w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs text-left transition-all animate-rise-up card-interactive"
-                  style={{ animationDelay: `${i * 70}ms` }}
-                >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 glass-sm group-hover:bg-accent group-hover:text-white transition-colors">
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                  <span className="font-semibold opacity-80 group-hover:opacity-100">{s}</span>
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all active:scale-98"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-subtle)',
+                    animationDelay: `${i * 60}ms`,
+                  }}>
+                  <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
+                  <span className="text-sm font-semibold" style={{ color: 'var(--fg-primary)' }}>{s}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Message list */}
+        {/* Message list — BD-style bubbles */}
         {messages.map((m, i) => (
-          <div key={i} className={`flex gap-3 md:gap-4 ${m.role === 'user' ? 'flex-row-reverse' : ''} animate-slide-up`}>
-            <div
-              className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 mt-1 shadow-md ${m.role === 'user' ? 'btn-primary' : 'glass surface-accent'}`}
-            >
-              {m.role === 'user'
-                ? <User className="w-4 h-4" />
-                : <Brain className="w-4 h-4 text-accent" />
-              }
+          <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'} animate-slide-up`}>
+            {/* Avatar */}
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+              style={m.role === 'user'
+                ? { background: 'var(--accent)', color: 'var(--accent-on)' }
+                : { background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', color: 'var(--accent)' }
+              }>
+              {m.role === 'user' ? <User className="w-4 h-4" /> : <Brain className="w-4 h-4" />}
             </div>
+            {/* Bubble */}
             <div
-              className={`px-5 py-3.5 max-w-[88%] text-sm leading-relaxed shadow-lg ${
-                m.role === 'user' 
-                ? 'btn-primary rounded-[20px_4px_20px_20px]' 
-                : 'glass-sm rounded-[4px_20px_20px_20px] surface-accent border-subtle'
-              }`}
+              className="px-4 py-3 max-w-[82%] text-sm leading-relaxed"
+              style={m.role === 'user'
+                ? {
+                    background: 'var(--accent)',
+                    color: 'var(--accent-on)',
+                    borderRadius: '18px 4px 18px 18px',
+                    fontWeight: 500,
+                  }
+                : {
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--fg-primary)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: '4px 18px 18px 18px',
+                  }
+              }
             >
               {m.role === 'assistant' ? (
-                <div
-                  className="prose-sm"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }}
-                />
+                <div className="prose-sm" dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
               ) : (
-                <span className="whitespace-pre-wrap font-medium tracking-tight">{m.content}</span>
+                <span className="whitespace-pre-wrap">{m.content}</span>
               )}
             </div>
           </div>

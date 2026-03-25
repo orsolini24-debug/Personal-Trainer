@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronRight, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import KPITracker from '@/app/components/KPITracker'
 import { getDashboardData } from '@/app/actions/dashboard'
 
@@ -30,8 +30,31 @@ export default function DashboardPage() {
     goals,
     streakValue,
     streakUnit,
+    weekSessionDates,
+    weekSessionsCount,
+    weekSessionsTarget,
+    recentPRs,
+    currentWeight,
+    weightDelta,
     lastReport,
   } = data
+
+  // Build week strip
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const weekStart = new Date(today)
+  const dow = today.getDay()
+  const diff = dow === 0 ? -6 : 1 - dow
+  weekStart.setDate(today.getDate() + diff)
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart)
+    d.setDate(weekStart.getDate() + i)
+    return d
+  })
+  const DAY_LABELS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
+  const sessionDateTimes = (weekSessionDates ?? []).map(iso => {
+    const d = new Date(iso); d.setHours(0,0,0,0); return d.getTime()
+  })
 
   // Recovery color — only applies when data exists
   const hasScore = score > 0
@@ -85,6 +108,118 @@ export default function DashboardPage() {
           )}
         </div>
       </header>
+
+      {/* ── Week Strip ── */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(7,1fr)',
+        gap: '6px', marginBottom: '12px',
+      }}>
+        {weekDays.map((day, idx) => {
+          const isToday = day.getTime() === today.getTime()
+          const hasSession = sessionDateTimes.includes(day.getTime())
+          const isFuture = day > today
+          return (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+              <span style={{
+                fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
+                color: isToday ? 'var(--accent)' : 'var(--fg-subtle)',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>
+                {DAY_LABELS[idx]}
+              </span>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '11px', fontWeight: 800,
+                background: isToday
+                  ? 'var(--accent)'
+                  : hasSession
+                    ? 'color-mix(in srgb, var(--positive) 18%, var(--bg-elevated))'
+                    : 'var(--bg-elevated)',
+                border: isToday ? 'none'
+                  : hasSession ? '1px solid rgba(52,211,153,0.35)'
+                  : '1px solid var(--border-subtle)',
+                color: isToday ? 'var(--accent-on)' : hasSession ? 'var(--positive)' : 'var(--fg-subtle)',
+                opacity: isFuture && !isToday ? 0.4 : 1,
+              }}>
+                {hasSession && !isToday ? '✓' : day.getDate()}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Week progress + Weight delta chips ── */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+        {/* Workout count chip */}
+        <div style={{
+          flex: 1, padding: '10px 14px', borderRadius: '14px',
+          background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            Settimana
+          </span>
+          <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums' }}>
+            {weekSessionsCount ?? 0}
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--fg-muted)' }}>
+              /{weekSessionsTarget ?? 5}
+            </span>
+          </span>
+        </div>
+
+        {/* Weight delta chip */}
+        {currentWeight != null && (
+          <div style={{
+            flex: 1, padding: '10px 14px', borderRadius: '14px',
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Peso
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                {currentWeight}
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--fg-muted)' }}>kg</span>
+              </span>
+              {weightDelta != null && weightDelta !== 0 && (
+                <span style={{
+                  fontSize: '11px', fontWeight: 800,
+                  color: weightDelta < 0 ? 'var(--positive)' : 'var(--warning)',
+                }}>
+                  {weightDelta > 0 ? `+${weightDelta}` : weightDelta}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Recent PRs ── */}
+      {recentPRs && recentPRs.length > 0 && (
+        <div style={{
+          padding: '12px 16px', borderRadius: '16px', marginBottom: '12px',
+          background: 'color-mix(in srgb, var(--accent) 6%, var(--bg-surface))',
+          border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
+        }}>
+          <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px', fontFamily: "'JetBrains Mono', monospace" }}>
+            🏆 Record questa settimana
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {recentPRs.map((pr, i) => (
+              <div key={i} style={{
+                padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
+                background: 'color-mix(in srgb, var(--accent) 12%, var(--bg-elevated))',
+                border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
+                color: 'var(--fg-primary)',
+              }}>
+                {pr.exerciseName} {pr.weightKg ? `${pr.weightKg}kg` : ''}{pr.repsActual ? `×${pr.repsActual}` : ''}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════
           RECOVERY — full-width hero band
