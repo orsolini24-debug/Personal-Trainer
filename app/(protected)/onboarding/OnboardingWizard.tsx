@@ -69,10 +69,10 @@ export default function OnboardingWizard({ userName, embedded = false }: { userN
     setIsFinishing(true)
     const res = await extractProfileData(chatHistory)
 
-    if ('success' in res && res.success) {
+    if (res && 'success' in res && res.success) {
       router.push('/dashboard')
     } else {
-      const errorMsg = 'error' in res ? res.error : "Errore sconosciuto"
+      const errorMsg = (res && 'error' in res) ? res.error : "Errore sconosciuto"
       alert("Errore durante la finalizzazione: " + errorMsg)
       setIsFinishing(false)
     }
