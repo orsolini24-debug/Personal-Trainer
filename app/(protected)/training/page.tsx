@@ -94,11 +94,6 @@ export default async function TrainingPage() {
     else label = `${weeksAgo} settimane fa`
     groups.push({ label, sessions: sess })
   })
-  groups.sort((a, b) => {
-    const wa = groupMap.get(groups.indexOf(a)) ?? 0
-    return wa - (groupMap.get(groups.indexOf(b)) ?? 0)
-  })
-  // Re-sort properly
   const sortedGroups: SessionGroup[] = []
   Array.from(groupMap.entries()).sort((a, b) => a[0] - b[0]).forEach(([weeksAgo, sess]) => {
     let label: string
