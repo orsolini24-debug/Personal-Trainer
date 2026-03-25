@@ -72,7 +72,15 @@ export type IngestionMethod =
   | 'MANUAL_TYPED_ENTRY'
 
 export type SensorType = 'ECG_CHEST_STRAP' | 'OPTICAL_WRIST_OR_RING' | 'UNKNOWN_GENERIC'
-export type ActionCode = 'FULL_STOP' | 'REDUCE_LOAD' | 'MONITOR_CLOSELY' | 'PROCEED'
+export type ActionCode = 
+  | 'FULL_STOP' 
+  | 'REDUCE_LOAD' 
+  | 'REDUCE_INTENSITY'
+  | 'SUBSTITUTE_LOWER_INTENSITY'
+  | 'MONITOR_CLOSELY' 
+  | 'PROCEED'
+  | 'FULL_REST'
+  | 'BLOCKED_PAIN'
 
 // ─── LAYER 1: CANONICAL BLOCK ──────────────────────────────────────────────
 // "La fisica dell'allenamento" — indipendente dal coach
@@ -262,14 +270,14 @@ export interface DegradationState {
 export interface ResilientRedFlag {
   // Truth Hierarchy: pain veto > mechanical performance > hardware telemetry
   primary_source:          'pain_vas' | 'mechanical_performance' | 'hrv_zscore' | 'wizard' | 'allostatic_load'
-  fallback_1_source:       'pain_vas' | 'mechanical_performance' | 'hrv_zscore' | 'wizard' | 'allostatic_load'
+  fallback_1_source?:      'pain_vas' | 'mechanical_performance' | 'hrv_zscore' | 'wizard' | 'allostatic_load'
   fallback_2_source?:      'pain_vas' | 'mechanical_performance' | 'hrv_zscore' | 'wizard' | 'allostatic_load'
   condition:               string    // human-readable
   threshold:               number    // per primary_source
-  fallback_1_threshold:    number
+  fallback_1_threshold?:   number
   fallback_2_threshold?:   number
   action_code:             ActionCode
-  confidence_penalty:      number    // 0–1, riduce il confidence score del sistema
+  confidence_penalty?:     number    // 0–1, riduce il confidence score del sistema
   ui_explanation:          string    // mostrato all'utente
 }
 
