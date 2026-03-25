@@ -77,7 +77,7 @@ export async function getDashboardData() {
   monday.setUTCDate(diff)
   monday.setUTCHours(0, 0, 0, 0)
 
-  const [completedSessions, activePlan, weekSessionsWithDates, recentPRs, weightHistory] = await Promise.all([
+  const [completedSessions, activePlan, weekSessionsWithDates, weightHistory] = await Promise.all([
     prisma.workoutSession.count({
       where: { userId, date: { gte: monday, lte: new Date() } }
     }),
@@ -90,15 +90,6 @@ export async function getDashboardData() {
       select: { date: true, type: true },
       orderBy: { date: 'asc' },
     }),
-    prisma.workoutSet.findMany({
-      where: {
-        exercise: { workoutSession: { userId } },
-        isPR: true,
-        loggedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-      },
-      select: { weightKg: true, repsActual: true, exercise: { select: { name: true } } },
-      take: 5,
-    }).catch(() => []),
     prisma.biometricLog.findMany({
       where: { userId, weightKg: { not: null } },
       orderBy: { date: 'desc' },
@@ -106,6 +97,7 @@ export async function getDashboardData() {
       select: { date: true, weightKg: true },
     }),
   ])
+  const recentPRs: { exerciseName: string; weightKg: number | null; repsActual: number | null }[] = []
 
   const sessionsTarget = activePlan?.daysPerWeek ?? 5
   const streakValue = String(completedSessions)
@@ -143,11 +135,7 @@ export async function getDashboardData() {
     weekSessionDates: weekSessionsWithDates.map(s => s.date.toISOString()),
     weekSessionsCount: completedSessions,
     weekSessionsTarget: sessionsTarget,
-    recentPRs: recentPRs.map(pr => ({
-      exerciseName: (pr.exercise as { name: string }).name,
-      weightKg: pr.weightKg,
-      repsActual: pr.repsActual,
-    })),
+    recentPRs,
     currentWeight,
     weightDelta,
     lastReport: lastReport ? {
