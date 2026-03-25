@@ -207,7 +207,7 @@ export default function DashboardPage() {
             🏆 Record questa settimana
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {recentPRs.map((pr, i) => (
+            {recentPRs.map((pr: { exerciseName: string; weightKg: number | null; repsActual: number | null }, i: number) => (
               <div key={i} style={{
                 padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
                 background: 'color-mix(in srgb, var(--accent) 12%, var(--bg-elevated))',
