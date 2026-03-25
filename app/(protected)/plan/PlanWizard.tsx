@@ -62,10 +62,11 @@ export default function PlanWizard() {
         setLoading(false)
         setIsGenerating(true)
         const result = await generatePlanFromWizard(newMessages, planType)
-        if ('success' in result && result.success) {
+        if (result && 'success' in result && result.success) {
           router.refresh()
         } else {
-          alert('Errore generazione piano: ' + ('error' in result ? result.error : 'Sconosciuto'))
+          const errorMsg = (result && 'error' in result) ? result.error : 'Sconosciuto'
+          alert('Errore generazione piano: ' + errorMsg)
           setIsGenerating(false)
         }
         return
