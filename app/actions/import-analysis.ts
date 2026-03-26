@@ -4,29 +4,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import Groq from "groq-sdk"
-import { MesoStatus, SessionType } from "@prisma/client"
-
-// ── Validazione dayLabel ──────────────────────────────────────────────────────
-const VALID_DAY_LABELS: SessionType[] = ['A', 'B', 'C', 'D', 'V1', 'V2', 'OUTDOOR']
-
-const DAY_NAME_MAP: Record<string, SessionType> = {
-  'LUNEDÌ': 'A', 'LUNEDI': 'A', 'MONDAY': 'A', 'MON': 'A', 'LUN': 'A',
-  'MARTEDÌ': 'B', 'MARTEDI': 'B', 'TUESDAY': 'B', 'TUE': 'B', 'MAR': 'B',
-  'MERCOLEDÌ': 'C', 'MERCOLEDI': 'C', 'WEDNESDAY': 'C', 'WED': 'C', 'MER': 'C',
-  'GIOVEDÌ': 'D', 'GIOVEDI': 'D', 'THURSDAY': 'D', 'THU': 'D', 'GIO': 'D',
-  'VENERDÌ': 'V1', 'VENERDI': 'V1', 'FRIDAY': 'V1', 'FRI': 'V1', 'VEN': 'V1',
-  'SABATO': 'V2', 'SATURDAY': 'V2', 'SAT': 'V2', 'SAB': 'V2',
-  'DOMENICA': 'OUTDOOR', 'SUNDAY': 'OUTDOOR', 'SUN': 'OUTDOOR', 'DOM': 'OUTDOOR',
-  'GIORNO 1': 'A', 'GIORNO 2': 'B', 'GIORNO 3': 'C', 'GIORNO 4': 'D', 'GIORNO 5': 'V1',
-  'DAY 1': 'A', 'DAY 2': 'B', 'DAY 3': 'C', 'DAY 4': 'D', 'DAY 5': 'V1',
-}
-
-function sanitizeDayLabel(raw: string | undefined, index: number): SessionType {
-  const val = (raw ?? '').toString().toUpperCase().trim()
-  if (VALID_DAY_LABELS.includes(val as SessionType)) return val as SessionType
-  if (DAY_NAME_MAP[val]) return DAY_NAME_MAP[val]
-  return VALID_DAY_LABELS[index] ?? 'A'
-}
+import { MesoStatus } from "@prisma/client"
+import { sanitizeDayLabel } from "@/lib/plan-utils"
 import { importNutritionPlanFromText, parseNutritionPlanFromText, type NutritionPlanData } from "./import-nutrition"
 import { schedulePlanForWeek } from "./plans"
 
