@@ -4,8 +4,30 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { SportType } from '@prisma/client'
-import { buildSyntheticChatHistory } from './plan-setup'
 import { generatePlanFromWizard } from './plan-wizard'
+import type { BasicProfileData, GeneratePlanData } from './plan-setup'
+
+function buildSyntheticChatHistory(
+  profile: BasicProfileData,
+  genData: GeneratePlanData
+): Array<{ role: 'user' | 'assistant'; content: string }> {
+  const sportsList = profile.sports.join(', ') || 'non specificato'
+  const sexLabel = profile.biologicalSex === 'FEMALE' ? 'donna' : 'uomo'
+  const userSummary = [
+    `Sono un ${sexLabel} di ${profile.ageYears} anni, alto ${profile.heightCm} cm.`,
+    `Mi alleno ${profile.gymSessionsPerWeek} volte a settimana, prevalentemente ${sportsList}.`,
+    `Esperienza: ${profile.experienceScore}/10.`,
+    `Obiettivo: ${genData.primaryGoal}.`,
+    `Sessioni da ${genData.sessionDurationMin} min, ${genData.timelineWeeks} settimane.`,
+    genData.upcomingEvent ? `Evento: ${genData.upcomingEvent}.` : '',
+    genData.injuries ? `Infortuni: ${genData.injuries}.` : 'Nessun infortuno rilevante.',
+  ].filter(Boolean).join(' ')
+  return [
+    { role: 'assistant', content: 'Raccontami obiettivi e situazione attuale.' },
+    { role: 'user', content: userSummary },
+    { role: 'assistant', content: 'Perfetto. Procedo con la generazione del piano. ###READY###' },
+  ]
+}
 
 export interface NewPlanInput {
   planType: 'FULL' | 'TRAINING_ONLY' | 'NUTRITION_ONLY'

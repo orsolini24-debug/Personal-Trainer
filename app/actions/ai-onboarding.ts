@@ -100,20 +100,19 @@ export async function extractProfileData(messages: { role: 'user' | 'assistant' 
       isFollowingPlan: !!raw.isFollowingPlan,
       currentPlanText: raw.currentPlanText || "",
       targetEvent: raw.targetEvent || "",
-      dietaryType: raw.dietaryType || raw.dietaryPreferences?.[0] || "OMNIVORE",
-      eatingRoutine: raw.eatingRoutine || { mealsPerDay: 3, snacks: true, intermittentFasting: false },
-      favoriteFoods: raw.favoriteFoods || [],
-      dislikedFoods: raw.dislikedFoods || [],
-      allergies: raw.allergies || [],
-      dailyRoutine: raw.dailyRoutine || "",
+      dietaryType: raw.dietaryType || 'OMNIVORE',
+      eatingRoutine: raw.eatingRoutine || { mealsPerDay: 3, snacks: false, intermittentFasting: false },
+      favoriteFoods: Array.isArray(raw.favoriteFoods) ? raw.favoriteFoods : [],
+      dislikedFoods: Array.isArray(raw.dislikedFoods) ? raw.dislikedFoods : [],
+      allergies: Array.isArray(raw.allergies) ? raw.allergies : [],
+      dailyRoutine: raw.dailyRoutine || 'standard',
       availableDays: Number(raw.availableDays) || 3,
       sessionDuration: Number(raw.sessionDuration) || 60,
-      equipmentLevel: raw.equipmentLevel || "GYM",
-      preferredSplit: raw.preferredSplit || "FULL_BODY",
-      injuriesList: raw.injuriesList || [],
+      equipmentLevel: raw.equipmentLevel || 'FULL_GYM',
+      preferredSplit: raw.preferredSplit || 'FULL_BODY',
+      injuriesList: Array.isArray(raw.injuriesList) ? raw.injuriesList : [],
     }
-    return sanitized
-  } catch {
-    return null
-  }
+
+    return completeDeepOnboarding(sanitized)
+  } catch { return null }
 }

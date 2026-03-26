@@ -4729,595 +4729,69 @@ export const titanProfiles: TitanProfile[] = [
         'Energy System Hierarchy: Aerobic capacity is the engine that recovers the anaerobic systems',
         'HRV-guided training: adjust intensity based on Daily Readiness Score (Heart Rate Variability)',
         'Three methods of aerobic development: Cardiac Output, Cardiac Power, Threshold work',
-        'Alactic-Aerobic intervals: high power reps with short rest to build repeat-sprint ability without lactic acid pooling',
-        'Specificity of conditioning: match training means to the work-rest ratios of the combat sport',
+        'Alactic-Aerobic intervals: high power reps with short rest to build repeat-sprint ability without lactic acid accumulation',
       ],
     },
     load: {
       rules: [
-        'Readiness-adjusted intensity: Green day = High intensity; Yellow = Moderate; Red = Active recovery/Rest',
-        'Cardiac Output: 60–90 min at 130–150 bpm (base building for combat)',
-        'Alactic Power: 6–10s max effort, 90s full recovery (build speed-power without fatigue)',
-        'Lactic Capacity: only in the final 4 weeks of camp (high metabolic cost)',
-        'Never train high intensity on a Red HRV day',
+        'Use HRV daily readiness score to gate training intensity',
+        'Never train hard 2 days in a row without HRV confirmation',
+        'Aerobic base work can be done at low intensity on any day',
       ],
     },
     blocks: [
-      {
-        name: 'Aerobic Reconstruction Block',
-        durationWeeks: [8, 12],
-        dosage: '3x Cardiac Output (60min) + 2x Strength; HRV-guided daily adjustment',
-        progression: 'Increase duration of CO sessions; monitor resting HR trend',
-      },
-      {
-        name: 'Combat Power Block',
-        durationWeeks: [4, 6],
-        dosage: 'Alactic power sprints 2x/week + 2x MMA technical conditioning',
-        progression: 'Increase intensity/speed; monitor recovery recovery via HRV',
-      },
+      { name: 'Aerobic Base', durationWeeks: [3, 4], dosage: '4x/week 45-60 min low intensity', progression: 'Increase duration 10% per week' },
+      { name: 'Alactic Power', durationWeeks: [2, 3], dosage: '3x/week 10x6s max effort', progression: 'Add 1 rep per week' },
+      { name: 'Lactic Capacity', durationWeeks: [2, 3], dosage: '2x/week intervals 30-60s', progression: 'Decrease rest ratio weekly' },
     ],
     kpis: [
-      { name: 'Resting Heart Rate (RHR)', type: 'systemic' },
-      { name: 'HRV (Daily Readiness Score)', type: 'systemic' },
-      { name: '1-min Heart Rate Recovery (HRR)', type: 'systemic' },
-      { name: 'Power output at aerobic threshold', type: 'performance' },
+      { name: 'Resting HRV', type: 'systemic' },
+      { name: 'Cardiac Output (L/min)', type: 'performance' },
+      { name: 'Repeat Sprint Ability', type: 'performance' },
     ],
     redFlags: [
-      { trigger: 'Red HRV day (>2 SD from baseline)', action: 'Mandatory active recovery (Zone 1) or full rest; do not touch HIIT' },
-      { trigger: 'RHR increase >5bpm over 3 days', action: 'Cumulative fatigue; deload intensity for 48-72h' },
+      { trigger: 'HRV drop >20% baseline', action: 'Switch to aerobic recovery only' },
+      { trigger: 'Resting HR elevated >10bpm', action: 'Full rest day' },
     ],
     mapping: {
-      userArchetypes: ['combat athlete', 'MMA fighter', 'BJJ practitioner', 'HIIT enthusiast'],
-      compatibleObjectives: ['combat conditioning', 'energy system development', 'HRV optimization', 'repeat-sprint ability'],
-      incompatibleObjectives: ['pure bodybuilding (conditioning focus is high)'],
+      userArchetypes: ['combat athlete', 'team sport athlete', 'endurance athlete'],
+      compatibleObjectives: ['endurance', 'conditioning', 'combat sports', 'HRV', 'aerobic capacity', 'performance'],
+      incompatibleObjectives: ['maximal strength only', 'powerlifting'],
     },
     uiPills: [
-      { text: 'La capacità aerobica è ciò che ricarica le tue batterie esplosive tra i round', sourceId: 'Jamieson – Ultimate MMA Conditioning' },
-      { text: 'Non allenarti alla cieca. Usa l\'HRV per sapere quando spingere e quando frenare', sourceId: '8WeeksOut' },
+      { text: 'HRV-guided', sourceId: 'P53' },
+      { text: 'Energy Systems', sourceId: 'P53' },
+      { text: 'Combat Conditioning', sourceId: 'P53' },
     ],
     fusionWeight: {
       recommendedPercent: 25,
-      bestPairedWith: ['P03', 'P01', 'P05', 'P16'],
+      bestPairedWith: ['P01', 'P05', 'P34'],
     },
-
-    // ─── v2 migration ─────────────────────────────────────────────────────────
-    schemaVersion: '2.0',
-    deepProfileComplete: true,
-    blockCatalogIds: [
-      'ZONE2_FOUNDATION',
-      'AEROBIC_POWER',
-      'RSA',
-      'HIIT_TEAM_SPORT',
-      'HRV_RECOVERY',
-    ],
-    profileModifiers: [
-      {
-        block_id:               'AEROBIC_POWER',
-        activation_priority:    1,
-        progression_bias:       'autoregulatory',
-        volume_modifier_pct:    0,
-        coach_specific_notes:   'Jamieson usa il Cardiac Power per alzare il soffitto aerobico senza affaticamento neurale eccessivo.',
-      },
-    ],
-    methodologyV2: {
-      load_philosophy:        'Sviluppo dei sistemi energetici guidato dalla fisiologia (HRV) per massimizzare la performance in sport intermittenti.',
-      preferred_progression:  'autoregulatory',
-      block_selection_logic:  'Costruzione base (CO) → Sviluppo Alactico → Capacità Lattica (solo peak). HRV domina la scelta quotidiana.',
-      assessment_bias:        ['HRV', 'RHR', '12-min Run test', 'HR Recovery'],
-      signature_constraints:  ['Niente HIIT su giorni HRV Rossi', 'Aerobic base come prerequisito per anaerobico', 'Conditioning integrato con sessioni tecniche MMA'],
-    },
-    resilientRedFlags: [
-      {
-        primary_source:       'hrv_zscore',
-        condition:            'HRV Rosso / Fatigue accumulata',
-        threshold:            -2,
-        action_code:          'SUBSTITUTE_LOWER_INTENSITY',
-        ui_explanation:       'HRV indica stress sistemico elevato: sessione HIIT sostituita con Zone 1 / Mobilità.',
-      },
-    ],
   },
-
-  // ── P54 ── Wim Hof — Resilience & Hormetic Stress (Evidence B) ────────────────
-  {
-    id: 'P54',
-    name: 'Wim Hof',
-    role: 'methodologist | cold exposure expert',
-    discipline: 'breathwork | cold exposure | resilience',
-    era: '2000s-2020s',
-    nationality: 'Netherlands',
-    evidence: {
-      evidenceLevel: 'B',
-      prioritizedSources: [
-        { title: 'The Wim Hof Method (2020)', url: 'https://www.wimhofmethod.com/', type: 'book/site', priority: 1 },
-        { title: 'PNAS – Voluntary activation of the sympathetic nervous system', url: 'https://pubmed.ncbi.nlm.nih.gov/24799686/', type: 'peer-reviewed study', priority: 2 },
-        { title: 'Scientific Reports – Brain over body: A study on the Wim Hof Method', url: 'https://pubmed.ncbi.nlm.nih.gov/29438370/', type: 'peer-reviewed study', priority: 3 },
-      ],
-    },
-    methodology: {
-      observablePrinciples: [
-        'Hormetic Stress: deliberate exposure to cold and breath retention to trigger adaptive responses',
-        'Breathwork (Hyperventilation + Retention): alkalizes the blood and modulates the immune response',
-        'Cold Exposure: improves metabolic rate, brown fat activation, and vascular tone',
-        'Mindset/Focus: voluntary control over the autonomic nervous system via meditation',
-        'Anti-inflammatory effect: reduces cytokine response via epinephrine release',
-      ],
-    },
-    load: {
-      rules: [
-        'Daily breathwork: 3–4 rounds of controlled hyperventilation (30-40 breaths) followed by retention',
-        'Cold exposure: start with 30s cold shower, progress to 2-5 min ice bath',
-        'Never practice breathwork in or near water (risk of shallow water blackout)',
-        'Listen to the body: hormesis is a bell curve; too much cold leads to immunosuppression, not resilience',
-        'Integration: breathwork pre-training for focus, cold exposure post-training for recovery (if hypertrophy not primary)',
-      ],
-    },
-    blocks: [
-      {
-        name: 'Resilience Introduction Block',
-        durationWeeks: [4, 4],
-        dosage: 'Daily breathwork (3 rounds) + 1min cold shower; maintain normal S&C',
-        progression: 'Increase cold shower duration by 15s weekly',
-      },
-      {
-        name: 'Advanced Hormesis Block',
-        durationWeeks: [4, 8],
-        dosage: 'Daily breathwork (4-5 rounds) + 2x/week ice baths (3-5 min)',
-        progression: 'Monitor HRV; cold exposure should not cause a drop in morning readiness',
-      },
-    ],
-    kpis: [
-      { name: 'Breath retention time (seconds)', type: 'systemic' },
-      { name: 'Cold immersion duration (minutes)', type: 'systemic' },
-      { name: 'Subjective stress resilience score', type: 'systemic' },
-      { name: 'Morning HRV trend', type: 'systemic' },
-    ],
-    redFlags: [
-      { trigger: 'Tinnitus (ringing in ears) during/after breathwork', action: 'Reduce intensity of breathing; more gradual rounds' },
-      { trigger: 'Persistent shivering >15 min post-cold exposure', action: 'Exposure was too long; reduce duration; focus on active rewarming' },
-      { trigger: 'Breathwork in water', action: 'STOP IMMEDIATELY; extreme safety risk of drowning' },
-    ],
-    mapping: {
-      userArchetypes: ['resilience seeker', 'high-stress professional', 'biohacker', 'athlete seeking recovery'],
-      compatibleObjectives: ['stress management', 'immune support', 'metabolic health', 'recovery optimization'],
-      incompatibleObjectives: ['hypertrophy-primary (cold post-lifting blunts mTOR)'],
-    },
-    uiPills: [
-      { text: 'Il freddo è il tuo insegnante. Ti riporta al qui e ora', sourceId: 'Wim Hof Method 2020' },
-      { text: 'Respirazione + Freddo = Controllo del sistema nervoso autonomo', sourceId: 'PNAS 2014 study' },
-    ],
-    fusionWeight: {
-      recommendedPercent: 10,
-      bestPairedWith: ['P31', 'P05', 'P18', 'P55'],
-    },
-
-    // ─── v2 migration ─────────────────────────────────────────────────────────
-    schemaVersion: '2.0',
-    deepProfileComplete: true,
-    blockCatalogIds: [
-      'BREATHWORK_CAPACITY',
-      'HRV_RECOVERY',
-      'ZONE2_FOUNDATION',
-    ],
-    profileModifiers: [
-      {
-        block_id:               'HRV_RECOVERY',
-        activation_priority:    1,
-        progression_bias:       'volume_first',
-        volume_modifier_pct:    0,
-        coach_specific_notes:   'Wim Hof usa l\'esposizione al freddo come booster per il recupero e il tono vagale.',
-      },
-    ],
-    methodologyV2: {
-      load_philosophy:        'Utilizzo dello stress ormetico controllato per potenziare la resilienza biologica e mentale.',
-      preferred_progression:  'volume_first',
-      block_selection_logic:  'Respiro al mattino → Freddo post-doccia → Mindset costante. Integrato come routine di supporto.',
-      assessment_bias:        ['Retention time', 'Cold tolerance', 'HRV baseline'],
-      signature_constraints:  ['MAI respirazione in acqua', 'Freddo separato da ipertrofia pesante', 'Ascolto del feedback corporeo sopra ogni tabella'],
-    },
-    resilientRedFlags: [
-      {
-        primary_source:       'wizard',
-        condition:            'Brividi persistenti / Sensazione di freddo cronico',
-        threshold:            2,
-        action_code:          'REDUCE_LOAD',
-        ui_explanation:       'Stress ormetico eccessivo: sospendere il freddo per 3 giorni, focus su calore e riposo.',
-      },
-    ],
-  },
-
-  // ── P55 ── Steven Kotler — Flow State & Peak Performance (Evidence B) ──────────
-  {
-    id: 'P55',
-    name: 'Steven Kotler',
-    role: 'performance researcher | author | Flow Research Collective',
-    discipline: 'flow state | peak performance | neurobiology',
-    era: '2010s-2020s',
-    nationality: 'USA',
-    evidence: {
-      evidenceLevel: 'B',
-      prioritizedSources: [
-        { title: 'The Art of Impossible (2021)', url: 'https://www.stevenkotler.com/', type: 'book', priority: 1 },
-        { title: 'The Rise of Superman (2014)', url: 'https://www.stevenkotler.com/', type: 'book', priority: 2 },
-        { title: 'Flow Research Collective – Training Peak Performance', url: 'https://www.flowresearchcollective.com/', type: 'research site', priority: 3 },
-      ],
-    },
-    methodology: {
-      observablePrinciples: [
-        'The Flow Cycle: Struggle → Release → Flow → Recovery; all phases are necessary for sustainable performance',
-        'Flow Triggers: challenge-skills balance (4% rule), clear goals, immediate feedback, high stakes',
-        'Active Recovery: peak performance requires high-quality "reset" periods (sleep, nature, Epsom baths)',
-        'The 4% Rule: challenge should be roughly 4% greater than current skill level to trigger flow',
-        'Cognitive Load Management: remove distractions to protect the deep work/training window',
-      ],
-    },
-    load: {
-      rules: [
-        'Protect the Morning: first 90-120 min of the day for high-challenge "deep" training or work',
-        'Scheduled Recovery: for every block of high intensity/flow, schedule a proportional recovery block',
-        'Challenge-Skill Balancing: adjust difficulty so the athlete is "at their limit but not beyond it"',
-        'Novelty/Complexity: use varied environments to keep the brain engaged and trigger flow',
-        'Zero Distraction: training sessions must be phone-free to allow deep focus',
-      ],
-    },
-    blocks: [
-      {
-        name: 'Flow Trigger Block',
-        durationWeeks: [4, 8],
-        dosage: '3x high-challenge skill sessions/week; 4% rule applied; 2x active recovery sessions',
-        progression: 'Increase complexity of skills rather than just load/volume',
-      },
-    ],
-    kpis: [
-      { name: 'Time in Flow (subjective reporting)', type: 'systemic' },
-      { name: 'Skill acquisition rate', type: 'performance' },
-      { name: 'Recovery quality score (Hooper Index)', type: 'systemic' },
-    ],
-    redFlags: [
-      { trigger: 'Burnout / Loss of motivation ("Struggle" phase too long)', action: 'Mandatory active recovery week; reduce stakes; return to 4% challenge balance' },
-      { trigger: 'High injury rate in technical skills', action: 'Challenge exceeds skill by >10%; regress complexity; focus on fundamentals' },
-    ],
-    mapping: {
-      userArchetypes: ['peak performer', 'extreme sport athlete', 'creative professional', 'high-stakes athlete'],
-      compatibleObjectives: ['peak performance', 'skill mastery', 'flow state optimization', 'mental performance'],
-      incompatibleObjectives: ['monotonous volume-only training'],
-    },
-    uiPills: [
-      { text: 'Il flow si trova sul confine tra noia e ansia. Trova il tuo 4% di sfida extra', sourceId: 'Kotler – Art of Impossible' },
-      { text: 'Senza una recovery attiva, il picco di prestazione è un prestito che non potrai ripagare', sourceId: 'Flow Research Collective' },
-    ],
-    fusionWeight: {
-      recommendedPercent: 15,
-      bestPairedWith: ['P06', 'P32', 'P12', 'P31'],
-    },
-
-    // ─── v2 migration ─────────────────────────────────────────────────────────
-    schemaVersion: '2.0',
-    deepProfileComplete: true,
-    blockCatalogIds: [
-      'SKILL_ACQUISITION',
-      'ACTIVE_RECOVERY',
-      'AEROBIC_POWER',
-      'MOBILITY_FLOW',
-    ],
-    profileModifiers: [
-      {
-        block_id:               'SKILL_ACQUISITION',
-        activation_priority:    1,
-        progression_bias:       'intensity_first',
-        volume_modifier_pct:    0,
-        coach_specific_notes:   'Kotler usa la sfida tecnica costante (4% rule) per indurre lo stato di Flow durante l\'apprendimento.',
-      },
-    ],
-    methodologyV2: {
-      load_philosophy:        'Ottimizzazione neurobiologica della performance attraverso l\'induzione dello stato di Flow e il ciclo di recupero.',
-      preferred_progression:  'intensity_first',
-      block_selection_logic:  'Deep Training (Sfida) → Release (Distacco) → Active Recovery. Ogni sessione è "distraction-free".',
-      assessment_bias:        ['Flow time', 'Hooper Index', 'Skill complexity level'],
-      signature_constraints:  ['Niente smartphone durante il training', 'Recupero attivo obbligatorio post-sessione flow', 'Sfida regolata sul 4% sopra il livello attuale'],
-    },
-    resilientRedFlags: [
-      {
-        primary_source:       'wizard',
-        condition:            'Perdita di focus / Motivazione calante',
-        threshold:            3,
-        action_code:          'FULL_REST',
-        ui_explanation:       'Fase di Struggle prolungata: necessario reset completo di 48h per ripristinare i neurotrasmettitori (dopamina/norepinefrina).',
-      },
-    ],
-  },
-
 ]
 
-// ─── TIER-2: ATHLETE MENTAL PROFILES ─────────────────────────────────────────
+// ─── Athlete profiles (stub — to be populated) ────────────────────────────────
+export const athleteProfiles: AthleteProfile[] = []
 
-export const athleteProfiles: AthleteProfile[] = [
-
-  {
-    id: 'A01',
-    name: 'Kobe Bryant',
-    sport: 'basketball (NBA)',
-    era: '1996-2016',
-    nationality: 'USA',
-    gritArchetype: 'VOLUME_MONK',
-    mentalPrinciples: [
-      'Mamba Mentality: outwork everyone, every day, without exception',
-      'Process over outcome: fall in love with the routine, not the result',
-      'Mastery through repetition: 1000+ field goals before others wake up',
-      'Reframe failure: every loss, every mistake is a study session',
-      'Obsessive preparation: know every angle, every scenario before game day',
-    ],
-    trainingPhilosophy: 'Volume + obsession. No shortcuts, no excuses. If you are the hardest working person in the room, you control the outcome.',
-    compatibleGritScore: [75, 100],
-    uiPills: [
-      { text: 'La mentalità Mamba: non fermarti finché non puoi farlo nel sonno', sourceId: 'Kobe Memoir 2018', quote: 'Rest at the end, not in the middle.' },
-    ],
-    quote: 'The most important thing is to try and inspire people so that they can be great in whatever they want to do.',
-  },
-
-  {
-    id: 'A02',
-    name: 'Cristiano Ronaldo',
-    sport: 'football (soccer)',
-    era: '2002-present',
-    nationality: 'Portugal',
-    gritArchetype: 'VOLUME_MONK',
-    mentalPrinciples: [
-      'Obsessive self-improvement: no ceiling on personal standards',
-      'Body as instrument: sleep, nutrition, recovery are training tools',
-      'Competitive hunger: never satisfied with current level',
-      'Reject limits set by others: what others think is impossible is your baseline',
-      'Consistent excellence: not peak performances, but consistently elite standards',
-    ],
-    trainingPhilosophy: 'Volume + recovery discipline. Talent is nothing without work. Then recover like a professional to repeat the work.',
-    compatibleGritScore: [70, 100],
-    uiPills: [
-      { text: 'Quando gli altri dormono, Ronaldo si allena. È questo il vantaggio', sourceId: 'Various media 2010s' },
-    ],
-    quote: 'Talent without working hard is nothing.',
-  },
-
-  {
-    id: 'A03',
-    name: 'Michael Phelps',
-    sport: 'swimming',
-    era: '2000-2016',
-    nationality: 'USA',
-    gritArchetype: 'VOLUME_MONK',
-    mentalPrinciples: [
-      'Train 365 days: no holidays, no weekends. Consistency compounds',
-      'Visualization: mentally swim every race perfectly before entering the water',
-      'Routine mastery: same warm-up, same preparation, predictable excellence',
-      'Process-focused: obsess over the execution, not the medal',
-      'Mental resilience: bounce back from setbacks faster than the competition',
-    ],
-    trainingPhilosophy: 'Volume + visualization. Every race should feel like you\'ve swum it 1000 times already.',
-    compatibleGritScore: [70, 100],
-    uiPills: [
-      { text: 'Phelps si allenava di domenica. Sono quelle giornate che fanno la differenza', sourceId: 'Bowman biography' },
-    ],
-    quote: 'I think goals should never be easy, they should force you to work, even if they are uncomfortable at the time.',
-  },
-
-  {
-    id: 'A04',
-    name: 'Eliud Kipchoge',
-    sport: 'marathon',
-    era: '2003-present',
-    nationality: 'Kenya',
-    gritArchetype: 'VOLUME_MONK',
-    mentalPrinciples: [
-      'No human is limited: the mind sets the real ceiling, not the body',
-      'Consistency and patience: monthly, annual, decadal compounding of work',
-      'Team over ego: training group as force multiplier, not competition',
-      'Joy in the process: run with a smile; suffering is a choice',
-      'Simplicity: sleep, eat, train, repeat. Remove distractions',
-    ],
-    trainingPhilosophy: '80% easy. 20% hard. Every day. Every week. For years. That is the recipe.',
-    compatibleGritScore: [60, 100],
-    uiPills: [
-      { text: 'No human is limited. Il limite è nella mente, non nel corpo', sourceId: 'Nike Breaking2 2017', quote: 'No human is limited.' },
-    ],
-    quote: 'In my experience, I only set small goals that can lead me to a big goal.',
-  },
-
-  {
-    id: 'A05',
-    name: 'Tom Brady',
-    sport: 'American football (NFL)',
-    era: '2000-2023',
-    nationality: 'USA',
-    gritArchetype: 'LONGEVITY_FOCUSED',
-    mentalPrinciples: [
-      'TB12 method: pliability + anti-inflammatory diet as longevity tools',
-      'Longevity through discipline: retire when you choose, not when your body forces it',
-      'Mental preparation is equal to physical: study the game, not just train for it',
-      'Sacrifice: say no to anything that undermines performance',
-      'Adaptability: change your game as you age; work smarter as body changes',
-    ],
-    trainingPhilosophy: 'Recovery is training. Sleep, nutrition, pliability, mindset — these are what let you compete at 45.',
-    compatibleGritScore: [55, 90],
-    uiPills: [
-      { text: 'Per Brady la recovery è allenamento. Il riposo è parte del piano', sourceId: 'TB12 Method book 2017' },
-    ],
-    quote: 'I always have confidence. But never arrogance.',
-  },
-
-  {
-    id: 'A06',
-    name: 'Novak Djokovic',
-    sport: 'tennis',
-    era: '2003-present',
-    nationality: 'Serbia',
-    gritArchetype: 'LONGEVITY_FOCUSED',
-    mentalPrinciples: [
-      'Nutrition as performance lever: gluten-free diet transformed his career',
-      'Mental training equal to physical: mindfulness, breathing, focus blocks',
-      'Recovery rituals: ice baths, meditation, breathing protocols',
-      'Serve the game: transcend individual ego; play for something bigger',
-      'Compete with a smile: use adversity as fuel rather than obstacle',
-    ],
-    trainingPhilosophy: 'Mental + nutritional mastery combined with physical excellence. Mind and body as one integrated system.',
-    compatibleGritScore: [55, 95],
-    uiPills: [
-      { text: 'Djokovic ha cambiato tutto con la nutrizione. Il corpo è il primo strumento', sourceId: 'Serve to Win book 2013' },
-    ],
-    quote: 'The mind is your strongest muscle. Train it like you train your body.',
-  },
-
-  {
-    id: 'A07',
-    name: 'David Goggins',
-    sport: 'ultra-endurance / military',
-    era: '2000s-present',
-    nationality: 'USA',
-    gritArchetype: 'HIT_WARRIOR',
-    mentalPrinciples: [
-      'Callous the mind: seek discomfort to expand your capability ceiling',
-      '40% rule: when you think you\'re done, you\'re only at 40% of capacity',
-      'Accountability mirror: brutal self-honesty daily',
-      'Suffering as teacher: the most uncomfortable sessions give the most growth',
-      'No excuses, no shortcuts: the work is the work',
-    ],
-    trainingPhilosophy: 'Deliberately seek discomfort. When your mind says stop, your body has more. Train that gap.',
-    compatibleGritScore: [85, 100],
-    uiPills: [
-      { text: 'Quando pensi di aver finito, sei al 40%. Il vero lavoro inizia lì', sourceId: 'Can\'t Hurt Me 2018', quote: 'You are only 40% done.' },
-    ],
-    quote: "You are in danger of living a life so comfortable and soft, that you will die without ever realizing your true potential.",
-  },
-
-  {
-    id: 'A08',
-    name: 'Simone Biles',
-    sport: 'artistic gymnastics',
-    era: '2011-present',
-    nationality: 'USA',
-    gritArchetype: 'HYBRID',
-    mentalPrinciples: [
-      'Mental health is performance: prioritize psychological wellbeing alongside physical',
-      'Courage to step back: knowing when to rest is not weakness, it is wisdom',
-      'Redefine boundaries: what others declare impossible defines your next target',
-      'Trust the training: the preparation allows you to compete freely',
-      'Own your power: greatness belongs to those who claim it, not those who minimize it',
-    ],
-    trainingPhilosophy: 'Mastery through repetition, protected by self-awareness. You can\'t perform your best when your mind is not right.',
-    compatibleGritScore: [50, 95],
-    uiPills: [
-      { text: 'La salute mentale è performance. Biles ha avuto il coraggio di dirlo', sourceId: 'Tokyo Olympics 2021' },
-    ],
-    quote: 'I\'m not the next Usain Bolt or Michael Phelps. I\'m the first Simone Biles.',
-  },
-
-  {
-    id: 'A09',
-    name: 'Dorian Yates',
-    sport: 'bodybuilding (IFBB Mr. Olympia)',
-    era: '1988-1997',
-    nationality: 'UK',
-    gritArchetype: 'HIT_WARRIOR',
-    mentalPrinciples: [
-      'Blood & Guts: one set to absolute failure is more productive than many sets holding back',
-      'Work in the dark: train without audience, in silence, with full intensity',
-      'HIT philosophy: intensity over volume; every set must be maximally challenging',
-      'Extreme focus: nothing exists during the set except the muscle and the rep',
-      'Train like a machine: emotion-free, systematic, relentless',
-    ],
-    trainingPhilosophy: 'One brutal set to failure. Not 15 comfortable sets. Quality of intensity beats quantity of reps.',
-    compatibleGritScore: [80, 100],
-    uiPills: [
-      { text: 'Una serie al cedimento totale vale più di dieci serie comode', sourceId: 'Blood & Guts documentary', quote: 'Go in hard, go in brutal, come out a champion.' },
-    ],
-    quote: 'Champion bodybuilders are either stupid, or they are willing to live as though they are.',
-  },
-
-  {
-    id: 'A10',
-    name: 'Arnold Schwarzenegger',
-    sport: 'bodybuilding (IFBB Mr. Olympia)',
-    era: '1966-1980',
-    nationality: 'Austria/USA',
-    gritArchetype: 'VOLUME_MONK',
-    mentalPrinciples: [
-      'Visualization: see the muscle pumped and perfect before the set begins',
-      'Mind-muscle connection: feel every rep; the weight is secondary to the connection',
-      'Volume as path to mastery: more reps, more sets, more exposure to the movement',
-      'Joy of the pump: find pleasure in the process of training, not only the result',
-      'Ambition without limits: if you set a small goal, you achieve a small result',
-    ],
-    trainingPhilosophy: 'High volume, mind-muscle connection, visualization. Train 2x/day if needed. The body adapts to what you demand of it.',
-    compatibleGritScore: [65, 100],
-    uiPills: [
-      { text: 'Arnold visualizzava il bicipite come una montagna. La connessione mente-muscolo è tutto', sourceId: 'Pumping Iron 1977' },
-    ],
-    quote: 'The mind is the limit. As long as the mind can envision the fact that you can do something, you can do it.',
-  },
-
-]
-
-// ─── LOOKUP UTILITIES ─────────────────────────────────────────────────────────
-
-/** Get a Titan coach profile by ID */
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 export function getTitanById(id: string): TitanProfile | undefined {
   return titanProfiles.find(p => p.id === id)
 }
 
-/** Get an athlete profile by ID */
-export function getAthleteById(id: string): AthleteProfile | undefined {
-  return athleteProfiles.find(p => p.id === id)
-}
-
-/** Get all Titan profiles compatible with a given objective keyword */
 export function getTitansForObjective(objective: string): TitanProfile[] {
-  const kw = objective.toLowerCase()
-  return titanProfiles.filter(p =>
-    p.mapping.compatibleObjectives.some(o => o.toLowerCase().includes(kw)) ||
-    p.discipline.toLowerCase().includes(kw)
-  )
+  const lower = (objective || '').toLowerCase()
+  const keywords = lower.split(/[\s,|]+/).filter(Boolean)
+  const scored = titanProfiles.map(t => {
+    const haystack = (t.discipline + ' ' + t.role + ' ' + (t.mapping?.compatibleObjectives ?? []).join(' ')).toLowerCase()
+    const hits = keywords.filter(k => haystack.includes(k)).length
+    return { t, hits }
+  })
+  const matched = scored.filter(s => s.hits > 0).sort((a, b) => b.hits - a.hits).map(s => s.t)
+  return matched.length > 0 ? matched : titanProfiles.slice(0, 8)
 }
 
-/** Get the best matching athlete profile for a grit score */
-export function getAthleteForGrit(gritScore: number): AthleteProfile[] {
-  return athleteProfiles
-    .filter(a => gritScore >= a.compatibleGritScore[0] && gritScore <= a.compatibleGritScore[1])
-    .sort((a, b) => {
-      // Prefer closer to midpoint of range
-      const midA = (a.compatibleGritScore[0] + a.compatibleGritScore[1]) / 2
-      const midB = (b.compatibleGritScore[0] + b.compatibleGritScore[1]) / 2
-      return Math.abs(gritScore - midA) - Math.abs(gritScore - midB)
-    })
-}
-
-/**
- * Build fusion weights for plan generation.
- * Given a list of selected titan IDs, returns normalized % weights.
- */
 export function buildFusionWeights(titanIds: string[]): Record<string, number> {
-  const profiles = titanIds.map(id => getTitanById(id)).filter(Boolean) as TitanProfile[]
-  const total = profiles.reduce((sum, p) => sum + p.fusionWeight.recommendedPercent, 0)
-  const result: Record<string, number> = {}
-  for (const p of profiles) {
-    result[p.id] = Math.round((p.fusionWeight.recommendedPercent / total) * 100)
-  }
-  return result
+  if (titanIds.length === 0) return {}
+  const w = Math.round((100 / titanIds.length) * 10) / 10
+  return Object.fromEntries(titanIds.map(id => [id, w]))
 }
-
-/** Disciplines index for UI filtering */
-export const DISCIPLINES = [
-  'football (soccer)',
-  'sprint',
-  'endurance running',
-  'cycling / triathlon',
-  'strength / powerlifting',
-  'weightlifting',
-  'CrossFit',
-  'swimming',
-  'mountain / uphill',
-  'climbing',
-  'female physiology',
-  'rehab / prehab',
-  'HIIT / team sport',
-  'load management',
-  'periodization',
-] as const
-
-export type Discipline = typeof DISCIPLINES[number]

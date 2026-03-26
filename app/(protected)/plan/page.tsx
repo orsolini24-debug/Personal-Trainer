@@ -11,7 +11,6 @@ import {
 import AIPanButton from "./AIPanButton"
 import ProposalSelector from "./ProposalSelector"
 import PlanImportButton from "./PlanImportButton"
-import PlanWizard from "./PlanWizard"
 import NewPlanCreator from "./NewPlanCreator"
 import { MesoStatus } from "@prisma/client"
 import Link from "next/link"
