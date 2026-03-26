@@ -37,7 +37,10 @@ export default async function CoachPage() {
   }))
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-4 athletic-panel p-4 md:p-6" style={{ height: 'calc(100dvh - 5rem)' }}>
+    <div
+      className="max-w-5xl mx-auto flex flex-col gap-4 athletic-panel p-4 md:p-6"
+      style={{ minHeight: 'calc(100dvh - 8rem)', paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 0px))' }}
+    >
 
       {/* Header */}
       <div className="flex items-start justify-between shrink-0">

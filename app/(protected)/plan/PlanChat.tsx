@@ -52,7 +52,7 @@ export default function PlanChat({ mesoId, title = "Discuti con il Coach AI" }: 
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-10 right-10 flex items-center gap-3 pl-5 pr-4 h-14 rounded-full btn-primary glow-accent shadow-2xl z-50 animate-bounce-slow group"
+        className="hidden md:flex fixed bottom-10 right-10 items-center gap-3 pl-5 pr-4 h-14 rounded-full btn-primary glow-accent shadow-2xl z-50 animate-bounce-slow group"
         title="Rivedi il piano con il Coach AI"
       >
         <MessageSquare className="w-5 h-5 shrink-0" />
@@ -64,7 +64,7 @@ export default function PlanChat({ mesoId, title = "Discuti con il Coach AI" }: 
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-[400px] h-[600px] max-w-[90vw] max-h-[80vh] bg-surface border border-accent/20 rounded-[2.5rem] shadow-2xl z-[60] flex flex-col overflow-hidden animate-rise-up glass-heavy">
+    <div className="fixed md:bottom-6 md:right-6 bottom-20 right-3 left-3 md:left-auto md:w-[400px] h-[600px] max-w-[90vw] max-h-[80vh] bg-surface border border-accent/20 rounded-[2.5rem] shadow-2xl z-[60] flex flex-col overflow-hidden animate-rise-up glass-heavy">
       {/* Header */}
       <div className="p-6 border-b border-border bg-accent/5 flex items-center justify-between">
         <div className="flex items-center gap-3">

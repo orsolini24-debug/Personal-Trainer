@@ -12,14 +12,14 @@ interface AIReport {
 
 function renderMarkdownLight(text: string) {
   let html = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/^### (.+)$/gm, '<p class="font-black text-sm mt-4 mb-2 text-accent-gradient">$1</p>')
-  html = html.replace(/^## (.+)$/gm, '<p class="font-black text-base mt-5 mb-2 text-accent-gradient">$1</p>')
+  html = html.replace(/^### (.+)$/gm, '<p class="font-black text-sm mt-4 mb-2 brand-text">$1</p>')
+  html = html.replace(/^## (.+)$/gm, '<p class="font-black text-base mt-5 mb-2 brand-text">$1</p>')
   html = html.replace(/^[-•] (.+)$/gm, '<li class="ml-4 list-disc mb-1">$1</li>')
   html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal mb-1">$1</li>')
   html = html.replace(/(<li[\s\S]*?<\/li>\n?)+/g, m => `<ul class="space-y-1 my-2">${m}</ul>`)
   html = html.replace(/\n\n/g, '</p><p class="mb-3">')
   html = html.replace(/\n/g, '<br/>')
-  return `<p class="mb-3 text-sm leading-relaxed text-balance">${html}</p>`
+  return `<p class="mb-3 text-sm leading-relaxed text-balance" style="color:var(--fg-primary)">${html}</p>`
 }
 
 function ReportCard({ report, index }: { report: AIReport; index: number }) {
@@ -129,7 +129,7 @@ export default function CoachTabs({ reports }: { reports: AIReport[] }) {
                   <BarChart2 className="w-8 h-8" style={{ color: 'var(--fg-subtle)' }} />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl tracking-tight text-accent-gradient">Nessun report generato</h3>
+                  <h3 className="font-black text-xl tracking-tight brand-text">Nessun report generato</h3>
                   <p className="text-sm mt-2 max-w-xs mx-auto opacity-70 leading-relaxed" style={{ color: 'var(--fg-muted)' }}>
                     Il tuo coach AI analizza i tuoi progressi ogni settimana. Il primo report apparirà lunedì mattina.
                   </p>

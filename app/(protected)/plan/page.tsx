@@ -120,8 +120,31 @@ export default async function PlanPage() {
         )}
       </div>
 
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-3 animate-rise-up">
+        <div className="lg:col-span-7 rounded-3xl p-6"
+          style={{ background: 'linear-gradient(120deg, color-mix(in srgb, var(--accent) 14%, var(--bg-surface)), var(--bg-surface))', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
+          <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-2" style={{ color: 'var(--accent)' }}>Plan Mission</p>
+          <h2 className="text-2xl font-black tracking-tight text-primary mb-1">Costruisci il prossimo blocco con logica atleta-first</h2>
+          <p className="text-sm text-fg-muted">Seleziona o genera rapidamente il prossimo ciclo e mantieni allenamento, nutrizione e progressione nello stesso flusso.</p>
+        </div>
+        <div className="lg:col-span-5 grid grid-cols-3 gap-2">
+          <div className="rounded-2xl p-3 bg-surface border border-border">
+            <p className="text-[9px] font-black uppercase tracking-widest text-fg-subtle mb-1">Attivo</p>
+            <p className="text-xl font-black text-primary">{activeMeso || activeNutritionMeso ? '1' : '0'}</p>
+          </div>
+          <div className="rounded-2xl p-3 bg-surface border border-border">
+            <p className="text-[9px] font-black uppercase tracking-widest text-fg-subtle mb-1">Draft</p>
+            <p className="text-xl font-black text-primary">{draftMeso ? '1' : '0'}</p>
+          </div>
+          <div className="rounded-2xl p-3 bg-surface border border-border">
+            <p className="text-[9px] font-black uppercase tracking-widest text-fg-subtle mb-1">Archivio</p>
+            <p className="text-xl font-black text-primary">{archivedMesos.length}</p>
+          </div>
+        </div>
+      </section>
+
       {!onboardingCompleted ? (
-        <section className="bg-surface rounded-[3.5rem] p-10 md:p-14 border border-accent/20 relative overflow-hidden mesh-bg animate-glow-breathe">
+        <section className="bg-surface rounded-[3.5rem] p-10 md:p-14 border border-accent/20 relative mesh-bg animate-glow-breathe">
           <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none animate-glow-breathe">
             <Sparkles className="w-72 h-72 text-accent" />
           </div>
@@ -262,7 +285,7 @@ export default async function PlanPage() {
             </div>
           ) : !draftMeso && (
             /* ── EMPTY STATE / NEW PLAN CREATOR ── */
-            <section className="bg-surface rounded-[3.5rem] p-8 md:p-12 border border-border relative overflow-hidden">
+            <section className="bg-surface rounded-[3.5rem] p-8 md:p-12 border border-border relative">
               <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
                 <Sparkles className="w-72 h-72 text-accent" />
               </div>

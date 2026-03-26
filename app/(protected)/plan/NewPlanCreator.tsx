@@ -157,7 +157,7 @@ export default function NewPlanCreator() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto animate-page">
+    <div className="max-w-5xl mx-auto animate-page pb-28 md:pb-8 relative z-20">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="lg:col-span-2 rounded-[2rem] border border-border p-6 md:p-8 bg-surface">
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-accent mb-2">Plan Studio</p>

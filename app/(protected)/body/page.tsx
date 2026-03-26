@@ -75,17 +75,16 @@ export default async function BodyPage() {
         </div>
       )}
 
-      {/* ── Current + Stats row ── */}
-      <div className="px-4 mb-5">
-        {/* Big current weight */}
-        <div className="rounded-2xl px-5 py-5 mb-3"
-          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-          <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--fg-muted)' }}>
-            Peso attuale
+      {/* ── Body Mission Grid ── */}
+      <div className="px-4 mb-5 grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <section className="lg:col-span-8 rounded-2xl px-5 py-5"
+          style={{ background: 'linear-gradient(120deg, color-mix(in srgb, var(--accent) 14%, var(--bg-surface)), var(--bg-surface))', border: '1px solid color-mix(in srgb, var(--accent) 28%, transparent)' }}>
+          <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>
+            Body Mission
           </p>
           <div className="flex items-end gap-4 justify-between">
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black tabular-nums tracking-tighter" style={{ color: 'var(--fg-primary)' }}>
+              <span className="text-6xl font-black tabular-nums tracking-tighter" style={{ color: 'var(--fg-primary)' }}>
                 {latest?.weightKg ?? '—'}
               </span>
               <span className="text-lg font-bold" style={{ color: 'var(--fg-muted)' }}>kg</span>
@@ -101,27 +100,20 @@ export default async function BodyPage() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Stats row: Ultimo · Più alto · Più basso */}
-        <div className="grid grid-cols-3 gap-2">
+        </section>
+        <section className="lg:col-span-4 grid grid-cols-1 gap-2">
           {[
-            { label: 'Settimana', value: weekAgo?.weightKg, delta: weekDelta },
-            { label: 'Più alto', value: maxWeight, delta: null },
-            { label: 'Più basso', value: minWeight, delta: null },
-          ].map(({ label, value, delta }) => (
-            <div key={label} className="rounded-xl px-3 py-3 text-center"
+            { label: 'Settimana', value: weekAgo?.weightKg },
+            { label: 'Più alto', value: maxWeight },
+            { label: 'Più basso', value: minWeight },
+          ].map(({ label, value }) => (
+            <div key={label} className="rounded-xl px-3 py-3"
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-              <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--fg-muted)' }}>
-                {label}
-              </p>
-              <p className="text-lg font-black tabular-nums" style={{ color: 'var(--fg-primary)' }}>
-                {value ?? '—'}
-              </p>
-              {value && <p className="text-[9px]" style={{ color: 'var(--fg-subtle)' }}>kg</p>}
+              <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--fg-muted)' }}>{label}</p>
+              <p className="text-xl font-black tabular-nums" style={{ color: 'var(--fg-primary)' }}>{value ?? '—'} {value ? 'kg' : ''}</p>
             </div>
           ))}
-        </div>
+        </section>
       </div>
 
       {/* ── Chart ── */}

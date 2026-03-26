@@ -867,7 +867,7 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
     const generateValid = primaryGoal !== '' && sessionDuration > 0 && timelineWeeks > 0
 
     return (
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto pb-28 md:pb-8 relative z-20">
         <StepHeader step={3} total={3} label="Obiettivi e preferenze" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

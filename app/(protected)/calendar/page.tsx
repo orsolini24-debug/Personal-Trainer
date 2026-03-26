@@ -25,19 +25,27 @@ export default async function CalendarPage() {
         </div>
       </div>
 
-      {/* ── Feature pills ── */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {[
-          { icon: CalendarDays, label: 'Piano integrato', color: 'var(--accent)' },
-          { icon: Activity, label: 'Import Suunto / Garmin', color: '#10B981' },
-          { icon: Bot, label: 'Analisi AI serale', color: '#EC4899' },
-          { icon: Plus, label: 'Attività extra', color: '#EAB308' },
-        ].map(({ icon: Icon, label, color }) => (
-          <div key={label} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-surface text-xs font-bold text-muted">
-            <Icon className="w-3.5 h-3.5" style={{ color }} />
-            {label}
-          </div>
-        ))}
+      {/* ── Mission Grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-8">
+        <section className="lg:col-span-8 rounded-2xl p-5"
+          style={{ background: 'linear-gradient(120deg, color-mix(in srgb, var(--accent) 14%, var(--bg-surface)), var(--bg-surface))', border: '1px solid color-mix(in srgb, var(--accent) 28%, transparent)' }}>
+          <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-2" style={{ color: 'var(--accent)' }}>Mission Control</p>
+          <h2 className="text-2xl font-black tracking-tight text-primary mb-2">Organizza settimana, adatta carico, sincronizza tutto</h2>
+          <p className="text-sm text-muted max-w-2xl">Usa il calendario come cabina di regia: pianificazione, import attività, note recovery e analisi AI in un unico flusso.</p>
+        </section>
+        <section className="lg:col-span-4 grid grid-cols-2 gap-2">
+          {[
+            { icon: CalendarDays, label: 'Piano integrato', color: 'var(--accent)' },
+            { icon: Activity, label: 'Import device', color: '#10B981' },
+            { icon: Bot, label: 'Analisi AI', color: '#EC4899' },
+            { icon: Plus, label: 'Extra session', color: '#EAB308' },
+          ].map(({ icon: Icon, label, color }) => (
+            <div key={label} className="rounded-xl border p-3 bg-surface" style={{ borderColor: 'var(--border-default)' }}>
+              <Icon className="w-4 h-4 mb-1.5" style={{ color }} />
+              <p className="text-xs font-bold text-primary leading-tight">{label}</p>
+            </div>
+          ))}
+        </section>
       </div>
 
       {/* ── Calendar ── */}

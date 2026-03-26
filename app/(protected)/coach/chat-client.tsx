@@ -17,16 +17,16 @@ const SUGGESTED = [
 function renderMarkdown(text: string) {
   let html = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  html = html.replace(/^### (.+)$/gm, '<h3 class="font-black text-sm mt-4 mb-1 text-accent-gradient">$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2 class="font-black text-base mt-5 mb-1 text-accent-gradient">$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1 class="font-black text-lg mt-6 mb-2 text-accent-gradient">$1</h1>')
+  html = html.replace(/^### (.+)$/gm, '<h3 class="font-black text-sm mt-4 mb-1 brand-text">$1</h3>')
+  html = html.replace(/^## (.+)$/gm, '<h2 class="font-black text-base mt-5 mb-1 brand-text">$1</h2>')
+  html = html.replace(/^# (.+)$/gm, '<h1 class="font-black text-lg mt-6 mb-2 brand-text">$1</h1>')
   html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal mb-1">$1</li>')
   html = html.replace(/^[-•] (.+)$/gm, '<li class="ml-4 list-disc mb-1">$1</li>')
   html = html.replace(/(<li[\s\S]*?<\/li>\n?)+/g, m => `<ul class="space-y-1 my-2">${m}</ul>`)
   html = html.replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded-md text-[11px] font-mono surface-accent" style="color:var(--accent)">$1</code>')
   html = html.replace(/\n\n/g, '</p><p class="mb-3">')
   html = html.replace(/\n/g, '<br/>')
-  return `<p class="mb-3 leading-relaxed text-balance">${html}</p>`
+  return `<p class="mb-3 leading-relaxed text-balance" style="color:var(--fg-primary)">${html}</p>`
 }
 
 export default function ChatClient() {
@@ -221,9 +221,9 @@ export default function ChatClient() {
                     fontWeight: 500,
                   }
                 : {
-                    background: 'var(--bg-elevated)',
+                    background: 'var(--bg-surface)',
                     color: 'var(--fg-primary)',
-                    border: '1px solid var(--border-subtle)',
+                    border: '1px solid var(--border-default)',
                     borderRadius: '4px 18px 18px 18px',
                   }
               }
@@ -259,7 +259,14 @@ export default function ChatClient() {
 
       {/* Input — Frosted Floating Bar */}
       <div className="shrink-0 p-4 md:p-6 pt-2">
-        <div className="max-w-3xl mx-auto frosted p-2 pr-3 flex gap-2 items-end shadow-2xl">
+        <div
+          className="max-w-3xl mx-auto p-2 pr-3 flex gap-2 items-end shadow-2xl"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            borderRadius: '16px',
+          }}
+        >
           {messages.length > 0 && (
             <button
               type="button"

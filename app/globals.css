@@ -989,6 +989,8 @@
   .athletic-panel { border-radius: 18px; }
   .card-interactive { border-radius: 14px; }
   .divider-label { font-size: 0.62rem; letter-spacing: 0.08em; }
+  .mission-hero { grid-template-columns: 1fr !important; }
+  .mission-hero-metrics { grid-template-columns: 1fr 1fr !important; }
 }
 
 /* ================================================================

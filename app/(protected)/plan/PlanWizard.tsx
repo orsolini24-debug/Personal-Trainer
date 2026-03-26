@@ -132,7 +132,10 @@ export default function PlanWizard() {
   }
 
   return (
-    <div className="flex flex-col h-[620px] rounded-[2.5rem] border border-border bg-surface overflow-hidden">
+    <div
+      className="relative z-30 flex flex-col rounded-[2.5rem] border border-border bg-surface overflow-hidden"
+      style={{ height: 'min(680px, calc(100dvh - 180px))' }}
+    >
       {/* Header */}
       <div className="px-6 py-4 border-b border-border flex items-center gap-3 bg-elevated/50">
         <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
@@ -199,7 +202,7 @@ export default function PlanWizard() {
 
       {/* Input */}
       {!isGenerating && (
-        <div className="shrink-0 p-4 border-t border-border">
+        <div className="shrink-0 p-4 border-t border-border" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex gap-2 items-center">
             <input
               type="text"

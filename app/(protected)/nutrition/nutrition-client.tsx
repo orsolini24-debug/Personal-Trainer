@@ -504,6 +504,29 @@ export default function NutritionClient({
         )}
       </div>
 
+      {/* ── Nutrition Mission Grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <section className="lg:col-span-8 rounded-2xl p-5"
+          style={{ background: 'linear-gradient(120deg, color-mix(in srgb, var(--accent) 14%, var(--bg-surface)), var(--bg-surface))', border: '1px solid color-mix(in srgb, var(--accent) 28%, transparent)' }}>
+          <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-2" style={{ color: 'var(--accent)' }}>Fuel Strategy</p>
+          <h2 className="text-2xl font-black tracking-tight text-primary mb-2">Mangia per performare, non solo per contare</h2>
+          <p className="text-sm text-muted">Bilancia macro, idratazione e timing pasti in base alla tua giornata di training.</p>
+        </section>
+        <section className="lg:col-span-4 grid grid-cols-2 gap-2">
+          {[
+            { k: 'Kcal', v: `${kcalActual}/${kcalTarget}` },
+            { k: 'Pro', v: `${proActual}g` },
+            { k: 'Carb', v: `${carbActual}g` },
+            { k: 'Fat', v: `${fatActual}g` },
+          ].map((m) => (
+            <div key={m.k} className="rounded-xl p-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+              <p className="text-[9px] font-black uppercase tracking-widest text-fg-subtle mb-1">{m.k}</p>
+              <p className="text-lg font-black text-primary">{m.v}</p>
+            </div>
+          ))}
+        </section>
+      </div>
+
       {/* ── Date navigator ── */}
       <DateNavigator date={date} onChange={handleDateChange} />
 
@@ -557,7 +580,7 @@ export default function NutritionClient({
       />
 
       {/* ── Meal sections with dividers ── */}
-      <div className="space-y-12 pt-6 stagger">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 pt-4 stagger">
         {(initialDay.meals ?? []).map((meal) => (
           <div key={meal.id} className="space-y-4">
             <div className="divider-label mx-2">

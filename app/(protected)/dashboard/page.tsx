@@ -136,6 +136,44 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* ── Mission Control Hero ── */}
+      <section
+        className="mission-hero"
+        style={{
+          marginBottom: '14px',
+          borderRadius: '22px',
+          padding: '18px',
+          background: 'linear-gradient(120deg, color-mix(in srgb, var(--accent) 16%, var(--bg-surface)), var(--bg-surface))',
+          border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
+          display: 'grid',
+          gridTemplateColumns: '1.2fr 1fr',
+          gap: '12px',
+          animation: 'fade-up 0.45s 40ms cubic-bezier(0.16,1,0.3,1) both',
+        }}
+      >
+        <div>
+          <p style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
+            Mission Control
+          </p>
+          <h2 style={{ fontSize: 'clamp(1.1rem, 2.2vw, 1.55rem)', lineHeight: 1.1, margin: 0, color: 'var(--fg-primary)' }}>
+            Oggi punta su qualita tecnica e recovery intelligente
+          </h2>
+        </div>
+        <div className="mission-hero-metrics" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          {[
+            { k: 'HRV', v: `${hrv || '--'}` },
+            { k: 'Recovery', v: hasScore ? `${score}` : '--' },
+            { k: 'Sessioni', v: `${sessCount}/${sessTgt}` },
+            { k: 'Kcal', v: `${kcalActual || 0}` },
+          ].map((m) => (
+            <div key={m.k} style={{ borderRadius: '14px', padding: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+              <p style={{ margin: 0, fontSize: '9px', color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{m.k}</p>
+              <p style={{ margin: '2px 0 0', fontSize: '18px', fontWeight: 900, color: 'var(--fg-primary)', letterSpacing: '-0.04em' }}>{m.v}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Week Strip + Progress Ring ── */}
       <div
         style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'stretch', animation: 'fade-up 0.4s 60ms cubic-bezier(0.16,1,0.3,1) both' }}

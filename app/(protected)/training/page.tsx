@@ -126,60 +126,59 @@ export default async function TrainingPage() {
         </div>
       </div>
 
-      {/* ── Stats strip ── */}
-      <div className="flex gap-3 px-4 mb-5" style={{ animation: 'fade-up 0.35s 60ms cubic-bezier(0.16,1,0.3,1) both' }}>
-        {[
-          { label: 'Sessioni', value: String(totalSessions), color: 'var(--accent)' },
-          { label: 'TL medio', value: avgTL ? String(avgTL) : '—', color: 'var(--accent2)' },
-          { label: 'Streak', value: `${streak}g`, color: 'var(--warning)' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="flex-1 py-3.5 px-3 rounded-2xl text-center transition-all hover:-translate-y-0.5"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', cursor: 'default' }}>
-            <p className="text-xl font-black tabular-nums" style={{ color, fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em' }}>{value}</p>
-            <p className="text-[9px] font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--fg-subtle)', fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Week strip ── */}
-      <div className="mx-4 mb-5 px-4 py-3 rounded-2xl"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-        <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--fg-muted)' }}>
-          Settimana corrente
-        </p>
-        <div className="flex justify-between">
-          {weekDays.map((day, idx) => {
-            const isToday = isSameDay(day, today)
-            const hasSession = sessionDates.some(d => isSameDay(d, day))
-            const isFuture = day > today
-            return (
-              <div key={idx} className="flex flex-col items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase"
-                  style={{ color: isToday ? 'var(--accent)' : 'var(--fg-subtle)' }}>
-                  {DAY_LABELS[idx]}
-                </span>
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black"
-                  style={{
-                    background: isToday
-                      ? 'var(--accent)'
-                      : hasSession
-                        ? 'color-mix(in srgb, var(--positive) 15%, var(--bg-elevated))'
-                        : 'var(--bg-elevated)',
-                    border: isToday
-                      ? 'none'
-                      : hasSession
-                        ? '1px solid rgba(52,211,153,0.3)'
-                        : '1px solid var(--border-subtle)',
-                    color: isToday ? 'var(--accent-on)' : hasSession ? 'var(--positive)' : 'var(--fg-subtle)',
-                    opacity: isFuture && !isToday ? 0.45 : 1,
-                  }}>
-                  {hasSession && !isToday ? '✓' : format(day, 'd')}
-                </div>
+      {/* ── Mission Grid (non-tabellare) ── */}
+      <div className="mx-4 mb-5 grid grid-cols-1 lg:grid-cols-12 gap-3" style={{ animation: 'fade-up 0.35s 60ms cubic-bezier(0.16,1,0.3,1) both' }}>
+        <section className="lg:col-span-8 rounded-2xl p-5"
+          style={{ background: 'linear-gradient(120deg, color-mix(in srgb, var(--accent) 14%, var(--bg-surface)), var(--bg-surface))', border: '1px solid color-mix(in srgb, var(--accent) 28%, transparent)' }}>
+          <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-2" style={{ color: 'var(--accent)' }}>Training Mission</p>
+          <h2 className="text-2xl font-black tracking-tight mb-3" style={{ color: 'var(--fg-primary)' }}>
+            Spingi dove serve, recupera dove conta
+          </h2>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Sessioni', value: String(totalSessions), color: 'var(--accent)' },
+              { label: 'TL medio', value: avgTL ? String(avgTL) : '—', color: 'var(--accent2)' },
+              { label: 'Streak', value: `${streak}g`, color: 'var(--warning)' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="rounded-xl p-3"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+                <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--fg-subtle)' }}>{label}</p>
+                <p className="text-2xl font-black tabular-nums" style={{ color }}>{value}</p>
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        </section>
+        <section className="lg:col-span-4 rounded-2xl px-4 py-3"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+          <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--fg-muted)' }}>
+            Settimana corrente
+          </p>
+          <div className="grid grid-cols-7 gap-1.5">
+            {weekDays.map((day, idx) => {
+              const isToday = isSameDay(day, today)
+              const hasSession = sessionDates.some(d => isSameDay(d, day))
+              const isFuture = day > today
+              return (
+                <div key={idx} className="flex flex-col items-center gap-1">
+                  <span className="text-[9px] font-bold uppercase"
+                    style={{ color: isToday ? 'var(--accent)' : 'var(--fg-subtle)' }}>
+                    {DAY_LABELS[idx]}
+                  </span>
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black"
+                    style={{
+                      background: isToday ? 'var(--accent)' : hasSession ? 'color-mix(in srgb, var(--positive) 15%, var(--bg-elevated))' : 'var(--bg-elevated)',
+                      border: isToday ? 'none' : hasSession ? '1px solid rgba(52,211,153,0.3)' : '1px solid var(--border-subtle)',
+                      color: isToday ? 'var(--accent-on)' : hasSession ? 'var(--positive)' : 'var(--fg-subtle)',
+                      opacity: isFuture && !isToday ? 0.45 : 1,
+                    }}>
+                    {hasSession && !isToday ? '✓' : format(day, 'd')}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       </div>
 
       {/* ── Today's session ── */}
