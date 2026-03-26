@@ -11,11 +11,38 @@ import {
 import {
   completeWithExistingPlan,
   completeWithGeneratedPlan,
-  buildSyntheticChatHistory,
   type BasicProfileData,
   type ExistingPlanData,
   type GeneratePlanData,
 } from '@/app/actions/plan-setup'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Local helper (cannot import from 'use server' file as it's synchronous)
+// ─────────────────────────────────────────────────────────────────────────────
+function buildSyntheticChatHistory(
+  profile: BasicProfileData,
+  genData: GeneratePlanData
+): Array<{ role: 'user' | 'assistant'; content: string }> {
+  const sportsList = profile.sports.join(', ') || 'non specificato'
+  const sexLabel = profile.biologicalSex === 'FEMALE' ? 'donna' : 'uomo'
+
+  const userSummary = `
+Sono un ${sexLabel} di ${profile.ageYears} anni, alto ${profile.heightCm} cm.
+Mi alleno ${profile.gymSessionsPerWeek} volte a settimana, prevalentemente ${sportsList}.
+La mia esperienza è di livello ${profile.experienceScore}/10.
+Obiettivo principale: ${genData.primaryGoal}.
+Posso dedicare ${genData.sessionDurationMin} minuti per sessione.
+Ho ${genData.timelineWeeks} settimane di tempo.
+${genData.upcomingEvent ? `Ho in programma: ${genData.upcomingEvent}.` : ''}
+${genData.injuries ? `Limitazioni / infortuni: ${genData.injuries}.` : 'Nessun infortuno rilevante.'}
+  `.trim()
+
+  return [
+    { role: 'assistant', content: 'Ottimo, raccontami i tuoi obiettivi e la tua situazione attuale.' },
+    { role: 'user',      content: userSummary },
+    { role: 'assistant', content: 'Perfetto, ho un quadro completo. Procedo con la generazione del piano. ###READY###' },
+  ]
+}
 import { generatePlanFromWizard } from '@/app/actions/plan-wizard'
 
 // ─────────────────────────────────────────────────────────────────────────────
