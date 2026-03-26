@@ -6,6 +6,25 @@ import { revalidatePath } from 'next/cache'
 import Groq from 'groq-sdk'
 import { SessionType, SportType } from '@prisma/client'
 
+// ── Validazione dayLabel — converte qualsiasi stringa AI → SessionType valido ──
+const VALID_DAY_LABELS_OB: SessionType[] = ['A', 'B', 'C', 'D', 'V1', 'V2', 'OUTDOOR']
+const DAY_NAME_MAP_OB: Record<string, SessionType> = {
+  'E': 'V1', 'F': 'V2', 'G': 'OUTDOOR',
+  'LUNEDÌ': 'A', 'LUNEDI': 'A', 'MONDAY': 'A',
+  'MARTEDÌ': 'B', 'MARTEDI': 'B', 'TUESDAY': 'B',
+  'MERCOLEDÌ': 'C', 'MERCOLEDI': 'C', 'WEDNESDAY': 'C',
+  'GIOVEDÌ': 'D', 'GIOVEDI': 'D', 'THURSDAY': 'D',
+  'VENERDÌ': 'V1', 'VENERDI': 'V1', 'FRIDAY': 'V1',
+  'SABATO': 'V2', 'SATURDAY': 'V2',
+  'DOMENICA': 'OUTDOOR', 'SUNDAY': 'OUTDOOR',
+}
+function sanitizeDayLabelOb(raw: string | undefined, index: number): SessionType {
+  const val = (raw ?? '').toString().toUpperCase().trim()
+  if (VALID_DAY_LABELS_OB.includes(val as SessionType)) return val as SessionType
+  if (DAY_NAME_MAP_OB[val]) return DAY_NAME_MAP_OB[val]
+  return VALID_DAY_LABELS_OB[index % VALID_DAY_LABELS_OB.length] ?? 'A'
+}
+
 export interface OnboardingData {
   // Step 1
   biologicalSex: string
@@ -280,12 +299,10 @@ Schema esatto:
     const planDayMap: Record<string, string> = {} // type → planDayId
     for (let i = 0; i < plan.sessions.length; i++) {
       const s = plan.sessions[i]
-      const sessionType = s.type as SessionType
-
       const planDay = await prisma.planDay.create({
         data: {
           planId: workoutPlan.id,
-          dayLabel: sessionType,
+          dayLabel: sanitizeDayLabelOb(s.type, i),
           focus: s.focus ?? '',
           orderIndex: i,
         },

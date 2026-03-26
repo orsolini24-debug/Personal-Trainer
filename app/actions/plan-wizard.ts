@@ -202,14 +202,16 @@ REGOLE DI SINTESI (Genera 3 opzioni):
 1. **COERENZA TOTALE**: Se l'utente non ha accesso alla palestra o il suo sport è il running/sedentario, NON proporre esercizi con bilancieri pesanti. Usa corpo libero, corsa, camminata o esercizi posturali.
 2. **VOLUME REALISTICO**: Per un utente sedentario (es. 10h al PC), non proporre piani estenuanti da 6 giorni. Inizia gradualmente (2-3 giorni).
 3. **FUSIONE TITANI**: Ogni proposta DEVE dichiarare la sintesi con i nomi reali dei Titani forniti nel contesto sopra.
-4. **OBIETTIVI**: Definisci obiettivi (goals) che siano coerenti con la richiesta dell'utente (es. perdita peso, non massimale di panca).
-5. **VOLUME ESERCIZI OBBLIGATORIO**: ogni giornata "plan" DEVE contenere MINIMO 5 esercizi e MASSIMO 20. Il numero dipende dal tipo di allenamento: forza/ipertrofia classica 6-8, HIIT/iRox/Circuit training 8-12, CrossFit/Full-day protocol fino a 20. MAI meno di 5.
-6. **GIORNI**: genera una giornata per ogni giorno di disponibilità dell'atleta. Es. 3 giorni = plan con 3 voci [A, B, C].
+4. **OBIETTIVI**: Definisci obiettivi (goals) coerenti. Se hai rilevato squilibri (es. "forza bassa quadricipiti"), NON bloccare la generazione, ma inserisci esercizi correttivi nel piano e spiega perché nella "strategy".
+5. **VOLUME ESERCIZI OBBLIGATORIO**: ogni giornata "plan" DEVE contenere MINIMO 5 esercizi e MASSIMO 20. MAI meno di 5.
+6. **FORMATO RIGIDO**: Restituisci SEMPRE un JSON valido. Se mancano dati per un obiettivo (es. targetValue), usa valori sensati basati sul profilo (es. peso attuale + 2kg).
+7. **DAYLABEL OBBLIGATORIO**: Il campo "dayLabel" di ogni giornata DEVE essere ESCLUSIVAMENTE uno di questi valori: "A", "B", "C", "D", "V1", "V2", "OUTDOOR". MAI usare "E", "F", "G" o altri valori. Per 5 giorni usa: A, B, C, D, V1. Per 6 giorni: A, B, C, D, V1, V2. Per 7 giorni: A, B, C, D, V1, V2, OUTDOOR.
 
-Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 proposte, tutti i giorni, minimo 5 esercizi ciascuno in base al tipo di sessione):
+Genera ESATTAMENTE questo JSON (tu genera 3 proposte, tutti i giorni, minimo 5 esercizi ciascuno):
 {
   "goals": [
     {
+      "id": "goal_1",
       "type": "STRENGTH|HYPERTROPHY|ENDURANCE|WEIGHT_LOSS|WEIGHT_GAIN|BODY_RECOMPOSITION|SPORT_PERFORMANCE|RACE_PREP|MOBILITY|INJURY_PREVENTION|CUSTOM",
       "sport": "PALESTRA|SOCCER|RUNNING|WALKING|...",
       "description": "descrizione specifica",
@@ -236,14 +238,10 @@ Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 pro
         "plan": [
           {
             "dayLabel": "A",
-            "focus": "Forza — Upper Body Spinta",
+            "IMPORTANT_dayLabel_MUST_BE_ONE_OF": ["A","B","C","D","V1","V2","OUTDOOR"],
+            "focus": "Focus della giornata",
             "exercises": [
-              { "name": "Panca Piana", "sets": 4, "repsMin": 5, "repsMax": 7, "targetRir": 2, "restSec": 180, "notes": "Scapole retratte, piedi piatti" },
-              { "name": "Overhead Press", "sets": 3, "repsMin": 6, "repsMax": 8, "targetRir": 2, "restSec": 150, "notes": "Core attivo" },
-              { "name": "Dips ai paralleli", "sets": 3, "repsMin": 8, "repsMax": 10, "targetRir": 2, "restSec": 120, "notes": "Torso inclinato per i pettorali" },
-              { "name": "Lateral Raise cavi", "sets": 3, "repsMin": 12, "repsMax": 15, "targetRir": 1, "restSec": 60, "notes": "Pollice verso il basso" },
-              { "name": "Tricep Pushdown", "sets": 3, "repsMin": 12, "repsMax": 15, "targetRir": 1, "restSec": 60, "notes": "Gomiti fermi ai fianchi" },
-              { "name": "Face Pull cavi", "sets": 3, "repsMin": 15, "repsMax": 20, "targetRir": 1, "restSec": 60, "notes": "Retrazione scapolare" }
+              { "name": "Esercizio", "sets": 3, "repsMin": 8, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "Nota tecnica" }
             ]
           }
         ]
@@ -253,7 +251,7 @@ Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 pro
         "proteinGPerKg": 1.8,
         "carbsGPerKg": 2.5,
         "fatGPerKg": 0.8,
-        "strategy": "Strategia nutrizionale Titano-based"
+        "strategy": "Strategia nutrizionale"
       }
     }
   ]
@@ -270,29 +268,46 @@ Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 pro
 
     const data = JSON.parse(response.choices[0]?.message?.content || "{}")
 
-    // Salvataggio Obiettivi
-    if (data.goals?.length) {
-      await prisma.athleteGoal.updateMany({
-        where: { userId, isActive: true },
-        data: { isActive: false }
-      })
-      await prisma.athleteGoal.createMany({
-        data: data.goals.map((g: any) => ({
-          userId,
-          type: g.type,
-          sport: g.sport || null,
-          description: g.description,
-          targetValue: g.targetValue,
-          currentValue: g.currentValue,
-          unit: g.unit,
-          targetDate: g.targetDate ? new Date(g.targetDate) : null,
-        })),
-      })
+    // Validazione minima post-generazione per evitare crash DB
+    if (!data.goals || !data.proposals) {
+       console.error("AI returned incomplete JSON structure", data)
+       return null
     }
 
-    // Salvataggio Proposte come mesociclo DRAFT (visibile in ProposalSelector)
+    // Salvataggio Obiettivi
+    if (data.goals?.length) {
+      // Filtra goal senza campi obbligatori
+      const validGoals = data.goals.filter((g: any) => g.type && g.description)
+      
+      if (validGoals.length > 0) {
+        await prisma.athleteGoal.updateMany({
+          where: { userId, isActive: true },
+          data: { isActive: false }
+        })
+        await prisma.athleteGoal.createMany({
+          data: validGoals.map((g: any) => ({
+            userId,
+            type: g.type,
+            sport: g.sport || null,
+            description: g.description,
+            targetValue: typeof g.targetValue === 'number' ? g.targetValue : null,
+            currentValue: typeof g.currentValue === 'number' ? g.currentValue : null,
+            unit: g.unit || '',
+            targetDate: g.targetDate ? new Date(g.targetDate) : null,
+          })),
+        })
+      }
+    }
+
+    // Salvataggio Proposte come mesociclo DRAFT
     if (data.proposals?.length) {
-      // Archivia eventuali draft precedenti
+      // Pulisci i dati delle proposte per sicurezza
+      const cleanedProposals = data.proposals.map((p: any) => ({
+        ...p,
+        planType: p.planType || planType,
+        trainingDays: Array.isArray(p.trainingDays) ? p.trainingDays : [1, 3, 5]
+      }))
+
       await prisma.mesocycle.updateMany({
         where: { userId, status: 'DRAFT' },
         data: { status: 'ARCHIVED' }
@@ -303,7 +318,7 @@ Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 pro
           name: 'Proposte Strategiche AI',
           startDate: new Date(),
           status: 'DRAFT',
-          aiProposals: data.proposals,
+          aiProposals: cleanedProposals,
         }
       })
     }
