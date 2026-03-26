@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MessageSquare, BarChart2, ChevronDown, ChevronUp, Calendar, Sparkles } from "lucide-react"
+import { MessageSquare, BarChart2, ChevronDown, Calendar, Sparkles } from "lucide-react"
 import ChatClient from "./chat-client"
 
 interface AIReport {
@@ -84,9 +84,9 @@ export default function CoachTabs({ reports }: { reports: AIReport[] }) {
   return (
     <div className="flex flex-col h-full min-h-0 animate-page">
       {/* Tab bar — Premium Pill Switcher */}
-      <div className="px-4 py-3 shrink-0">
+      <div className="px-4 py-3 shrink-0 border-b border-border/50">
         <div 
-          className="flex p-1.5 gap-1 rounded-2xl glass-sm"
+          className="flex p-1.5 gap-1 rounded-2xl"
           style={{ background: 'color-mix(in srgb, var(--bg-elevated) 60%, transparent)' }}
         >
           {([

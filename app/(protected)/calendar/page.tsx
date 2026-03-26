@@ -8,7 +8,7 @@ export default async function CalendarPage() {
   if (!session?.user?.id) redirect('/login')
 
   return (
-    <div className="max-w-5xl mx-auto pb-24 px-4 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto pb-24 px-4 md:px-6 py-4 animate-in fade-in duration-500 athletic-panel">
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 mb-8 pt-2">
         <div>
@@ -16,7 +16,7 @@ export default async function CalendarPage() {
             <div className="p-1.5 rounded-xl text-accent" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }}>
               <CalendarDays className="w-4 h-4" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-accent">Performance Log</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-accent">BuiltDifferent Calendar</p>
           </div>
           <h1 className="text-4xl font-black tracking-tighter text-primary leading-none">Calendario</h1>
           <p className="text-sm text-muted mt-2 max-w-md leading-relaxed">

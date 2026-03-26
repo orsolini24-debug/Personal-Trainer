@@ -45,12 +45,12 @@ export default async function BodyPage() {
   const deltaColor = weekDelta == null ? 'var(--fg-muted)' : weekDelta <= 0 ? 'var(--positive)' : 'var(--warning)'
 
   return (
-    <div className="animate-page max-w-2xl mx-auto pb-24">
+    <div className="animate-page athletic-panel max-w-4xl mx-auto pb-24 p-2 md:p-4">
 
       {/* ── Header ── */}
       <div className="px-4 pt-6 pb-5" style={{ animation: 'fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
         <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'var(--accent)', fontFamily: "'JetBrains Mono', monospace" }}>
-          Composizione
+          BuiltDifferent Metrics
         </p>
         <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--fg-primary)', fontFamily: "'Sora', sans-serif", letterSpacing: '-0.05em' }}>
           Body Metrics

@@ -37,12 +37,12 @@ export default async function CoachPage() {
   }))
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-4" style={{ height: 'calc(100dvh - 5rem)' }}>
+    <div className="max-w-5xl mx-auto flex flex-col gap-4 athletic-panel p-4 md:p-6" style={{ height: 'calc(100dvh - 5rem)' }}>
 
       {/* Header */}
       <div className="flex items-start justify-between shrink-0">
         <div>
-          <p className="text-sm font-medium mb-1" style={{ color: 'var(--accent)' }}>Coach AI</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)' }}>BuiltDifferent Coach</p>
           <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--fg-primary)' }}>
             Il tuo preparatore personale
           </h1>
@@ -94,7 +94,7 @@ export default async function CoachPage() {
 
       {/* Tab: Chat | Report — gestite lato client */}
       <div
-        className="flex-1 rounded-2xl overflow-hidden flex flex-col min-h-0"
+        className="flex-1 rounded-[1.75rem] overflow-hidden flex flex-col min-h-0"
         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
       >
         <CoachTabs reports={serializedReports} />

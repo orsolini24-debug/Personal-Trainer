@@ -104,7 +104,7 @@ export default async function TrainingPage() {
   })
 
   return (
-    <div className="animate-page max-w-2xl mx-auto pb-24">
+    <div className="animate-page athletic-panel max-w-4xl mx-auto pb-24">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 pt-6 pb-4" style={{ animation: 'fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>

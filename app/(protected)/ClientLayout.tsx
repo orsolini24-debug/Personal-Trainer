@@ -163,13 +163,13 @@ function SidebarContent({ pathname, session, onHelp, onClose }: { pathname: stri
               fontSize: '13px',
             }}
           >
-            Performance
+            BuiltDifferent
           </span>
           <span
             className="text-[9px] font-bold uppercase block mt-0.5"
             style={{ color: 'var(--fg-subtle)', letterSpacing: '0.15em' }}
           >
-            Ecosystem
+            Training OS
           </span>
         </div>
       </div>
@@ -322,7 +322,7 @@ function getCurrentPageTitle(pathname: string): string {
       ? pathname === item.href || pathname.startsWith(item.href + '/active')
       : pathname === item.href || pathname.startsWith(item.href + '/')
   )
-  return found?.name ?? 'Performance Ecosystem'
+  return found?.name ?? 'BuiltDifferent OS'
 }
 
 export default function ProtectedLayout({ children, session }: { children: React.ReactNode; session: Session | null }) {
@@ -335,18 +335,20 @@ export default function ProtectedLayout({ children, session }: { children: React
 
   return (
     <div
-      className="flex h-[100dvh] overflow-hidden"
-      style={{ background: 'var(--bg-base)', color: 'var(--fg-primary)' }}
+      className="flex h-[100dvh] overflow-hidden athletic-shell"
+      style={{ color: 'var(--fg-primary)' }}
     >
       {/* Help Panel */}
       <HelpPanel open={showHelp} onClose={() => setShowHelp(false)} />
 
       {/* Desktop Sidebar */}
       <div
-        className="hidden md:flex flex-col w-56 h-screen shrink-0"
+        className="hidden md:flex flex-col w-60 h-screen shrink-0"
         style={{
-          background: 'var(--bg-sidebar)',
-          borderRight: '1px solid var(--border-subtle)',
+          background: 'color-mix(in srgb, var(--bg-sidebar) 88%, transparent)',
+          borderRight: '1px solid var(--border-default)',
+          backdropFilter: 'blur(22px)',
+          WebkitBackdropFilter: 'blur(22px)',
         }}
       >
         <SidebarContent pathname={pathname} session={session} onHelp={() => setShowHelp(true)} />
@@ -415,7 +417,7 @@ export default function ProtectedLayout({ children, session }: { children: React
             paddingTop: 'env(safe-area-inset-top, 0px)',
             paddingLeft: '1rem',
             paddingRight: '1rem',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid var(--border-default)',
             backdropFilter: 'blur(40px) saturate(160%)',
             WebkitBackdropFilter: 'blur(40px) saturate(160%)',
             background: 'color-mix(in srgb, var(--bg-base) 78%, transparent)',
@@ -441,7 +443,7 @@ export default function ProtectedLayout({ children, session }: { children: React
 
         {/* Page */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-5xl mx-auto w-full">
+          <div className="p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto w-full">
             {children}
           </div>
         </main>

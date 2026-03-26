@@ -9,18 +9,18 @@
    Variable fonts · Layered glass · Spring physics · Full token set
    ================================================================ */
 
-/* ── DEFAULT: COBALT (Blue/Indigo — PE Brand) ── */
+/* ── DEFAULT: PERFORMANCE (BuiltDifferent-inspired) ── */
 :root, [data-theme="cobalt"], [data-theme="dark"], [data-theme="cobalt-dark"] {
-  --bg-base: #06060F; --bg-surface: #0C0C1D; --bg-elevated: #12122A; --bg-input: #09091A; --bg-sidebar: #04040D;
-  --fg-primary: #E8EAF0; --fg-muted: #8B92A8; --fg-subtle: #3D4460;
-  --accent: #3B82F6; --accent-dim: rgba(59,130,246,0.12); --accent-on: #FFFFFF;
-  --accent2: #0EA5E9; --accent2-dim: rgba(14,165,233,0.12);
+  --bg-base: #09090A; --bg-surface: #0F0F10; --bg-elevated: #1A1A1B; --bg-input: #0F0F10; --bg-sidebar: #060607;
+  --fg-primary: #F5F0E8; --fg-muted: #9A948B; --fg-subtle: #4D4842;
+  --accent: #F5C200; --accent-dim: rgba(245,194,0,0.15); --accent-on: #000000;
+  --accent2: #D4A200; --accent2-dim: rgba(212,162,0,0.15);
   --positive: #22C55E; --positive-dim: rgba(34,197,94,0.12);
   --negative: #F43F5E; --negative-dim: rgba(244,63,94,0.12);
   --warning: #F59E0B; --warning-dim: rgba(245,158,11,0.12);
-  --border-default: rgba(255,255,255,0.06); --border-subtle: rgba(255,255,255,0.03); --border-strong: rgba(255,255,255,0.14);
-  --sidebar-active-border: #3B82F6;
-  --glow-accent: rgba(59,130,246,0.35); --glow-positive: rgba(34,197,94,0.3); --glow-negative: rgba(244,63,94,0.3);
+  --border-default: rgba(255,255,255,0.08); --border-subtle: rgba(255,255,255,0.04); --border-strong: rgba(245,194,0,0.25);
+  --sidebar-active-border: #F5C200;
+  --glow-accent: rgba(245,194,0,0.4); --glow-positive: rgba(34,197,94,0.3); --glow-negative: rgba(244,63,94,0.3);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 8px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4);
   --shadow-lg: 0 20px 48px rgba(0,0,0,0.65), 0 8px 16px rgba(0,0,0,0.45);
@@ -540,6 +540,10 @@
     transform: scale(0.985) translateY(0);
     transition-duration: var(--dur-fast);
   }
+  .card-interactive:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 60%, white);
+    outline-offset: 2px;
+  }
 
   /* Gradient accent border card */
   .card-accent-border {
@@ -588,6 +592,10 @@
     filter: brightness(0.96);
     transition-duration: var(--dur-fast);
   }
+  .btn-primary:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 65%, white);
+    outline-offset: 2px;
+  }
 
   .btn-ghost {
     background: transparent;
@@ -607,6 +615,38 @@
   .btn-ghost:active {
     transform: scale(0.98);
     transition-duration: var(--dur-fast);
+  }
+  .btn-ghost:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, white);
+    outline-offset: 2px;
+  }
+
+  /* Unified CTA utilities across pages */
+  .cta-primary {
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 70%, var(--accent)));
+    color: var(--accent-on);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 32%, transparent);
+    transition: transform var(--dur-normal) var(--ease-expo-out), box-shadow var(--dur-normal) var(--ease-expo-out), filter var(--dur-normal) var(--ease-expo-out);
+  }
+  .cta-primary:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 38%, transparent);
+  }
+  .cta-primary:active {
+    transform: scale(0.98);
+  }
+  .cta-secondary {
+    background: var(--bg-elevated);
+    color: var(--fg-primary);
+    border: 1px solid var(--border-default);
+    transition: all var(--dur-normal) var(--ease-expo-out);
+  }
+  .cta-secondary:hover {
+    border-color: var(--border-strong);
+    background: color-mix(in srgb, var(--bg-elevated) 92%, white 8%);
+    transform: translateY(-1px);
   }
 
   .input-field {
@@ -946,6 +986,9 @@
    ================================================================ */
 @media screen and (max-width: 768px) {
   input, select, textarea { font-size: 16px !important; }
+  .athletic-panel { border-radius: 18px; }
+  .card-interactive { border-radius: 14px; }
+  .divider-label { font-size: 0.62rem; letter-spacing: 0.08em; }
 }
 
 /* ================================================================
@@ -1072,6 +1115,35 @@
   .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+  /* Global shell */
+  .athletic-shell {
+    position: relative;
+    background:
+      radial-gradient(80% 70% at 0% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+      radial-gradient(70% 50% at 100% 20%, color-mix(in srgb, var(--accent2, var(--accent)) 8%, transparent), transparent 70%),
+      var(--bg-base);
+  }
+
+  .athletic-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--border-subtle) 60%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--border-subtle) 60%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(circle at center, black 25%, transparent 90%);
+  }
+
+  .athletic-panel {
+    background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
 }
 
 /* animate-in keyframe (Tailwind animate-in compatibility) */

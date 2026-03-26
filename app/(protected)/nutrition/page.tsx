@@ -31,7 +31,7 @@ export default async function NutritionPage({
   }
 
   return (
-    <div className="max-w-2xl mx-auto pb-28 animate-page">
+    <div className="max-w-4xl mx-auto pb-28 animate-page athletic-panel p-4 md:p-6">
       <NutritionClient initialDay={result.data} currentDate={dateParam} />
     </div>
   )

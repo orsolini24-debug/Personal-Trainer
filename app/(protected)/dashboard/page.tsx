@@ -91,7 +91,7 @@ export default function DashboardPage() {
   const ringColor  = sessCount >= sessTgt ? 'var(--positive)' : sessCount > 0 ? 'var(--accent)' : 'var(--border-strong)'
 
   return (
-    <div className="animate-page" style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }}>
+    <div className="animate-page athletic-panel" style={{ maxWidth: '980px', margin: '0 auto', padding: '18px 20px 72px' }}>
 
       {/* ── HEADER ── */}
       <header style={{ padding: '4px 0 24px', animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both' }}>
@@ -435,13 +435,11 @@ export default function DashboardPage() {
                     </span>
                   )}
                 </div>
-                <Link href="/training/active" style={{
+                <Link href="/training/active" className="cta-primary" style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: 'var(--accent)', color: 'var(--accent-on)',
                   padding: '13px 18px', borderRadius: '10px',
                   fontWeight: 800, fontSize: '12px', letterSpacing: '0.06em',
                   textTransform: 'uppercase', textDecoration: 'none',
-                  boxShadow: '0 4px 16px var(--glow-accent)',
                   transition: 'filter 0.2s, transform 0.2s',
                 }}>
                   Inizia ora <ArrowRight size={14} />
@@ -717,7 +715,7 @@ export default function DashboardPage() {
 
 function DashboardSkeleton() {
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }} className="animate-page">
+    <div style={{ maxWidth: '980px', margin: '0 auto', padding: '18px 20px 72px' }} className="animate-page athletic-panel">
       {/* Header skeleton */}
       <div style={{ padding: '4px 0 24px' }}>
         <div className="skeleton" style={{ height: '10px', width: '140px', marginBottom: '14px' }} />

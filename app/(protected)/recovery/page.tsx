@@ -59,7 +59,7 @@ export default async function RecoveryPage() {
   const activeFatigued = Object.entries(districtTotals).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
 
   return (
-    <div className="animate-page max-w-5xl mx-auto space-y-6 pb-8">
+    <div className="animate-page athletic-panel max-w-6xl mx-auto space-y-6 pb-8 p-4 md:p-6">
 
       <div style={{ animation: 'fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
         <p className="text-xs font-black uppercase tracking-[0.2em] mb-1" style={{ color: 'var(--positive)', fontFamily: "'JetBrains Mono', monospace" }}>

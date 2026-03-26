@@ -477,13 +477,13 @@ export default function NutritionClient({
   const proMissing = proTarget - proActual
 
   return (
-    <div className="space-y-5 px-4 pt-5">
+    <div className="space-y-5 px-2 md:px-4 pt-3">
 
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: "var(--accent)" }}>
-            Nutrition
+          <p className="text-[11px] font-black tracking-[0.18em] uppercase" style={{ color: "var(--accent)" }}>
+            BuiltDifferent Nutrition
           </p>
           <h1 className="text-2xl font-black tracking-tight" style={{ color: "var(--fg-primary)" }}>
             Diario alimentare
@@ -515,9 +515,7 @@ export default function NutritionClient({
       />
 
       {/* ── Hero: calorie ring + macro bars ── */}
-      <div
-        className="surface-accent mesh-bg p-8 rounded-[2.5rem] border border-border-subtle flex flex-col sm:flex-row items-center gap-10 shadow-2xl relative overflow-hidden"
-      >
+      <div className="athletic-panel surface-accent mesh-bg p-8 rounded-[2.5rem] flex flex-col sm:flex-row items-center gap-10 relative overflow-hidden">
         {/* Glow decoration */}
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
         
@@ -694,9 +692,8 @@ function AddMealPicker({
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98] cta-secondary"
           style={{
-            background: "var(--bg-surface)",
             border: "2px dashed var(--accent)",
             color: "var(--accent)",
           }}

@@ -99,13 +99,13 @@ export default async function PlanPage() {
   })
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-24 px-4 animate-page">
+    <div className="max-w-6xl mx-auto space-y-12 pb-24 px-4 md:px-6 py-4 animate-page athletic-panel">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 stagger">
         <div>
-          <p className="divider-label mb-2">Centro di Preparazione</p>
-          <h1 className="text-5xl font-black tracking-tighter text-accent-gradient">Plan Manager</h1>
+          <p className="divider-label mb-2">Built For Performance</p>
+          <h1 className="text-5xl font-black tracking-tighter text-accent-gradient">Performance Lab</h1>
         </div>
         {/* Mostra i pulsanti di azione solo quando l'onboarding è completato,
             per evitare che le overlay coprano i wizard di configurazione */}

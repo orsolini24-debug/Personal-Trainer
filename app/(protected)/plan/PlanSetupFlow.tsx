@@ -95,6 +95,12 @@ const DURATION_OPTIONS = [
   { label: '2 ore',  value: 120 },
 ]
 
+const QUICK_PRESETS = [
+  { id: 'lean', label: 'Cut & definizione', goal: 'Perdere peso e ridurre il grasso', weeks: 8, duration: 45, type: 'FULL' as const },
+  { id: 'mass', label: 'Massa muscolare', goal: 'Aumentare la massa muscolare', weeks: 12, duration: 60, type: 'TRAINING_ONLY' as const },
+  { id: 'sport', label: 'Peak performance', goal: 'Migliorare la performance sportiva', weeks: 8, duration: 90, type: 'FULL' as const },
+]
+
 const DURATION_LABELS: Record<string, string> = {
   'none':   'Non iniziato',
   'week':   '< 1 settimana',
@@ -861,10 +867,33 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
     const generateValid = primaryGoal !== '' && sessionDuration > 0 && timelineWeeks > 0
 
     return (
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <StepHeader step={3} total={3} label="Obiettivi e preferenze" />
 
-        <div className="space-y-7">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-7">
+            <FormField label="Scelta rapida">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {QUICK_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      setPrimaryGoal(preset.goal)
+                      setTimelineWeeks(preset.weeks)
+                      setSessionDuration(preset.duration)
+                      setPlanType(preset.type)
+                    }}
+                    className="p-4 rounded-2xl border text-left transition-all"
+                    style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border-default)' }}
+                  >
+                    <p className="text-sm font-black text-primary mb-1">{preset.label}</p>
+                    <p className="text-[11px] text-fg-muted">{preset.weeks} settimane · {preset.duration} min</p>
+                  </button>
+                ))}
+              </div>
+            </FormField>
+
           {/* Primary goal */}
           <FormField label="Obiettivo principale">
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -988,6 +1017,33 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
               {error}
             </div>
           )}
+          </div>
+
+          <aside className="lg:col-span-1 h-fit rounded-[2rem] p-6 border border-border bg-surface">
+            <p className="text-[10px] font-black uppercase tracking-widest text-fg-subtle mb-4">Anteprima Piano</p>
+            <div className="space-y-3">
+              <div className="p-4 rounded-2xl border border-border bg-elevated">
+                <p className="text-[10px] font-black uppercase tracking-widest text-fg-subtle mb-1">Focus</p>
+                <p className="text-sm font-black text-primary">{primaryGoal || 'Seleziona obiettivo'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-2xl border border-border bg-elevated">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-fg-subtle mb-1">Durata</p>
+                  <p className="text-sm font-black text-primary">{timelineWeeks ? `${timelineWeeks} sett.` : '--'}</p>
+                </div>
+                <div className="p-4 rounded-2xl border border-border bg-elevated">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-fg-subtle mb-1">Sessione</p>
+                  <p className="text-sm font-black text-primary">{sessionDuration ? `${sessionDuration} min` : '--'}</p>
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl border border-border bg-elevated">
+                <p className="text-[10px] font-black uppercase tracking-widest text-fg-subtle mb-1">Tipologia</p>
+                <p className="text-sm font-black text-primary">
+                  {planType === 'FULL' ? 'Completo' : planType === 'NUTRITION_ONLY' ? 'Solo Nutrizione' : 'Solo Allenamento'}
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
 
         <NavButtons
