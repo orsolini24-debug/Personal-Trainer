@@ -203,10 +203,10 @@ REGOLE DI SINTESI (Genera 3 opzioni):
 2. **VOLUME REALISTICO**: Per un utente sedentario (es. 10h al PC), non proporre piani estenuanti da 6 giorni. Inizia gradualmente (2-3 giorni).
 3. **FUSIONE TITANI**: Ogni proposta DEVE dichiarare la sintesi con i nomi reali dei Titani forniti nel contesto sopra.
 4. **OBIETTIVI**: Definisci obiettivi (goals) che siano coerenti con la richiesta dell'utente (es. perdita peso, non massimale di panca).
-5. **VOLUME ESERCIZI OBBLIGATORIO**: ogni giornata "plan" DEVE contenere tra 5 e 8 esercizi reali. MAI meno di 5. Sessioni forza/ipertrofia: 6-8 esercizi. Sessioni endurance/mobilità: 5-6 drill/esercizi.
+5. **VOLUME ESERCIZI OBBLIGATORIO**: ogni giornata "plan" DEVE contenere MINIMO 5 esercizi e MASSIMO 20. Il numero dipende dal tipo di allenamento: forza/ipertrofia classica 6-8, HIIT/iRox/Circuit training 8-12, CrossFit/Full-day protocol fino a 20. MAI meno di 5.
 6. **GIORNI**: genera una giornata per ogni giorno di disponibilità dell'atleta. Es. 3 giorni = plan con 3 voci [A, B, C].
 
-Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 proposte, tutti i giorni, 5-8 esercizi ciascuno):
+Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 proposte, tutti i giorni, minimo 5 esercizi ciascuno in base al tipo di sessione):
 {
   "goals": [
     {

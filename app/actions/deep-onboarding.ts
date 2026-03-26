@@ -147,7 +147,7 @@ export async function generateAITripleProposal() {
   2. SINERGIA LOGICA: La fusione deve avere senso fisiologico. Ad esempio, usa la Zona 2 di Attia/San Millán come base, ma integra la forza esplosiva di Bosco o la mobilità di McGill se il profilo lo richiede.
   3. ADATTAMENTO REALE: Rispetta rigorosamente l'attrezzatura e la routine quotidiana dell'atleta.
   4. QUALITÀ ASSOLUTA: La programmazione risultante deve essere la migliore possibile, bilanciata per evitare interferenze negative tra sistemi energetici.
-  5. VOLUME ESERCIZI OBBLIGATORIO: ogni giornata "plan" DEVE contenere tra 5 e 8 esercizi. NON generare mai meno di 5 esercizi per sessione. Sessioni di forza o ipertrofia: 6-8 esercizi. Sessioni di endurance/mobilità: 5-6 esercizi/drill.
+  5. VOLUME ESERCIZI OBBLIGATORIO: ogni giornata "plan" DEVE contenere MINIMO 5 esercizi e MASSIMO 20. Il numero dipende dal tipo di allenamento: forza/ipertrofia classica 6-8, HIIT/iRox/Circuit training 8-12, CrossFit/Full-day protocol fino a 20. NON scendere mai sotto 5.
   6. GIORNI: genera tante giornate quante indica availability (es. 3 disponibilità = 3 giorni: A, B, C).
 
   FORMATO JSON RICHIESTO (esempio con UNA proposta e UN giorno — espandi tu a 3 proposte e tutti i giorni necessari):
