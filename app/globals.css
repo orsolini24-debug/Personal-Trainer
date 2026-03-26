@@ -1115,22 +1115,36 @@
 
 /* ── Dashboard card hover lift ── */
 .dash-card-hover {
-  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1);
+  transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), box-shadow 0.28s cubic-bezier(0.16,1,0.3,1), border-color 0.2s ease;
 }
 .dash-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle);
 }
 .dash-card-hover:active {
-  transform: scale(0.99);
+  transform: scale(0.987) translateY(0px);
   transition-duration: 80ms;
 }
 /* Stats strip cell hover */
 .dash-stat-cell {
-  transition: background 0.15s ease;
+  transition: background 0.18s ease, color 0.18s ease;
+  cursor: pointer;
 }
 .dash-stat-cell:hover {
   background: var(--bg-elevated);
+}
+/* ── Session history card hover ── */
+.session-card {
+  transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), box-shadow 0.22s cubic-bezier(0.16,1,0.3,1), background 0.18s ease;
+}
+.session-card:hover {
+  transform: translateY(-2px) translateX(2px);
+  box-shadow: var(--shadow-md);
+  background: var(--bg-elevated) !important;
+}
+.session-card:active {
+  transform: scale(0.985);
+  transition-duration: 60ms;
 }
 @media (max-width: 640px) {
   .dash-2col {
@@ -1140,3 +1154,37 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ── Pulse (AI coach dot) ── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 var(--glow-accent); }
+  50% { opacity: 0.8; transform: scale(1.15); box-shadow: 0 0 0 5px transparent; }
+}
+
+/* ── Progress ring stroke animation ── */
+@keyframes ring-fill {
+  from { stroke-dashoffset: var(--ring-circumference, 200); }
+  to   { stroke-dashoffset: var(--ring-offset, 0); }
+}
+
+/* ── Number pop-in ── */
+@keyframes num-pop {
+  0%   { opacity: 0; transform: scale(0.7) translateY(4px); }
+  70%  { opacity: 1; transform: scale(1.08) translateY(-1px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-num-pop { animation: num-pop 0.45s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Slide-in-left ── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-left { animation: slide-in-left 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Online dot pulsating ── */
+@keyframes online-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--glow-positive); opacity: 1; }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--positive) 0%, transparent); opacity: 0.9; }
+}
+.online-dot { animation: online-pulse 2.5s ease-in-out infinite; }

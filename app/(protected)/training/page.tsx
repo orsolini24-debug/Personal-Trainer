@@ -104,10 +104,10 @@ export default async function TrainingPage() {
   })
 
   return (
-    <div className="max-w-2xl mx-auto pb-24">
+    <div className="animate-page max-w-2xl mx-auto pb-24">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-4">
+      <div className="flex items-center justify-between px-4 pt-6 pb-4" style={{ animation: 'fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'var(--accent)' }}>
             Training Log
@@ -118,7 +118,7 @@ export default async function TrainingPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/training/library"
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105"
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--fg-muted)' }}>
             <BookOpen className="w-4 h-4" />
           </Link>
@@ -127,16 +127,16 @@ export default async function TrainingPage() {
       </div>
 
       {/* ── Stats strip ── */}
-      <div className="flex gap-3 px-4 mb-5">
+      <div className="flex gap-3 px-4 mb-5" style={{ animation: 'fade-up 0.35s 60ms cubic-bezier(0.16,1,0.3,1) both' }}>
         {[
           { label: 'Sessioni', value: String(totalSessions), color: 'var(--accent)' },
           { label: 'TL medio', value: avgTL ? String(avgTL) : '—', color: 'var(--accent2)' },
           { label: 'Streak', value: `${streak}g`, color: 'var(--warning)' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="flex-1 py-3 px-3 rounded-2xl text-center"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-            <p className="text-lg font-black tabular-nums" style={{ color }}>{value}</p>
-            <p className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: 'var(--fg-muted)' }}>{label}</p>
+          <div key={label} className="flex-1 py-3.5 px-3 rounded-2xl text-center transition-all hover:-translate-y-0.5"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', cursor: 'default' }}>
+            <p className="text-xl font-black tabular-nums" style={{ color, fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em' }}>{value}</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--fg-subtle)', fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
           </div>
         ))}
       </div>
@@ -256,39 +256,51 @@ export default async function TrainingPage() {
       )}
 
       {/* ── Session history ── */}
-      <div className="px-4">
-        <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--fg-subtle)' }}>
+      <div className="px-4" style={{ animation: 'fade-up 0.4s 180ms cubic-bezier(0.16,1,0.3,1) both' }}>
+        <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'var(--fg-subtle)', fontFamily: "'JetBrains Mono', monospace" }}>
           Storico
         </p>
 
         {sessions.length === 0 ? (
           <div className="text-center py-16 rounded-[2rem]"
             style={{ background: 'var(--bg-surface)', border: '1px dashed var(--border-default)' }}>
-            <Dumbbell className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--fg-subtle)', opacity: 0.4 }} />
-            <p className="font-bold" style={{ color: 'var(--fg-muted)' }}>Nessuna sessione registrata.</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--fg-subtle)' }}>Creane una nuova per iniziare!</p>
+            <div className="w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+              <Dumbbell className="w-7 h-7" style={{ color: 'var(--fg-subtle)', opacity: 0.5 }} />
+            </div>
+            <p className="font-bold text-sm" style={{ color: 'var(--fg-muted)' }}>Nessuna sessione registrata</p>
+            <p className="text-xs mt-1.5 mb-4" style={{ color: 'var(--fg-subtle)' }}>Inizia il tuo primo allenamento!</p>
+            <Link href="/training/active"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black"
+              style={{ background: 'var(--accent)', color: 'var(--accent-on)', boxShadow: '0 4px 14px var(--glow-accent)', textDecoration: 'none' }}>
+              <Play className="w-4 h-4 fill-current" /> Nuovo Allenamento
+            </Link>
           </div>
         ) : (
           <div className="space-y-5">
             {sortedGroups.map(({ label, sessions: groupSessions }) => (
               <div key={label}>
-                <p className="text-[11px] font-black uppercase tracking-widest mb-2 px-1"
-                  style={{ color: 'var(--fg-subtle)' }}>{label}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest mb-2.5 px-1"
+                  style={{ color: 'var(--fg-subtle)', fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
                 <div className="space-y-2">
                   {groupSessions.map(s => {
                     const color = SESSION_COLORS[s.type] ?? 'var(--fg-muted)'
                     return (
-                      <Link key={s.id} href={`/training/${s.id}`}>
+                      <Link key={s.id} href={`/training/${s.id}`} style={{ display: 'block', textDecoration: 'none' }}>
                         <div
-                          className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.99]"
+                          className="session-card flex items-center gap-3 px-4 py-3.5 rounded-2xl"
                           style={{
                             background: 'var(--bg-surface)',
                             border: '1px solid var(--border-subtle)',
                             borderLeft: `3px solid ${color}`,
                           }}>
                           {/* Type badge */}
-                          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
-                            style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}>
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
+                            style={{
+                              background: `color-mix(in srgb, ${color} 15%, var(--bg-elevated))`,
+                              color,
+                              boxShadow: `0 2px 8px color-mix(in srgb, ${color} 20%, transparent)`,
+                            }}>
                             {s.type}
                           </div>
 
@@ -297,7 +309,7 @@ export default async function TrainingPage() {
                             <p className="font-bold text-sm leading-tight" style={{ color: 'var(--fg-primary)' }}>
                               {SESSION_FOCUS[s.type] ?? `Tipo ${s.type}`}
                             </p>
-                            <p className="text-[11px] mt-0.5 tabular-nums" style={{ color: 'var(--fg-muted)' }}>
+                            <p className="text-[11px] mt-0.5 tabular-nums" style={{ color: 'var(--fg-muted)', fontFamily: "'JetBrains Mono', monospace" }}>
                               {format(new Date(s.date), "EEE dd MMM", { locale: it })}
                               {s.durationMin ? ` · ${s.durationMin}min` : ''}
                               {s.trainingLoad ? ` · TL ${s.trainingLoad}` : ''}
@@ -306,17 +318,17 @@ export default async function TrainingPage() {
 
                           {/* Badges */}
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg"
-                              style={{ background: 'var(--bg-elevated)' }}>
+                            <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg"
+                              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
                               <Dumbbell className="w-3 h-3" style={{ color: 'var(--fg-subtle)' }} />
                               <span className="text-[11px] font-bold" style={{ color: 'var(--fg-muted)' }}>{s._count.exercises}</span>
                             </div>
                             {s.rpe && (
-                              <div className="px-2 py-1 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
+                              <div className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
                                 <span className="text-[11px] font-bold" style={{ color: 'var(--fg-muted)' }}>RPE {s.rpe}</span>
                               </div>
                             )}
-                            <ChevronRight className="w-3.5 h-3.5" style={{ color: 'var(--fg-subtle)' }} />
+                            <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--fg-subtle)' }} />
                           </div>
                         </div>
                       </Link>

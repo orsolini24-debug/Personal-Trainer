@@ -2,11 +2,34 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronRight, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { ArrowRight, ChevronRight, Trophy, TrendingUp, TrendingDown, Minus, Dumbbell, Utensils, Activity } from 'lucide-react'
 import KPITracker from '@/app/components/KPITracker'
 import { getDashboardData } from '@/app/actions/dashboard'
 
 type DashData = Awaited<ReturnType<typeof getDashboardData>>
+
+// ── Circular SVG Progress Ring ──
+function ProgressRing({ value, max, size = 72, stroke = 5, color = 'var(--accent)', bg = 'var(--border-default)' }: {
+  value: number; max: number; size?: number; stroke?: number; color?: string; bg?: string
+}) {
+  const r = (size - stroke * 2) / 2
+  const circ = 2 * Math.PI * r
+  const pct = max > 0 ? Math.min(value / max, 1) : 0
+  const offset = circ * (1 - pct)
+  return (
+    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={bg} strokeWidth={stroke} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none"
+        stroke={color} strokeWidth={stroke}
+        strokeDasharray={`${circ}`}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1)' }}
+      />
+    </svg>
+  )
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashData | null>(null)
@@ -56,18 +79,22 @@ export default function DashboardPage() {
     const d = new Date(iso); d.setHours(0,0,0,0); return d.getTime()
   })
 
-  // Recovery color — only applies when data exists
+  // Recovery color
   const hasScore = score > 0
   const recBg      = hasScore ? scoreBg : 'var(--bg-elevated)'
   const recText    = hasScore ? 'rgba(0,0,0,0.88)' : 'var(--fg-primary)'
   const recMuted   = hasScore ? 'rgba(0,0,0,0.45)' : 'var(--fg-subtle)'
   const recDivider = hasScore ? 'rgba(0,0,0,0.12)' : 'var(--border-default)'
 
+  const sessCount  = weekSessionsCount ?? 0
+  const sessTgt    = weekSessionsTarget ?? 5
+  const ringColor  = sessCount >= sessTgt ? 'var(--positive)' : sessCount > 0 ? 'var(--accent)' : 'var(--border-strong)'
+
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }}>
+    <div className="animate-page" style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }}>
 
       {/* ── HEADER ── */}
-      <header style={{ padding: '4px 0 28px' }}>
+      <header style={{ padding: '4px 0 24px', animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both' }}>
         <p style={{
           fontSize: '10px', fontWeight: 700, letterSpacing: '0.16em',
           textTransform: 'uppercase', color: 'var(--fg-subtle)',
@@ -109,99 +136,120 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* ── Week Strip ── */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(7,1fr)',
-        gap: '6px', marginBottom: '12px',
-      }}>
-        {weekDays.map((day, idx) => {
-          const isToday = day.getTime() === today.getTime()
-          const hasSession = sessionDateTimes.includes(day.getTime())
-          const isFuture = day > today
-          return (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-              <span style={{
-                fontSize: '9px', fontWeight: 700, textTransform: 'uppercase',
-                color: isToday ? 'var(--accent)' : 'var(--fg-subtle)',
-                fontFamily: "'JetBrains Mono', monospace",
-              }}>
-                {DAY_LABELS[idx]}
-              </span>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '11px', fontWeight: 800,
-                background: isToday
-                  ? 'var(--accent)'
-                  : hasSession
-                    ? 'color-mix(in srgb, var(--positive) 18%, var(--bg-elevated))'
-                    : 'var(--bg-elevated)',
-                border: isToday ? 'none'
-                  : hasSession ? '1px solid rgba(52,211,153,0.35)'
-                  : '1px solid var(--border-subtle)',
-                color: isToday ? 'var(--accent-on)' : hasSession ? 'var(--positive)' : 'var(--fg-subtle)',
-                opacity: isFuture && !isToday ? 0.4 : 1,
-              }}>
-                {hasSession && !isToday ? '✓' : day.getDate()}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* ── Week progress + Weight delta chips ── */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-        {/* Workout count chip */}
+      {/* ── Week Strip + Progress Ring ── */}
+      <div
+        style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'stretch', animation: 'fade-up 0.4s 60ms cubic-bezier(0.16,1,0.3,1) both' }}
+      >
+        {/* Week calendar */}
         <div style={{
-          flex: 1, padding: '10px 14px', borderRadius: '14px',
+          flex: 1,
           background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          borderRadius: '16px', padding: '12px 14px',
         }}>
-          <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <p style={{
+            fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em',
+            textTransform: 'uppercase', color: 'var(--fg-subtle)',
+            fontFamily: "'JetBrains Mono', monospace", marginBottom: '10px',
+          }}>
             Settimana
-          </span>
-          <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums' }}>
-            {weekSessionsCount ?? 0}
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--fg-muted)' }}>
-              /{weekSessionsTarget ?? 5}
-            </span>
-          </span>
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '4px' }}>
+            {weekDays.map((day, idx) => {
+              const isToday = day.getTime() === today.getTime()
+              const hasSession = sessionDateTimes.includes(day.getTime())
+              const isFuture = day > today
+              return (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <span style={{
+                    fontSize: '8px', fontWeight: 700, textTransform: 'uppercase',
+                    color: isToday ? 'var(--accent)' : 'var(--fg-subtle)',
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}>
+                    {DAY_LABELS[idx]}
+                  </span>
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '10px', fontWeight: 800,
+                    background: isToday
+                      ? 'var(--accent)'
+                      : hasSession
+                        ? 'color-mix(in srgb, var(--positive) 18%, var(--bg-elevated))'
+                        : 'var(--bg-elevated)',
+                    border: isToday ? 'none'
+                      : hasSession ? '1px solid rgba(52,211,153,0.35)'
+                      : '1px solid var(--border-subtle)',
+                    color: isToday ? 'var(--accent-on)' : hasSession ? 'var(--positive)' : 'var(--fg-subtle)',
+                    opacity: isFuture && !isToday ? 0.4 : 1,
+                    transition: 'all 0.2s ease',
+                  }}>
+                    {hasSession && !isToday ? '✓' : day.getDate()}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Weight delta chip */}
-        {currentWeight != null && (
+        {/* Progress ring + stats column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Weekly ring */}
           <div style={{
-            flex: 1, padding: '10px 14px', borderRadius: '14px',
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            borderRadius: '16px', padding: '12px 14px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+            minWidth: '88px',
           }}>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Peso
+            <div style={{ position: 'relative', width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ProgressRing value={sessCount} max={sessTgt} size={64} stroke={5} color={ringColor} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: "'Sora', sans-serif", fontSize: '18px', fontWeight: 900, color: 'var(--fg-primary)', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                  {sessCount}
+                </span>
+                <span style={{ fontSize: '8px', fontWeight: 700, color: 'var(--fg-subtle)', letterSpacing: '0.04em' }}>
+                  /{sessTgt}
+                </span>
+              </div>
+            </div>
+            <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--fg-subtle)', fontFamily: "'JetBrains Mono', monospace" }}>
+              Sessioni
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums' }}>
-                {currentWeight}
-                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--fg-muted)' }}>kg</span>
+          </div>
+
+          {/* Weight chip */}
+          {currentWeight != null && (
+            <div style={{
+              flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+              borderRadius: '14px', padding: '10px 12px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px',
+              minWidth: '88px',
+            }}>
+              <span style={{ fontSize: '18px', fontWeight: 900, color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.04em', lineHeight: 1, fontFamily: "'Sora', sans-serif" }}>
+                {currentWeight}<span style={{ fontSize: '9px', fontWeight: 600, color: 'var(--fg-muted)' }}>kg</span>
               </span>
               {weightDelta != null && weightDelta !== 0 && (
                 <span style={{
-                  fontSize: '11px', fontWeight: 800,
+                  fontSize: '10px', fontWeight: 800,
                   color: weightDelta < 0 ? 'var(--positive)' : 'var(--warning)',
                 }}>
                   {weightDelta > 0 ? `+${weightDelta}` : weightDelta}
                 </span>
               )}
+              <span style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--fg-subtle)', fontFamily: "'JetBrains Mono', monospace" }}>
+                Peso
+              </span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Recent PRs ── */}
       {recentPRs && recentPRs.length > 0 && (
         <div style={{
-          padding: '12px 16px', borderRadius: '16px', marginBottom: '12px',
+          padding: '12px 16px', borderRadius: '16px', marginBottom: '10px',
           background: 'color-mix(in srgb, var(--accent) 6%, var(--bg-surface))',
           border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
+          animation: 'fade-up 0.4s 80ms cubic-bezier(0.16,1,0.3,1) both',
         }}>
           <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px', fontFamily: "'JetBrains Mono', monospace" }}>
             🏆 Record questa settimana
@@ -224,7 +272,7 @@ export default function DashboardPage() {
       {/* ═══════════════════════════════════════════
           RECOVERY — full-width hero band
       ═══════════════════════════════════════════ */}
-      <Link href="/recovery" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
+      <Link href="/recovery" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px', animation: 'fade-up 0.45s 100ms cubic-bezier(0.16,1,0.3,1) both' }}>
         <div
           className="dash-card-hover"
           style={{
@@ -232,13 +280,24 @@ export default function DashboardPage() {
             borderRadius: '20px',
             padding: 'clamp(28px, 4vw, 48px)',
             cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Subtle noise texture when no data */}
+          {!hasScore && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse 80% 60% at 20% 50%, color-mix(in srgb, var(--accent) 5%, transparent), transparent)',
+              pointerEvents: 'none',
+            }} />
+          )}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto',
             gap: '24px 40px',
             alignItems: 'center',
+            position: 'relative',
           }}>
             {/* Score */}
             <div>
@@ -274,7 +333,7 @@ export default function DashboardPage() {
                 textTransform: 'uppercase', color: recMuted,
                 marginTop: '10px', fontFamily: "'Sora', sans-serif",
               }}>
-                {hasScore ? scoreLabel : 'Nessun dato'}
+                {hasScore ? scoreLabel : 'Aggiungi recupero →'}
               </p>
             </div>
 
@@ -324,7 +383,7 @@ export default function DashboardPage() {
       ═══════════════════════════════════════════ */}
       <div
         className="dash-2col"
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px', animation: 'fade-up 0.45s 140ms cubic-bezier(0.16,1,0.3,1) both' }}
       >
         {/* SESSION */}
         <div
@@ -378,10 +437,12 @@ export default function DashboardPage() {
                 </div>
                 <Link href="/training/active" style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: 'var(--accent)', color: '#fff',
+                  background: 'var(--accent)', color: 'var(--accent-on)',
                   padding: '13px 18px', borderRadius: '10px',
                   fontWeight: 800, fontSize: '12px', letterSpacing: '0.06em',
                   textTransform: 'uppercase', textDecoration: 'none',
+                  boxShadow: '0 4px 16px var(--glow-accent)',
+                  transition: 'filter 0.2s, transform 0.2s',
                 }}>
                   Inizia ora <ArrowRight size={14} />
                 </Link>
@@ -438,16 +499,18 @@ export default function DashboardPage() {
                   fontFamily: "'Sora', sans-serif",
                   fontSize: 'clamp(2.4rem, 5.5vw, 3.4rem)',
                   fontWeight: 900, letterSpacing: '-0.06em',
-                  color: 'var(--fg-primary)', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+                  color: kcalActual > 0 ? 'var(--fg-primary)' : 'var(--fg-subtle)', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
                 }}>
-                  {kcalActual}
+                  {kcalActual > 0 ? kcalActual : '––'}
                 </span>
-                <span style={{
-                  fontSize: '11px', fontWeight: 600, color: 'var(--fg-subtle)',
-                  fontFamily: "'JetBrains Mono', monospace",
-                }}>
-                  / {kcalTarget}
-                </span>
+                {kcalTarget > 0 && (
+                  <span style={{
+                    fontSize: '11px', fontWeight: 600, color: 'var(--fg-subtle)',
+                    fontFamily: "'JetBrains Mono', monospace",
+                  }}>
+                    / {kcalTarget}
+                  </span>
+                )}
               </div>
               <p style={{
                 fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em',
@@ -457,17 +520,19 @@ export default function DashboardPage() {
                 kcal
               </p>
 
-              <div style={{
-                height: '3px', background: 'var(--border-default)',
-                borderRadius: '2px', overflow: 'hidden', marginBottom: '16px',
-              }}>
+              {kcalTarget > 0 && (
                 <div style={{
-                  height: '100%', width: `${kcalPct}%`,
-                  background: kcalPct >= 95 ? 'var(--positive)' : kcalPct >= 60 ? 'var(--accent)' : 'var(--warning)',
-                  borderRadius: '2px',
-                  transition: 'width 1.4s cubic-bezier(0.16,1,0.3,1)',
-                }} />
-              </div>
+                  height: '4px', background: 'var(--border-default)',
+                  borderRadius: '3px', overflow: 'hidden', marginBottom: '16px',
+                }}>
+                  <div style={{
+                    height: '100%', width: `${Math.min(kcalPct, 100)}%`,
+                    background: kcalPct >= 95 ? 'var(--positive)' : kcalPct >= 60 ? 'var(--accent)' : 'var(--warning)',
+                    borderRadius: '3px',
+                    transition: 'width 1.4s cubic-bezier(0.16,1,0.3,1)',
+                  }} />
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px' }}>
                 {[
@@ -477,7 +542,7 @@ export default function DashboardPage() {
                 ].map(({ label, val, color }) => (
                   <div key={label} style={{
                     background: 'var(--bg-elevated)',
-                    borderRadius: '8px', padding: '7px 6px', textAlign: 'center',
+                    borderRadius: '10px', padding: '8px 6px', textAlign: 'center',
                   }}>
                     <p style={{
                       fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em',
@@ -487,11 +552,11 @@ export default function DashboardPage() {
                       {label}
                     </p>
                     <p style={{
-                      fontSize: '13px', fontWeight: 900, color,
+                      fontSize: '13px', fontWeight: 900, color: val > 0 ? color : 'var(--fg-subtle)',
                       fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
                       fontFamily: "'Sora', sans-serif",
                     }}>
-                      {val}g
+                      {val > 0 ? `${val}g` : '–'}
                     </p>
                   </div>
                 ))}
@@ -504,16 +569,16 @@ export default function DashboardPage() {
       {/* ═══════════════════════════════════════════
           AI COACH
       ═══════════════════════════════════════════ */}
-      <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
+      <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px', animation: 'fade-up 0.45s 180ms cubic-bezier(0.16,1,0.3,1) both' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: '12px',
           padding: '14px 20px', borderRadius: '14px',
           background: 'var(--accent-dim)',
-          border: '1px solid color-mix(in srgb, var(--accent) 14%, transparent)',
-          transition: 'background 0.2s',
+          border: '1px solid color-mix(in srgb, var(--accent) 18%, transparent)',
+          transition: 'background 0.2s, border-color 0.2s',
         }}>
           <div style={{
-            width: '5px', height: '5px', borderRadius: '50%', flexShrink: 0,
+            width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
             background: 'var(--accent)',
             boxShadow: '0 0 8px var(--glow-accent)',
             animation: 'pulse 2s infinite',
@@ -526,15 +591,19 @@ export default function DashboardPage() {
         </div>
       </Link>
 
-      {/* ── WEEKLY REPORT SNIPPET (if exists) ── */}
+      {/* ── WEEKLY REPORT SNIPPET ── */}
       {lastReport && (
-        <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
-          <div style={{
+        <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px', animation: 'fade-up 0.45s 200ms cubic-bezier(0.16,1,0.3,1) both' }}>
+          <div className="dash-card-hover" style={{
             padding: '24px', borderRadius: '20px',
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
             position: 'relative', overflow: 'hidden',
           }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
+              background: 'linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)), transparent)',
+            }} />
             <p style={{
               fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em',
               textTransform: 'uppercase', color: 'var(--accent)',
@@ -542,8 +611,8 @@ export default function DashboardPage() {
             }}>
               Weekly Report · {new Date(lastReport.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })}
             </p>
-            <p style={{ 
-              fontSize: '13px', lineHeight: 1.6, color: 'var(--fg-primary)', 
+            <p style={{
+              fontSize: '13px', lineHeight: 1.6, color: 'var(--fg-primary)',
               margin: 0, opacity: 0.9, fontWeight: 500,
               display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
               overflow: 'hidden'
@@ -561,7 +630,7 @@ export default function DashboardPage() {
       )}
 
       {/* ═══════════════════════════════════════════
-          STATS STRIP — single bar, no separate cards
+          STATS STRIP
       ═══════════════════════════════════════════ */}
       <div
         className="dash-stats-strip"
@@ -570,6 +639,7 @@ export default function DashboardPage() {
           border: '1px solid var(--border-default)',
           borderRadius: '16px', overflow: 'hidden',
           marginBottom: '36px',
+          animation: 'fade-up 0.45s 220ms cubic-bezier(0.16,1,0.3,1) both',
         }}
       >
         {[
@@ -618,7 +688,7 @@ export default function DashboardPage() {
       {/* ═══════════════════════════════════════════
           OBIETTIVI
       ═══════════════════════════════════════════ */}
-      <div>
+      <div style={{ animation: 'fade-up 0.45s 260ms cubic-bezier(0.16,1,0.3,1) both' }}>
         <div style={{
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', marginBottom: '14px',
@@ -647,17 +717,33 @@ export default function DashboardPage() {
 
 function DashboardSkeleton() {
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }}>
-      <div style={{ padding: '4px 0 28px' }}>
-        <div style={{ height: '10px', width: '120px', borderRadius: '5px', background: 'var(--bg-elevated)', marginBottom: '12px' }} />
-        <div style={{ height: '64px', width: '240px', borderRadius: '8px', background: 'var(--bg-elevated)' }} />
+    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '72px' }} className="animate-page">
+      {/* Header skeleton */}
+      <div style={{ padding: '4px 0 24px' }}>
+        <div className="skeleton" style={{ height: '10px', width: '140px', marginBottom: '14px' }} />
+        <div className="skeleton" style={{ height: '60px', width: '55%', borderRadius: '10px' }} />
       </div>
-      <div style={{ height: '180px', borderRadius: '20px', background: 'var(--bg-elevated)', marginBottom: '8px' }} />
+      {/* Week strip */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
+        <div className="skeleton" style={{ flex: 1, height: '100px', borderRadius: '16px' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="skeleton" style={{ width: '88px', height: '100px', borderRadius: '16px' }} />
+        </div>
+      </div>
+      {/* Recovery */}
+      <div className="skeleton" style={{ height: '180px', borderRadius: '20px', marginBottom: '8px' }} />
+      {/* Session + Nutrition */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-        {[0, 1].map(i => <div key={i} style={{ height: '210px', borderRadius: '20px', background: 'var(--bg-elevated)' }} />)}
+        <div className="skeleton" style={{ height: '210px', borderRadius: '20px' }} />
+        <div className="skeleton" style={{ height: '210px', borderRadius: '20px' }} />
       </div>
-      <div style={{ height: '44px', borderRadius: '14px', background: 'var(--bg-elevated)', marginBottom: '8px' }} />
-      <div style={{ height: '80px', borderRadius: '16px', background: 'var(--bg-elevated)', marginBottom: '36px' }} />
+      {/* Coach */}
+      <div className="skeleton" style={{ height: '48px', borderRadius: '14px', marginBottom: '8px' }} />
+      {/* Stats strip */}
+      <div className="skeleton" style={{ height: '80px', borderRadius: '16px', marginBottom: '36px' }} />
+      {/* Goals */}
+      <div className="skeleton" style={{ height: '16px', width: '100px', borderRadius: '8px', marginBottom: '14px' }} />
+      <div className="skeleton" style={{ height: '120px', borderRadius: '16px' }} />
     </div>
   )
 }

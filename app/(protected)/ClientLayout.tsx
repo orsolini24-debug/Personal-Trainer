@@ -113,7 +113,7 @@ function UserAvatar({ session, onLogout }: { session: Session | null; onLogout: 
         </div>
         {/* Online dot */}
         <div
-          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+          className="online-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
           style={{
             background: 'var(--positive)',
             border: '2px solid var(--bg-sidebar)',
@@ -142,23 +142,23 @@ function SidebarContent({ pathname, session, onHelp, onClose }: { pathname: stri
       {/* Logo */}
       <div className="flex items-center gap-3 px-2 mb-5 shrink-0">
         <div
-          className="w-9 h-9 flex items-center justify-center font-black text-white shrink-0"
+          className="w-9 h-9 flex items-center justify-center font-black shrink-0"
           style={{
             borderRadius: '10px',
-            background: 'var(--accent)',
-            boxShadow: '0 2px 12px var(--glow-accent)',
+            background: 'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 60%, var(--accent)))',
+            boxShadow: '0 2px 14px var(--glow-accent)',
             fontSize: '11px',
             letterSpacing: '-0.02em',
             fontFamily: "'Sora', sans-serif",
+            color: 'var(--accent-on, #fff)',
           }}
         >
           PE
         </div>
         <div className="leading-none">
           <span
-            className="font-black text-sm tracking-tight block"
+            className="text-accent-gradient font-black block"
             style={{
-              color: 'var(--accent)',
               letterSpacing: '-0.04em',
               fontSize: '13px',
             }}
