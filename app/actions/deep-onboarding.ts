@@ -143,34 +143,47 @@ export async function generateAITripleProposal() {
   }, null, 2)}
   
   REGOLE TECNICHE DI GENERAZIONE:
-  1. HYBRID FUSION: Non limitarti a 1 o 2 Titani. Se l'atleta è multisport o ha obiettivi complessi (es. Forza + Endurance + Longevità), fondi TUTTE le metodologie necessarie (anche 5 o più) in un'unica visione coerente. 
+  1. HYBRID FUSION: Non limitarti a 1 o 2 Titani. Se l'atleta è multisport o ha obiettivi complessi (es. Forza + Endurance + Longevità), fondi TUTTE le metodologie necessarie (anche 5 o più) in un'unica visione coerente.
   2. SINERGIA LOGICA: La fusione deve avere senso fisiologico. Ad esempio, usa la Zona 2 di Attia/San Millán come base, ma integra la forza esplosiva di Bosco o la mobilità di McGill se il profilo lo richiede.
   3. ADATTAMENTO REALE: Rispetta rigorosamente l'attrezzatura e la routine quotidiana dell'atleta.
   4. QUALITÀ ASSOLUTA: La programmazione risultante deve essere la migliore possibile, bilanciata per evitare interferenze negative tra sistemi energetici.
-  
-  FORMATO JSON RICHIESTO:
+  5. VOLUME ESERCIZI OBBLIGATORIO: ogni giornata "plan" DEVE contenere tra 5 e 8 esercizi. NON generare mai meno di 5 esercizi per sessione. Sessioni di forza o ipertrofia: 6-8 esercizi. Sessioni di endurance/mobilità: 5-6 esercizi/drill.
+  6. GIORNI: genera tante giornate quante indica availability (es. 3 disponibilità = 3 giorni: A, B, C).
+
+  FORMATO JSON RICHIESTO (esempio con UNA proposta e UN giorno — espandi tu a 3 proposte e tutti i giorni necessari):
   {
     "proposals": [
       {
         "id": 1,
         "name": "Nome Strategia (es. 'Apex Hybrid: Longevità, Forza & Endurance')",
-        "titanIds": ["P51", "P18", "P48", "P34", "P06"], // Includi TUTTI i Titani usati per la fusione
+        "titanIds": ["P51", "P18", "P48", "P34", "P06"],
         "strategy": "Spiegazione tecnica della sinergia creata tra i diversi Titani",
-        "pros": [], "cons": [],
+        "pros": ["Pro 1", "Pro 2"], "cons": ["Con 1"],
         "isRecommended": true,
         "mesocycle": {
-          "name": "...",
-          "objectives": "...",
+          "name": "Mesociclo Apex — Settimane 1-4",
+          "objectives": "Obiettivi sintetizzati dal profilo atleta",
           "plan": [
-            { "dayLabel": "A", "focus": "...", "exercises": [{ "name": "...", "sets": 3, "repsMin": 8, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "..." }] }
+            {
+              "dayLabel": "A",
+              "focus": "Forza Bassa — Quadricipiti e Posteriori coscia",
+              "exercises": [
+                { "name": "Squat al bilanciere", "sets": 4, "repsMin": 4, "repsMax": 6, "targetRir": 2, "restSec": 180, "notes": "Scendi sotto il parallelo, core braced" },
+                { "name": "Romanian Deadlift", "sets": 3, "repsMin": 8, "repsMax": 10, "targetRir": 2, "restSec": 120, "notes": "Senti lo stretch degli ischiocrurali" },
+                { "name": "Leg Press 45°", "sets": 3, "repsMin": 10, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "Piedi alti per enfatizzare i femorali" },
+                { "name": "Leg Curl sdraiato", "sets": 3, "repsMin": 10, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "Fase eccentrica lenta 3 sec" },
+                { "name": "Calf Raise in piedi", "sets": 4, "repsMin": 12, "repsMax": 15, "targetRir": 1, "restSec": 60, "notes": "Pausa 1 sec in cima" },
+                { "name": "Plank con rotazione", "sets": 3, "repsMin": 10, "repsMax": 12, "targetRir": 2, "restSec": 60, "notes": "Mantieni bacino stabile" }
+              ]
+            }
           ]
         },
         "nutritionPlan": {
-          "trainingDayKcal": 2000,
-          "enduranceDayKcal": 2200,
-          "restDayKcal": 1800,
-          "macros": { "p": 120, "c": 200, "f": 60 },
-          "strategy": "..."
+          "trainingDayKcal": 2200,
+          "enduranceDayKcal": 2400,
+          "restDayKcal": 1900,
+          "macros": { "p": 140, "c": 220, "f": 65 },
+          "strategy": "Carboidrati attorno all'allenamento, proteine distribuite su 4 pasti"
         }
       }
     ]
@@ -180,7 +193,9 @@ export async function generateAITripleProposal() {
     const completion = await groq.chat.completions.create({
       messages: [{ role: 'system', content: prompt }],
       model: 'llama-3.3-70b-versatile',
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
+      max_tokens: 8000,
+      temperature: 0.3,
     })
 
     const res = JSON.parse(completion.choices[0].message.content || "{}")

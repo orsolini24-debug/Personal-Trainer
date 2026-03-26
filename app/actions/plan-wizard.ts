@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { revalidatePath } from "next/cache"
 import Groq from "groq-sdk"
 import {
   titanProfiles,
@@ -202,8 +203,10 @@ REGOLE DI SINTESI (Genera 3 opzioni):
 2. **VOLUME REALISTICO**: Per un utente sedentario (es. 10h al PC), non proporre piani estenuanti da 6 giorni. Inizia gradualmente (2-3 giorni).
 3. **FUSIONE TITANI**: Ogni proposta DEVE dichiarare la sintesi con i nomi reali dei Titani forniti nel contesto sopra.
 4. **OBIETTIVI**: Definisci obiettivi (goals) che siano coerenti con la richiesta dell'utente (es. perdita peso, non massimale di panca).
+5. **VOLUME ESERCIZI OBBLIGATORIO**: ogni giornata "plan" DEVE contenere tra 5 e 8 esercizi reali. MAI meno di 5. Sessioni forza/ipertrofia: 6-8 esercizi. Sessioni endurance/mobilità: 5-6 drill/esercizi.
+6. **GIORNI**: genera una giornata per ogni giorno di disponibilità dell'atleta. Es. 3 giorni = plan con 3 voci [A, B, C].
 
-Genera ESATTAMENTE questo JSON:
+Genera ESATTAMENTE questo JSON (esempio con 1 proposta/1 giorno: tu genera 3 proposte, tutti i giorni, 5-8 esercizi ciascuno):
 {
   "goals": [
     {
@@ -222,7 +225,7 @@ Genera ESATTAMENTE questo JSON:
       "id": 1,
       "name": "Nome Sintesi",
       "strategy": "Perché questi Titani? Come aiutano un utente con questa routine specifica?",
-      "pros": ["Pro 1"], "cons": ["Con 1"],
+      "pros": ["Pro 1", "Pro 2"], "cons": ["Con 1"],
       "isRecommended": true,
       "planType": "${planType}",
       "trainingDays": [1, 3, 5],
@@ -233,17 +236,22 @@ Genera ESATTAMENTE questo JSON:
         "plan": [
           {
             "dayLabel": "A",
-            "focus": "Focus",
+            "focus": "Forza — Upper Body Spinta",
             "exercises": [
-              { "name": "Esercizio", "sets": 3, "repsMin": 8, "repsMax": 12, "targetRir": 2, "restSec": 90, "notes": "Nota tecnica" }
+              { "name": "Panca Piana", "sets": 4, "repsMin": 5, "repsMax": 7, "targetRir": 2, "restSec": 180, "notes": "Scapole retratte, piedi piatti" },
+              { "name": "Overhead Press", "sets": 3, "repsMin": 6, "repsMax": 8, "targetRir": 2, "restSec": 150, "notes": "Core attivo" },
+              { "name": "Dips ai paralleli", "sets": 3, "repsMin": 8, "repsMax": 10, "targetRir": 2, "restSec": 120, "notes": "Torso inclinato per i pettorali" },
+              { "name": "Lateral Raise cavi", "sets": 3, "repsMin": 12, "repsMax": 15, "targetRir": 1, "restSec": 60, "notes": "Pollice verso il basso" },
+              { "name": "Tricep Pushdown", "sets": 3, "repsMin": 12, "repsMax": 15, "targetRir": 1, "restSec": 60, "notes": "Gomiti fermi ai fianchi" },
+              { "name": "Face Pull cavi", "sets": 3, "repsMin": 15, "repsMax": 20, "targetRir": 1, "restSec": 60, "notes": "Retrazione scapolare" }
             ]
           }
         ]
       },
       "nutritionPlan": {
-        "kcalTarget": 2000,
-        "proteinGPerKg": 1.6,
-        "carbsGPerKg": 2.0,
+        "kcalTarget": 2200,
+        "proteinGPerKg": 1.8,
+        "carbsGPerKg": 2.5,
         "fatGPerKg": 0.8,
         "strategy": "Strategia nutrizionale Titano-based"
       }
@@ -256,7 +264,7 @@ Genera ESATTAMENTE questo JSON:
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: systemPrompt }],
       temperature: 0.3,
-      max_tokens: 4000,
+      max_tokens: 8000,
       response_format: { type: "json_object" }
     })
 
@@ -269,7 +277,7 @@ Genera ESATTAMENTE questo JSON:
         data: { isActive: false }
       })
       await prisma.athleteGoal.createMany({
-        data: data.goals.map((g: any, i: number) => ({
+        data: data.goals.map((g: any) => ({
           userId,
           type: g.type,
           sport: g.sport || null,
@@ -281,7 +289,29 @@ Genera ESATTAMENTE questo JSON:
         })),
       })
     }
-  } catch {
+
+    // Salvataggio Proposte come mesociclo DRAFT (visibile in ProposalSelector)
+    if (data.proposals?.length) {
+      // Archivia eventuali draft precedenti
+      await prisma.mesocycle.updateMany({
+        where: { userId, status: 'DRAFT' },
+        data: { status: 'ARCHIVED' }
+      })
+      await prisma.mesocycle.create({
+        data: {
+          userId,
+          name: 'Proposte Strategiche AI',
+          startDate: new Date(),
+          status: 'DRAFT',
+          aiProposals: data.proposals,
+        }
+      })
+    }
+
+    revalidatePath('/plan')
+    return { success: true }
+  } catch (e: any) {
+    console.error('[generatePlanFromWizard]', e)
     return null
   }
 }
