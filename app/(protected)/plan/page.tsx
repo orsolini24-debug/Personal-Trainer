@@ -236,7 +236,15 @@ export default async function PlanPage() {
                   </div>
                 </div>
 
-                {/* Sidebar Sidebar */}
+                {/* Floating AI Chat — fixed bottom-right, scrolls with page */}
+              {activeMeso && (
+                <PlanChat
+                  mesoId={activeMeso.id}
+                  title="Rivedi il Piano con il Coach"
+                />
+              )}
+
+              {/* Sidebar Sidebar */}
                 <div className="lg:col-span-4 space-y-8 animate-rise-up" style={{ animationDelay: '500ms' }}>
                   <section className="rounded-[2.5rem] p-8 card-elevated mesh-bg border border-border">
                     <div className="divider-label mb-8">Roadmap</div>

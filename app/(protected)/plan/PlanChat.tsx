@@ -52,10 +52,13 @@ export default function PlanChat({ mesoId, title = "Discuti con il Coach AI" }: 
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-10 right-10 w-16 h-16 rounded-full btn-primary glow-accent flex items-center justify-center shadow-2xl z-50 animate-bounce-slow"
-        title="Chiedi spiegazioni al Coach"
+        className="fixed bottom-10 right-10 flex items-center gap-3 pl-5 pr-4 h-14 rounded-full btn-primary glow-accent shadow-2xl z-50 animate-bounce-slow group"
+        title="Rivedi il piano con il Coach AI"
       >
-        <MessageSquare className="w-7 h-7" />
+        <MessageSquare className="w-5 h-5 shrink-0" />
+        <span className="text-[11px] font-black uppercase tracking-widest pr-1 whitespace-nowrap">
+          Rivedi con il Coach
+        </span>
       </button>
     )
   }
@@ -84,22 +87,46 @@ export default function PlanChat({ mesoId, title = "Discuti con il Coach AI" }: 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
         {messages.length === 0 && (
-          <div className="text-center py-10 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto text-accent">
-              <Bot className="w-8 h-8" />
+          <div className="py-8 space-y-5">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto text-accent">
+                <Bot className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-primary tracking-tight">Rivedi il piano con me</p>
+                <p className="text-[11px] text-fg-muted mt-1 px-4 leading-relaxed">
+                  Posso analizzare il tuo piano attuale, spiegare le scelte metodologiche e aiutarti a modificarlo insieme.
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-fg-muted italic px-6">
-              "Ciao! Posso spiegarti le basi fisiologiche di questo piano o aiutarti a fare modifiche coerenti con i principi dei Titani."
-            </p>
-            <div className="grid grid-cols-1 gap-2 px-4">
-              <button onClick={() => setInput("Spiegami perché è stato scelto questo Titano.")} className="p-3 rounded-xl bg-elevated text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left">
-                Perché questo Titano?
+            <div className="grid grid-cols-1 gap-2 px-2">
+              <button
+                onClick={() => setInput("Analizza il mio piano attuale e dimmi cosa ne pensi.")}
+                className="p-3 rounded-xl text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left border border-border/50"
+                style={{ background: 'var(--bg-elevated)' }}
+              >
+                🔍 Analizza il mio piano
               </button>
-              <button onClick={() => setInput("Posso allenarmi 1 ora invece di 45 min?")} className="p-3 rounded-xl bg-elevated text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left">
-                Posso allungare le sessioni?
+              <button
+                onClick={() => setInput("Cosa posso migliorare nel mio piano?")}
+                className="p-3 rounded-xl text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left border border-border/50"
+                style={{ background: 'var(--bg-elevated)' }}
+              >
+                ⚡ Cosa posso migliorare?
               </button>
-              <button onClick={() => setInput("Come gestisco il recupero?")} className="p-3 rounded-xl bg-elevated text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left">
-                Come gestisco il recupero?
+              <button
+                onClick={() => setInput("Spiegami la struttura del piano e i principi metodologici seguiti.")}
+                className="p-3 rounded-xl text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left border border-border/50"
+                style={{ background: 'var(--bg-elevated)' }}
+              >
+                📚 Spiega la metodologia
+              </button>
+              <button
+                onClick={() => setInput("Come gestisco il recupero e il carico nelle prossime settimane?")}
+                className="p-3 rounded-xl text-[11px] font-black uppercase tracking-tight text-accent hover:bg-accent/10 transition-all text-left border border-border/50"
+                style={{ background: 'var(--bg-elevated)' }}
+              >
+                🔄 Gestione recupero e carico
               </button>
             </div>
           </div>

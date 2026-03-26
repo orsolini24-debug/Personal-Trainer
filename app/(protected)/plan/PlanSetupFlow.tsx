@@ -245,6 +245,7 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
   // ── Navigation ────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>('PROFILE')
   const [loading, setLoading] = useState(false)
+  const [extracting, setExtracting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // ── Phase 1: Profile ──────────────────────────────────────────────────────
@@ -319,12 +320,42 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
   }
 
   const handleExistingPlanSubmit = async () => {
-    const effectiveDescription = planFile
-      ? `[Documento: ${planFile.name}]${planNotes.trim() ? '\n' + planNotes.trim() : ''}`
-      : planNotes.trim()
     if (!planFile && !planNotes.trim()) return
-    setLoading(true)
     setError(null)
+
+    // ── Step 1: if there's a file, extract its content via API ───────────────
+    let effectiveDescription = planNotes.trim()
+
+    if (planFile) {
+      setExtracting(true)
+      try {
+        const fd = new FormData()
+        fd.append('file', planFile)
+        const res = await fetch('/api/plan-extract', { method: 'POST', body: fd })
+        const json = await res.json()
+        if (json.success && json.description) {
+          // Merge AI-extracted description with any manual notes
+          effectiveDescription = planNotes.trim()
+            ? `${json.description}\n\nNote aggiuntive: ${planNotes.trim()}`
+            : json.description
+        } else {
+          // Fallback: just store filename + notes
+          effectiveDescription = planNotes.trim()
+            ? `[Documento: ${planFile.name}]\n${planNotes.trim()}`
+            : `[Documento: ${planFile.name}]`
+        }
+      } catch {
+        // Silent fallback — don't block the onboarding
+        effectiveDescription = planNotes.trim()
+          ? `[Documento: ${planFile.name}]\n${planNotes.trim()}`
+          : `[Documento: ${planFile.name}]`
+      } finally {
+        setExtracting(false)
+      }
+    }
+
+    // ── Step 2: save profile + create mesocycle ───────────────────────────────
+    setLoading(true)
 
     const profileData = getProfileData()
     const planData: ExistingPlanData = {
@@ -796,6 +827,15 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
             </div>
           </div>
 
+          {/* Extracting state */}
+          {extracting && (
+            <div className="flex items-center gap-3 p-4 rounded-2xl text-sm"
+              style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
+              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+              Analisi del documento in corso... l&apos;AI sta leggendo il tuo piano
+            </div>
+          )}
+
           {error && (
             <div className="flex items-center gap-3 p-4 rounded-2xl text-sm"
               style={{ background: 'color-mix(in srgb, #ef4444 12%, transparent)', color: '#ef4444', border: '1px solid color-mix(in srgb, #ef4444 30%, transparent)' }}>
@@ -808,8 +848,8 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
         <NavButtons
           onBack={() => setStep('DECISION')}
           onNext={handleExistingPlanSubmit}
-          nextLabel="Salva e continua"
-          disabled={!existingValid}
+          nextLabel={extracting ? 'Analisi...' : 'Salva e continua'}
+          disabled={!existingValid || extracting}
           loading={loading}
         />
       </div>
