@@ -6,7 +6,7 @@ import { SportType } from '@prisma/client'
 import {
   User, ChevronRight, ChevronLeft, Loader2, CheckCircle2,
   Dumbbell, Sparkles, Calendar, Clock, Target, AlertTriangle,
-  Trophy, Zap, Activity, BarChart2
+  Trophy, Zap, Activity, BarChart2, Upload, FileText, X
 } from 'lucide-react'
 import {
   completeWithExistingPlan,
@@ -96,6 +96,8 @@ const DURATION_OPTIONS = [
 ]
 
 const DURATION_LABELS: Record<string, string> = {
+  'none':   'Non iniziato',
+  'week':   '< 1 settimana',
   'short':  '< 1 mese',
   'medium': '1-3 mesi',
   'long':   '3-6 mesi',
@@ -259,6 +261,8 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
 
   // ── Phase 3a: Existing Plan ───────────────────────────────────────────────
   const [planDescription, setPlanDescription] = useState('')
+  const [planFile, setPlanFile] = useState<File | null>(null)
+  const [planNotes, setPlanNotes] = useState('')
   const [planDuration, setPlanDuration] = useState('')
   const [planSatisfaction, setPlanSatisfaction] = useState<number>(0)
   const [squat, setSquat] = useState('')
@@ -315,13 +319,16 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
   }
 
   const handleExistingPlanSubmit = async () => {
-    if (!planDescription.trim()) return
+    const effectiveDescription = planFile
+      ? `[Documento: ${planFile.name}]${planNotes.trim() ? '\n' + planNotes.trim() : ''}`
+      : planNotes.trim()
+    if (!planFile && !planNotes.trim()) return
     setLoading(true)
     setError(null)
 
     const profileData = getProfileData()
     const planData: ExistingPlanData = {
-      planDescription,
+      planDescription: effectiveDescription,
       durationLabel: DURATION_LABELS[planDuration] ?? planDuration,
       satisfaction: planSatisfaction,
       squat1RM: squat ? parseFloat(squat) : undefined,
@@ -628,23 +635,86 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
 
   // ── Step: EXISTING PLAN ───────────────────────────────────────────────────
   if (step === 'EXISTING_PLAN') {
-    const existingValid = planDescription.trim().length > 10
+    const existingValid = planFile !== null || planNotes.trim().length > 2
+    const showSatisfaction = planDuration !== '' && planDuration !== 'none' && planDuration !== 'week'
 
     return (
       <div className="max-w-xl mx-auto">
         <StepHeader step={3} total={3} label="Il tuo piano attuale" />
 
         <div className="space-y-7">
-          {/* Plan description */}
+          {/* File upload */}
           <FormField
-            label="Descrivici il tuo piano"
-            hint="Es: 'Push/Pull/Legs, 4x a settimana, circa 45-60 min a sessione'"
+            label="Carica il tuo piano"
+            hint="PDF, Word, immagine o qualsiasi documento con il tuo programma"
+          >
+            <div>
+              <input
+                id="plan-file-input"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0] ?? null
+                  setPlanFile(f)
+                }}
+              />
+              {!planFile ? (
+                <label
+                  htmlFor="plan-file-input"
+                  className="flex flex-col items-center justify-center gap-3 w-full py-8 rounded-2xl cursor-pointer transition-all border-2 border-dashed"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    borderColor: 'var(--border-default)',
+                  }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)')}
+                >
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+                    <Upload className="w-6 h-6" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-black text-primary">Carica documento</p>
+                    <p className="text-[11px] text-fg-subtle opacity-60 mt-0.5">PDF, Word, immagine...</p>
+                  </div>
+                </label>
+              ) : (
+                <div className="flex items-center gap-4 p-4 rounded-2xl border"
+                  style={{ background: 'color-mix(in srgb, var(--accent) 8%, var(--bg-elevated))', borderColor: 'var(--accent)' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--accent)' }}>
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-primary truncate">{planFile.name}</p>
+                    <p className="text-[11px] text-fg-subtle opacity-60">
+                      {(planFile.size / 1024).toFixed(0)} KB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPlanFile(null)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:opacity-70"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--fg-muted)' }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </FormField>
+
+          {/* Optional notes */}
+          <FormField
+            label="Note aggiuntive (opzionale)"
+            hint="Aggiungi dettagli sul piano, obiettivi o contesto"
           >
             <textarea
-              value={planDescription}
-              onChange={e => setPlanDescription(e.target.value)}
-              placeholder="Descrivi brevemente la struttura del tuo piano — giorni, esercizi principali, obiettivi..."
-              rows={4}
+              value={planNotes}
+              onChange={e => setPlanNotes(e.target.value)}
+              placeholder="Es: Push/Pull/Legs 4x a settimana, focus sulla forza massimale..."
+              rows={3}
               className="w-full px-4 py-3 rounded-2xl text-sm font-medium outline-none transition-all resize-none"
               style={{
                 background: 'var(--bg-elevated)',
@@ -667,27 +737,33 @@ export default function PlanSetupFlow({ userName }: PlanSetupFlowProps) {
             </div>
           </FormField>
 
-          {/* Satisfaction */}
-          <FormField label={`Come sta andando? ${planSatisfaction > 0 ? '⭐'.repeat(planSatisfaction) : ''}`}
-            hint="1 = per niente soddisfatto  •  5 = ottimamente">
-            <div className="flex gap-3">
-              {[1, 2, 3, 4, 5].map(n => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPlanSatisfaction(n)}
-                  className="flex-1 h-12 rounded-2xl text-lg font-black transition-all border"
-                  style={{
-                    background: planSatisfaction >= n ? '#f59e0b' : 'var(--bg-elevated)',
-                    borderColor: planSatisfaction >= n ? '#f59e0b' : 'var(--border-default)',
-                    color: planSatisfaction >= n ? 'white' : 'var(--fg-muted)',
-                  }}
-                >
-                  ⭐
-                </button>
-              ))}
-            </div>
-          </FormField>
+          {/* Satisfaction — hidden when plan not yet started */}
+          {showSatisfaction && (
+            <FormField
+              label={`Come sta andando? ${planSatisfaction > 0 ? '★'.repeat(planSatisfaction) : ''}`}
+              hint="1 = per niente soddisfatto  •  5 = ottimamente"
+            >
+              <div className="flex gap-3">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setPlanSatisfaction(n)}
+                    className="flex-1 h-12 rounded-2xl font-black transition-all border"
+                    style={{
+                      fontSize: n <= 2 ? '0.8rem' : n === 3 ? '0.75rem' : '0.65rem',
+                      background: planSatisfaction >= n ? '#f59e0b' : 'var(--bg-elevated)',
+                      borderColor: planSatisfaction >= n ? '#f59e0b' : 'var(--border-default)',
+                      color: planSatisfaction >= n ? 'white' : 'var(--fg-muted)',
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {'★'.repeat(n)}
+                  </button>
+                ))}
+              </div>
+            </FormField>
+          )}
 
           {/* Carichi di riferimento (opzionale) */}
           <div className="p-6 rounded-[1.5rem] border border-dashed border-border/50"
