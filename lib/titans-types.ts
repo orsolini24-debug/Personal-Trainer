@@ -335,6 +335,6 @@ export interface TitanProfileV2Extension {
   schemaVersion?:          '1.0' | '2.0'        // default '1.0' per profili non migrati
   deepProfileComplete?:    boolean               // true = profilo completamente migrato
 
-  // NUOVO v2: Resilient red flags (opzionale, sostituisce il formato testo nel DB)
+  // NUOVO v2: Resilient red flags (override individuali di sicurezza)
   resilientRedFlags?:      ResilientRedFlag[]
 }

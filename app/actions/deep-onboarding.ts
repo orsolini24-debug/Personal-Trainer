@@ -259,35 +259,15 @@ export async function selectProposal(mesoId: string, optionId: number) {
             repsMax: Number(ex.repsMax) || 12,
             targetRir: Number(ex.targetRir) || 2,
             restSec: Number(ex.restSec) || 90,
-            notes: ex.notes || "",
-          }))
+            notes: ex.notes || null,
+          })),
         })
-      }
-
-      // Nutrition setup...
-      const today = new Date()
-      today.setUTCHours(0, 0, 0, 0)
-      const nutritionData = Array.from({length: 28}, (_, d) => {
-        const date = new Date(today);
-        date.setUTCDate(date.getUTCDate() + d);
-        return {
-          userId: meso.userId,
-          date,
-          kcalTarget: Number(selected.nutritionPlan.trainingDayKcal) || 2500,
-          proteinG: Number(selected.nutritionPlan.macros?.p) || 150,
-          carbsG: Number(selected.nutritionPlan.macros?.c) || 250,
-          fatG: Number(selected.nutritionPlan.macros?.f) || 70,
-          isTrainingDay: d % 2 === 0,
-        }
-      })
-      if (nutritionData.length > 0) {
-        await tx.nutritionDay.createMany({ data: nutritionData, skipDuplicates: true }).catch(() => {})
       }
     })
 
     revalidatePath('/plan')
     return { success: true }
   } catch (e: any) {
-    return { success: false, error: (e as Error).message }
+    return { error: e?.message ?? 'Database error' }
   }
 }
