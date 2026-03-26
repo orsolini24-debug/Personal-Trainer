@@ -12,9 +12,10 @@ import AIPanButton from "./AIPanButton"
 import ProposalSelector from "./ProposalSelector"
 import PlanImportButton from "./PlanImportButton"
 import PlanWizard from "./PlanWizard"
+import NewPlanCreator from "./NewPlanCreator"
 import { MesoStatus } from "@prisma/client"
 import Link from "next/link"
-import OnboardingWizard from "@/app/(protected)/onboarding/OnboardingWizard"
+import PlanSetupFlow from "./PlanSetupFlow"
 import CoachInsights from "./CoachInsights"
 import NutritionPlanSection from "./NutritionPlanSection"
 import WeeklyCalendar from "@/app/components/WeeklyCalendar"
@@ -122,7 +123,12 @@ export default async function PlanPage() {
 
       {!onboardingCompleted ? (
         <section className="bg-surface rounded-[3.5rem] p-10 md:p-14 border border-accent/20 relative overflow-hidden mesh-bg animate-glow-breathe">
-          <OnboardingWizard embedded={true} userName={session.user.name || undefined} />
+          <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none animate-glow-breathe">
+            <Sparkles className="w-72 h-72 text-accent" />
+          </div>
+          <div className="relative z-10">
+            <PlanSetupFlow userName={session.user.name || undefined} />
+          </div>
         </section>
       ) : (
         <>
@@ -248,17 +254,16 @@ export default async function PlanPage() {
               </div>
             </div>
           ) : !draftMeso && (
-            /* ── EMPTY STATE / WIZARD ── */
-            <section className="bg-surface rounded-[3.5rem] p-10 md:p-14 border border-border relative overflow-hidden glass-heavy">
-              <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none animate-glow-breathe">
+            /* ── EMPTY STATE / NEW PLAN CREATOR ── */
+            <section className="bg-surface rounded-[3.5rem] p-8 md:p-12 border border-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
                 <Sparkles className="w-72 h-72 text-accent" />
               </div>
               <div className="relative z-10">
-                {/* Alternativa rapida all'import sopra il wizard */}
                 <div className="flex justify-end mb-6 gap-3">
                   <PlanImportButton />
                 </div>
-                <PlanWizard />
+                <NewPlanCreator />
               </div>
             </section>
           )}
@@ -310,12 +315,8 @@ export default async function PlanPage() {
               )}
             </div>
           </div>
-        </>
-      )}
 
-      {/* ── CONVERSATIONAL AI COACH (POST-GENERATION) ── */}
-      {(draftMeso || activeMeso) && (
-        <PlanChat mesoId={draftMeso?.id || activeMeso?.id || ""} />
+        </>
       )}
     </div>
   )
