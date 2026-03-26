@@ -32,6 +32,20 @@ export async function getPlanInsights(mesoId: string) {
 
   if (!meso) throw new Error("Mesociclo non trovato")
 
+  // Se non ci sono sessioni reali, evitiamo di chiamare l'IA per non generare feedback allucinati
+  if (meso.sessions.length === 0) {
+    return {
+      expectedObjectives: [
+        "Iniziare il piano di allenamento",
+        "Calibrare i carichi della prima settimana",
+        "Stabilire una routine costante"
+      ],
+      nextPhasePreview: "In attesa dei primi dati per proiettare l'evoluzione del mesociclo.",
+      currentStatus: "Piano caricato con successo. Inizia la tua prima sessione per sbloccare l'analisi del Coach.",
+      adjustments: []
+    }
+  }
+
   const prompt = `Sei un Head Coach esperto. Analizza l'andamento del mesociclo attuale e fornisci approfondimenti.
   
   ATLETA: ${JSON.stringify(meso.user.profile)}
@@ -66,21 +80,22 @@ export async function getExerciseAlternative(exerciseName: string, reason: strin
   const profile = await prisma.userProfile.findUnique({ where: { userId: session.user.id } })
 
   const prompt = `L'atleta non può fare "${exerciseName}" perché: "${reason}".
-  Attrezzatura disponibile: ${profile?.equipmentLevel}.
-  Infortuni da considerare: ${JSON.stringify(profile?.injuriesList)}.
-  
-  Suggerisci 3 alternative valide, spiegando brevemente il perché.
-  Ritorna un JSON con "alternatives": [{ "name": "...", "reason": "..." }].
+  Attrezzatura disponibile: ${profile?.equipmentLevel ?? 'non specificata'}.
+  Infortuni: ${JSON.stringify(profile?.injuriesList ?? [])}.
+
+  Suggerisci 3 esercizi alternativi. Rispondi in JSON con:
+  { "alternatives": [{ "name": string, "reason": string, "equipment": string }] }
   `
 
   try {
     const completion = await groq.chat.completions.create({
       messages: [{ role: 'system', content: prompt }],
       model: 'llama-3.3-70b-versatile',
-      response_format: { type: "json_object" }
+      response_format: { type: 'json_object' },
     })
-    return JSON.parse(completion.choices[0].message.content || "{}")
+    return JSON.parse(completion.choices[0].message.content || '{}')
   } catch (e) {
-    return { error: "Impossibile generare alternative" }
+    console.error('Alternative Error:', e)
+    return null
   }
 }
