@@ -10,12 +10,13 @@ export async function skipPlannedSession(planDayId: string, date: string, reason
   const userId = session.user.id
 
   const scheduledDate = new Date(date)
+  const planId = await getPlanIdForDay(planDayId)
 
   await prisma.plannedSession.upsert({
-    where: { userId_scheduledDate: { userId, scheduledDate } },
+    where: { userId_planId_scheduledDate: { userId, planId, scheduledDate } },
     create: {
       userId,
-      planId: await getPlanIdForDay(planDayId),
+      planId,
       planDayId,
       scheduledDate,
       status: 'SKIPPED',
