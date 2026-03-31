@@ -17,6 +17,7 @@ import {
   type FeasibilityInput,
   type ObjectiveType,
 } from "@/lib/feasibility"
+import { sanitizeDayLabel } from "@/lib/plan-utils"
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! })
 
@@ -305,7 +306,17 @@ Genera ESATTAMENTE questo JSON (tu genera 3 proposte, tutti i giorni, minimo 5 e
       const cleanedProposals = data.proposals.map((p: any) => ({
         ...p,
         planType: p.planType || planType,
-        trainingDays: Array.isArray(p.trainingDays) ? p.trainingDays : [1, 3, 5]
+        trainingDays: Array.isArray(p.trainingDays) ? p.trainingDays : [1, 3, 5],
+        // Sanitize dayLabels so AI-generated "E","F","G" etc. never reach the DB
+        mesocycle: p.mesocycle ? {
+          ...p.mesocycle,
+          plan: Array.isArray(p.mesocycle.plan)
+            ? p.mesocycle.plan.map((day: any, idx: number) => ({
+                ...day,
+                dayLabel: sanitizeDayLabel(day.dayLabel, idx),
+              }))
+            : [],
+        } : p.mesocycle,
       }))
 
       await prisma.mesocycle.updateMany({
@@ -322,6 +333,12 @@ Genera ESATTAMENTE questo JSON (tu genera 3 proposte, tutti i giorni, minimo 5 e
         }
       })
     }
+
+    // Mark onboarding complete — only after the plan was successfully saved
+    await prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true },
+    })
 
     revalidatePath('/plan')
     return { success: true }

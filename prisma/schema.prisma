@@ -91,7 +91,6 @@ model UserProfile {
   preferredSplit   String?  
 
   injuriesList         String[]
-  onboardingCompleted  Boolean  @default(false)
   updatedAt            DateTime @updatedAt
 }
 
