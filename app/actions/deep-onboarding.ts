@@ -299,6 +299,12 @@ export async function selectProposal(mesoId: string, optionId: number) {
 
     console.log(`selectProposal: scheduled ${scheduledCount} sessions over 4 weeks`)
 
+    // Mark onboarding as completed so the JWT guard in middleware lets the user through
+    await prisma.user.update({
+      where: { id: meso.userId },
+      data: { onboardingCompleted: true },
+    })
+
     revalidatePath('/plan')
     revalidatePath('/calendar')
     revalidatePath('/dashboard')

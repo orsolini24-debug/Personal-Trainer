@@ -22,9 +22,11 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/dashboard", nextUrl))
     }
 
-    // New-user guard: if onboarding not done, only /plan is allowed
+    // New-user guard: redirect to /plan only if onboarding is EXPLICITLY false.
+    // undefined = old JWT token without this field — let through to avoid locking out
+    // existing users whose token predates this field.
     const onboardingCompleted = (req.auth as any)?.user?.onboardingCompleted
-    if (!onboardingCompleted && !isPlanRoute && !isOnboardingRoute) {
+    if (onboardingCompleted === false && !isPlanRoute && !isOnboardingRoute) {
       return NextResponse.redirect(new URL("/plan", nextUrl))
     }
   } else {
