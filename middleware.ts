@@ -22,13 +22,10 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/dashboard", nextUrl))
     }
 
-    // New-user guard: redirect to /plan only if onboarding is EXPLICITLY false.
-    // undefined = old JWT token without this field — let through to avoid locking out
-    // existing users whose token predates this field.
-    const onboardingCompleted = (req.auth as any)?.user?.onboardingCompleted
-    if (onboardingCompleted === false && !isPlanRoute && !isOnboardingRoute) {
-      return NextResponse.redirect(new URL("/plan", nextUrl))
-    }
+    // Onboarding gating is handled at the page level (/plan/page.tsx shows PlanSetupFlow).
+    // Middleware-level JWT guard is intentionally removed: the JWT is stale between logins
+    // and can lock out users whose onboardingCompleted was updated in the DB but not yet
+    // refreshed in the token. Page-level checks are always fresh.
   } else {
     if (!isPublicRoute) {
       return NextResponse.redirect(new URL("/login", nextUrl))
