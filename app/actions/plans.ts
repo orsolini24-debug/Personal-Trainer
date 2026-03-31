@@ -225,9 +225,9 @@ export async function schedulePlanForWeek(planId: string, weekStartISO: string) 
     where: { userId, planId, scheduledDate: { lt: weekStart } },
   })
 
-  // Get already scheduled dates this week (may have been scheduled individually)
+  // Get already scheduled dates this week for THIS plan only
   const existing = await prisma.plannedSession.findMany({
-    where: { userId, scheduledDate: { gte: weekStart, lte: weekEnd } },
+    where: { userId, planId, scheduledDate: { gte: weekStart, lte: weekEnd } },
     select: { scheduledDate: true },
   })
   const existingDates = new Set(existing.map(s => s.scheduledDate.toISOString().split('T')[0]))
@@ -309,9 +309,9 @@ export async function advancedSchedulePlan(options: ScheduleOptions) {
   const endDate = new Date(startDate)
   endDate.setUTCDate(endDate.getUTCDate() + (weeksToSchedule * 7))
 
-  // Trova le date già occupate in questo periodo
+  // Trova le date già occupate in questo periodo per QUESTO piano
   const existing = await prisma.plannedSession.findMany({
-    where: { userId, scheduledDate: { gte: startDate, lte: endDate } },
+    where: { userId, planId, scheduledDate: { gte: startDate, lte: endDate } },
     select: { scheduledDate: true },
   })
   const existingDates = new Set(existing.map(s => s.scheduledDate.toISOString().split('T')[0]))

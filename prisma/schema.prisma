@@ -266,7 +266,8 @@ model PlannedSession {
   skipReason             String?
   substituteForPlanDayId String?
 
-  @@unique([userId, scheduledDate])
+  // One session per plan per day per user — allows scheduling multiple plans on same day
+  @@unique([userId, planId, scheduledDate])
 }
 
 // ─── ACTIVE SESSION (real-time tracker state) ─────────────────────────────────
