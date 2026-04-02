@@ -20,15 +20,9 @@ export default auth((req) => {
     if (isPublicRoute) {
       return NextResponse.redirect(new URL("/dashboard", nextUrl))
     }
-
-    // If onboarding is not yet complete, funnel the user to /plan.
-    // Note: req.auth.user.onboardingCompleted reflects the JWT value at login time.
-    // After selectProposal() sets it to true in the DB, the next login will refresh the token.
-    // In the meantime /plan/page.tsx reads fresh DB state and shows the correct view.
-    const onboardingCompleted = req.auth?.user?.onboardingCompleted
-    if (!onboardingCompleted && !isPlanRoute) {
-      return NextResponse.redirect(new URL("/plan", nextUrl))
-    }
+    // Onboarding gating is handled at page level (/plan/page.tsx reads DB directly).
+    // JWT-based check removed: the token is stale between logins and would block
+    // users whose onboardingCompleted was just updated in the DB.
   } else {
     if (!isPublicRoute) {
       return NextResponse.redirect(new URL("/login", nextUrl))
