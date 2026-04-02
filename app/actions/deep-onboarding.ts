@@ -7,6 +7,7 @@ import Groq from 'groq-sdk'
 import { MesoStatus } from '@prisma/client'
 import { titanProfiles, getTitansForObjective } from '@/lib/titans-db'
 import { sanitizeDayLabel } from '@/lib/plan-utils'
+import { matchExerciseNames } from '@/lib/exercise-matcher'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // generateAITripleProposal
@@ -216,6 +217,12 @@ export async function selectProposal(mesoId: string, optionId: number) {
     const availableDays = profile?.availableDays ?? 3
     const trainingDays = inferTrainingDays(availableDays)
 
+    // ── Pre-match exercise names → ExerciseDefinition IDs (before transaction) ─
+    const allExerciseNames: string[] = (selected.mesocycle.plan ?? [])
+      .flatMap((day: any) => (Array.isArray(day.exercises) ? day.exercises.map((e: any) => e.name as string) : []))
+      .filter(Boolean)
+    const exerciseDefMap = await matchExerciseNames(allExerciseNames)
+
     // ── Main plan creation transaction ────────────────────────────────────────
     const { workoutPlanId, planDayIds } = await prisma.$transaction(async (tx) => {
       // Archive any currently active mesocycle
@@ -267,6 +274,7 @@ export async function selectProposal(mesoId: string, optionId: number) {
           await tx.planExercise.createMany({
             data: day.exercises.map((ex: any, idx: number) => ({
               planDayId: pDay.id,
+              exerciseDefId: exerciseDefMap[ex.name] ?? null,
               name: ex.name,
               orderIndex: idx,
               sets: Number(ex.sets) || 3,

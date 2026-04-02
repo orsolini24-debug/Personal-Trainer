@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import Groq from "groq-sdk"
 import { MesoStatus } from "@prisma/client"
 import { sanitizeDayLabel } from "@/lib/plan-utils"
+import { matchExerciseNames } from "@/lib/exercise-matcher"
 import { importNutritionPlanFromText, parseNutritionPlanFromText, type NutritionPlanData } from "./import-nutrition"
 import { schedulePlanForWeek } from "./plans"
 
@@ -131,6 +132,12 @@ REGOLE:
 
     const planData = JSON.parse(completion.choices[0]?.message?.content || "{}")
 
+    // Pre-match exercise names → ExerciseDefinition IDs (before transaction)
+    const allExerciseNames: string[] = (planData.plan ?? [])
+      .flatMap((day: any) => (Array.isArray(day.exercises) ? day.exercises.map((e: any) => e.name as string) : []))
+      .filter(Boolean)
+    const exerciseDefMap = await matchExerciseNames(allExerciseNames)
+
     // Inizia transazione DB
     const result = await prisma.$transaction(async (tx) => {
       // 1. Archivia precedenti (allenamento e dieta)
@@ -200,6 +207,7 @@ REGOLE:
             await tx.planExercise.createMany({
               data: day.exercises.map((ex: any, idx: number) => ({
                 planDayId: pDay.id,
+                exerciseDefId: exerciseDefMap[ex.name] ?? null,
                 name: ex.name,
                 orderIndex: idx,
                 sets: parseInt(ex.sets) || 3,
