@@ -124,9 +124,9 @@ REGOLE:
         { role: "system", content: systemPrompt },
         { role: "user", content: `Analizza questo piano: ${text}` }
       ],
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.1,
-      max_tokens: 3000,
+      max_tokens: 6000,
       response_format: { type: "json_object" }
     })
 
@@ -140,9 +140,10 @@ REGOLE:
 
     // Inizia transazione DB
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Archivia precedenti (allenamento e dieta)
+      // 1. Archivia piani di allenamento attivi — NON toccare i NUTRITION_ONLY
+      // (la dieta rimane attiva indipendentemente dall'import di una scheda)
       await tx.mesocycle.updateMany({
-        where: { userId, status: MesoStatus.ACTIVE },
+        where: { userId, status: MesoStatus.ACTIVE, planType: { not: 'NUTRITION_ONLY' } },
         data: { status: MesoStatus.ARCHIVED }
       })
 
@@ -205,18 +206,37 @@ REGOLE:
 
           if (day.exercises && Array.isArray(day.exercises)) {
             await tx.planExercise.createMany({
-              data: day.exercises.map((ex: any, idx: number) => ({
-                planDayId: pDay.id,
-                exerciseDefId: exerciseDefMap[ex.name] ?? null,
-                name: ex.name,
-                orderIndex: idx,
-                sets: parseInt(ex.sets) || 3,
-                repsMin: parseInt(ex.repsMin) || 8,
-                repsMax: parseInt(ex.repsMax) || 12,
-                targetRir: parseInt(ex.targetRir) || 2,
-                restSec: parseInt(ex.restSec) || 90,
-                notes: ex.notes || "",
-              }))
+              data: day.exercises.map((ex: any, idx: number) => {
+                // Robust reps parsing: handle both "repsMin"/"repsMax" and combined "reps":"8-12"
+                let repsMin = 8, repsMax = 12
+                if (ex.repsMin != null || ex.repsMax != null) {
+                  repsMin = parseInt(ex.repsMin) || 8
+                  repsMax = parseInt(ex.repsMax) || repsMin
+                } else if (typeof ex.reps === 'string' && ex.reps.includes('-')) {
+                  const parts = ex.reps.split('-').map((p: string) => parseInt(p.trim()))
+                  repsMin = parts[0] || 8
+                  repsMax = parts[1] || repsMin
+                } else if (ex.reps != null) {
+                  repsMin = parseInt(ex.reps) || 8
+                  repsMax = repsMin
+                }
+                // Clamp: DB expects positive Int
+                repsMin = Math.max(1, repsMin)
+                repsMax = Math.max(repsMin, repsMax)
+
+                return {
+                  planDayId: pDay.id,
+                  exerciseDefId: exerciseDefMap[ex.name] ?? null,
+                  name: String(ex.name || 'Esercizio'),
+                  orderIndex: idx,
+                  sets: Math.max(1, parseInt(ex.sets) || 3),
+                  repsMin,
+                  repsMax,
+                  targetRir: Math.max(0, parseInt(ex.targetRir) || 2),
+                  restSec: Math.max(0, parseInt(ex.restSec) || 90),
+                  notes: ex.notes || "",
+                }
+              })
             })
           }
         }
@@ -232,7 +252,6 @@ REGOLE:
     })
 
     // Auto-schedule 4 weeks starting from today
-    const numDays = planData.plan?.length || 3
     const today = new Date()
     const todayISO = today.toISOString().split('T')[0]
     await schedulePlanForWeek(result.workoutPlan.id, todayISO)
