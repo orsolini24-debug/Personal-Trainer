@@ -64,7 +64,7 @@ export async function generateWeeklyReport(): Promise<{
       prisma.biometricLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
       prisma.mesocycle.findFirst({
         where: { userId, status: 'ACTIVE' },
-        include: { workoutPlan: true },
+        include: { workoutPlans: true },
       }),
     ])
 
@@ -110,7 +110,8 @@ export async function generateWeeklyReport(): Promise<{
       lines.push(`- Score medio: ${avgRecovery.toFixed(0)}/100`)
       for (const r of recoveryLogs) {
         const dateStr = r.date.toISOString().split('T')[0]
-        lines.push(`  - ${dateStr}: score ${r.recoveryScore ?? '?'}, HRV ${r.hrv ?? '?'}, sonno ${r.sleepHours ?? '?'} h, TSB ${r.tsb ?? '?'}`)
+        const sleepH = r.sleepMin != null ? (r.sleepMin / 60).toFixed(1) : '?'
+        lines.push(`  - ${dateStr}: score ${r.recoveryScore ?? '?'}, HRV ${r.hrv ?? '?'}, sonno ${sleepH} h, TSB ${r.tsb ?? '?'}`)
       }
     }
 
