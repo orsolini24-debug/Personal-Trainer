@@ -94,66 +94,8 @@ async function main() {
     count++
   }
 
-  // ── SESSION STRESS DEFINITIONS ───────────────────────────────────────────
-  console.log("🌱 Seeding session stress definitions...")
-  const SESSION_STRESS = {
-    A: [
-      { district: 'KNEE',       intensity: 2 },
-      { district: 'HAMSTRING',  intensity: 2 },
-      { district: 'GLUTE',      intensity: 2 },
-      { district: 'LOWER_BACK', intensity: 1 },
-      { district: 'CALF',       intensity: 1 },
-      { district: 'CORE',       intensity: 1 },
-    ],
-    B: [
-      { district: 'CHEST',      intensity: 2 },
-      { district: 'SHOULDER',   intensity: 2 },
-      { district: 'TRICEP',     intensity: 2 },
-    ],
-    C: [
-      { district: 'UPPER_BACK', intensity: 2 },
-      { district: 'LOWER_BACK', intensity: 2 },
-      { district: 'BICEP',      intensity: 1 },
-      { district: 'CORE',       intensity: 1 },
-    ],
-    D: [
-      { district: 'QUAD',       intensity: 2 },
-      { district: 'KNEE',       intensity: 2 },
-      { district: 'GLUTE',      intensity: 1 },
-      { district: 'CALF',       intensity: 1 },
-      { district: 'CORE',       intensity: 1 },
-    ],
-    V1: [
-      { district: 'QUAD',      intensity: 1 },
-      { district: 'HAMSTRING', intensity: 1 },
-      { district: 'CALF',      intensity: 1 },
-    ],
-    V2: [
-      { district: 'SHOULDER', intensity: 1 },
-      { district: 'CORE',     intensity: 1 },
-      { district: 'CALF',     intensity: 1 },
-    ],
-  }
-
-  for (const [type, stresses] of Object.entries(SESSION_STRESS)) {
-    for (const s of stresses) {
-      await prisma.sessionStressDefinition.upsert({
-        where: {
-          sessionType_district: {
-            sessionType: type as any,
-            district: s.district as any,
-          }
-        },
-        update: { intensity: s.intensity },
-        create: {
-          sessionType: type as any,
-          district: s.district as any,
-          intensity: s.intensity,
-        }
-      })
-    }
-  }
-  console.log("✅ Seeded session stress definitions")
+  // NOTE: SessionStressDefinition was removed from schema (Step 4 refactor).
+  // DistrictStress is now calculated dynamically from real SetLog data.
 }
 
 main()
