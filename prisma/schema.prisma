@@ -248,7 +248,7 @@ model PlannedSession {
   planId           String
   plan             WorkoutPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   planDayId        String
-  planDay          PlanDay       @relation(fields: [planDayId], references: [id])
+  planDay          PlanDay       @relation(fields: [planDayId], references: [id], onDelete: Cascade)
   scheduledDate    DateTime      @db.Date
   status           PlannedStatus @default(PENDING)
   workoutSessionId String?         @unique
@@ -266,7 +266,7 @@ model ActiveSession {
   userId             String         @unique
   user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   workoutSessionId   String         @unique
-  workoutSession     WorkoutSession @relation(fields: [workoutSessionId], references: [id])
+  workoutSession     WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
   currentExerciseIdx Int            @default(0)
   currentSetIdx      Int            @default(0)
   startedAt          DateTime       @default(now())

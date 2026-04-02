@@ -30,12 +30,17 @@ export default async function ActiveSessionPage({ searchParams }: Props) {
   const exercises = active.workoutSession.exercises
   const prevPerfs: Record<string, { weightKg: number | null; repsActual: number | null; setNumber: number }[]> = {}
 
+  const currentSessionId = active.workoutSessionId
   for (const ex of exercises) {
     const lastEx = await prisma.exercise.findFirst({
       where: {
         name: ex.name,
-        session: { userId: session.user.id },
-        id: { not: ex.id },
+        session: {
+          userId: session.user.id,
+          // Esclude l'intera sessione corrente — evita che "precedente" mostri
+          // dati parziali della sessione in corso
+          id: { not: currentSessionId },
+        },
       },
       orderBy: { createdAt: 'desc' },
       include: {

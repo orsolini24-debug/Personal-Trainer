@@ -159,15 +159,20 @@ export async function advanceExercise(activeSessionId: string, exerciseIdx: numb
 }
 
 // ── getPreviousPerformance ────────────────────────────────────────────────────
-// Carica i SetLog dell'ultima sessione per ogni esercizio per mostrare "Prec: X kg × Y"
-export async function getPreviousPerformance(exerciseName: string) {
+// Carica i SetLog dell'ultima sessione PRECEDENTE per mostrare "Prec: X kg × Y".
+// currentSessionId esclude la sessione in corso — altrimenti mostrerebbe i
+// propri dati parziali come "record precedente".
+export async function getPreviousPerformance(exerciseName: string, currentSessionId?: string) {
   const session = await auth()
   if (!session?.user?.id) return null
 
   const lastExercise = await prisma.exercise.findFirst({
     where: {
       name: exerciseName,
-      session: { userId: session.user.id },
+      session: {
+        userId: session.user.id,
+        ...(currentSessionId ? { id: { not: currentSessionId } } : {}),
+      },
     },
     orderBy: { createdAt: 'desc' },
     include: {
@@ -306,6 +311,9 @@ export async function abandonSession(activeSessionId: string) {
   })
   if (!active) return { error: 'Sessione non trovata' }
 
+  // Elimina ActiveSession prima di WorkoutSession — evita FK constraint
+  // (WorkoutSession.activeSession non ha onDelete:Cascade in questa direzione)
+  await prisma.activeSession.delete({ where: { id: activeSessionId } })
   await prisma.workoutSession.delete({ where: { id: active.workoutSessionId } })
   return { success: true }
 }
