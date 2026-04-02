@@ -230,20 +230,53 @@ export async function finishSession(params: {
     },
   })
 
-  // Crea DistrictStress from SessionStressDefinition in DB
-  const sessionType = active.workoutSession.type
-  const stressData = await prisma.sessionStressDefinition.findMany({
-    where: { sessionType },
-  })
+  // ── DistrictStress: calcolato dai SetLog reali + ExerciseDefinition ──────────
+  // Logica: conta i set di lavoro per esercizio → distribuisce stress ai gruppi
+  // muscolari (primari peso 1.0, secondari peso 0.5) → scala 0-3.
+  const exerciseNames = active.workoutSession.exercises.map(e => e.name)
+  const defs = exerciseNames.length > 0
+    ? await prisma.exerciseDefinition.findMany({
+        where: {
+          OR: [
+            { name: { in: exerciseNames } },
+            { nameIt: { in: exerciseNames } },
+          ],
+        },
+        select: { name: true, nameIt: true, primaryMuscles: true, secondaryMuscles: true },
+      })
+    : []
 
-  if (stressData.length > 0) {
-    await prisma.districtStress.createMany({
-      data: stressData.map(s => ({
-        sessionId: active.workoutSessionId,
-        district: s.district,
-        intensity: s.intensity,
-      })),
-    })
+  // Indice rapido: nome normalizzato → muscoli
+  const defByName = new Map<string, { primaryMuscles: District[]; secondaryMuscles: District[] }>()
+  for (const d of defs) {
+    defByName.set(d.name.toLowerCase(), d)
+    if (d.nameIt) defByName.set(d.nameIt.toLowerCase(), d)
+  }
+
+  // Accumula set pesati per distretto
+  const districtSets: Partial<Record<District, number>> = {}
+  for (const ex of active.workoutSession.exercises) {
+    const workingSets = ex.setLogs.length // setLogs già filtrati isWarmup: false nella query
+    if (workingSets === 0) continue
+    const def = defByName.get(ex.name.toLowerCase())
+    if (!def) continue
+    for (const d of def.primaryMuscles)   districtSets[d] = (districtSets[d] ?? 0) + workingSets
+    for (const d of def.secondaryMuscles) districtSets[d] = (districtSets[d] ?? 0) + workingSets * 0.5
+  }
+
+  // Mappa a scala 0-3: 0=nessuno, 1=lieve (1-2 set), 2=moderato (3-5), 3=intenso (6+)
+  const toIntensity = (s: number) => s <= 0 ? 0 : s <= 2 ? 1 : s <= 5 ? 2 : 3
+
+  const stressEntries = (Object.entries(districtSets) as [District, number][])
+    .filter(([, s]) => s > 0)
+    .map(([district, sets]) => ({
+      sessionId: active.workoutSessionId,
+      district,
+      intensity: toIntensity(sets),
+    }))
+
+  if (stressEntries.length > 0) {
+    await prisma.districtStress.createMany({ data: stressEntries })
   }
 
   // Aggiorna PlannedSession

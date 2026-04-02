@@ -188,14 +188,6 @@ model DistrictStress {
   intensity  Int
 }
 
-model SessionStressDefinition {
-  id          String      @id @default(cuid())
-  sessionType SessionType
-  district    District
-  intensity   Int
-  @@unique([sessionType, district])
-}
-
 // ─── WORKOUT PLANS (SCHEDE) ──────────────────────────────────────────────────
 
 model WorkoutPlan {
