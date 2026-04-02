@@ -294,7 +294,7 @@ Genera ESATTAMENTE questo JSON (tu genera 3 proposte, tutti i giorni, minimo 5 e
             targetValue: typeof g.targetValue === 'number' ? g.targetValue : null,
             currentValue: typeof g.currentValue === 'number' ? g.currentValue : null,
             unit: g.unit || '',
-            targetDate: g.targetDate ? new Date(g.targetDate) : null,
+            targetDate: g.targetDate && !isNaN(new Date(g.targetDate).getTime()) ? new Date(g.targetDate) : null,
           })),
         })
       }

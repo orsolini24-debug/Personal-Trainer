@@ -66,9 +66,9 @@ export async function addExercise(data: {
 
 export async function updateExercise(id: string, data: any) {
   try {
-    await getUserId() // verify auth
+    const userId = await getUserId()
     const exercise = await prisma.exercise.update({
-      where: { id },
+      where: { id, session: { userId } }, // ownership guard
       data,
     })
     revalidatePath(`/training/${exercise.sessionId}`)
@@ -80,9 +80,9 @@ export async function updateExercise(id: string, data: any) {
 
 export async function deleteExercise(id: string) {
   try {
-    await getUserId() // verify auth
+    const userId = await getUserId()
     const exercise = await prisma.exercise.delete({
-      where: { id },
+      where: { id, session: { userId } }, // ownership guard
     })
     revalidatePath(`/training/${exercise.sessionId}`)
     return { success: true }
@@ -93,8 +93,15 @@ export async function deleteExercise(id: string) {
 
 export async function updateDistrictStress(sessionId: string, district: District, intensity: number) {
   try {
-    await getUserId() // verify auth
-    
+    const userId = await getUserId()
+
+    // Verify session ownership before touching district stress
+    const session = await prisma.workoutSession.findUnique({
+      where: { id: sessionId, userId },
+      select: { id: true },
+    })
+    if (!session) return { success: false, error: 'Sessione non trovata' }
+
     // Check if it exists
     const existing = await prisma.districtStress.findFirst({
       where: { sessionId, district }
