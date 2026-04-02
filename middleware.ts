@@ -25,7 +25,7 @@ export default auth((req) => {
     // Note: req.auth.user.onboardingCompleted reflects the JWT value at login time.
     // After selectProposal() sets it to true in the DB, the next login will refresh the token.
     // In the meantime /plan/page.tsx reads fresh DB state and shows the correct view.
-    const onboardingCompleted = (req.auth as any)?.user?.onboardingCompleted
+    const onboardingCompleted = req.auth?.user?.onboardingCompleted
     if (!onboardingCompleted && !isPlanRoute) {
       return NextResponse.redirect(new URL("/plan", nextUrl))
     }

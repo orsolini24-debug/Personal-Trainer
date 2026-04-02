@@ -39,7 +39,6 @@ ${JSON.stringify(exercisesList)}`
          Object.values(response).find((v): v is unknown[] => Array.isArray(v)))
 
     if (!Array.isArray(translatedArray) || translatedArray.length === 0) {
-        console.log("Response is not an array:", response)
         throw new Error("Formato risposta AI non valido")
     }
 
@@ -57,14 +56,13 @@ ${JSON.stringify(exercisesList)}`
         })
         updated++
       } catch (e) {
-        console.error(`Error updating exercise ${item.id}:`, e)
+        // silently skip failed updates
       }
     }
 
     revalidatePath("/training/library")
     return { success: true, count: updated }
   } catch (error: any) {
-    console.error("Translation error:", error)
     return { success: false, error: error.message }
   }
 }

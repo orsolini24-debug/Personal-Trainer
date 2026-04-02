@@ -32,7 +32,6 @@ export async function extractTextFromImage(base64Image: string) {
 
     return { success: true, text: response.choices[0]?.message?.content || "" }
   } catch (error: any) {
-    console.error("Vision extraction error:", error)
     return { success: false, error: error.message }
   }
 }

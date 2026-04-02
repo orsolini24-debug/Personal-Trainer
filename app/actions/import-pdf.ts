@@ -12,8 +12,6 @@ export async function extractTextFromPDF(base64Data: string) {
   if (!session?.user?.id) throw new Error("Unauthorized")
 
   try {
-    console.log("PDF Extraction: Starting AI Vision extraction for PDF pages...")
-    
     // In serverless, pdf-parse is often unstable. 
     // We use a high-reliability fallback: treating the PDF as an image via Groq Vision 
     // or asking the LLM to process the content if the text was extractable on client.
@@ -44,7 +42,6 @@ export async function extractTextFromPDF(base64Data: string) {
 
     return { success: true, text: response.choices[0]?.message?.content || "" }
   } catch (error: any) {
-    console.error("PDF extraction error:", error)
     return { success: false, error: error.message }
   }
 }

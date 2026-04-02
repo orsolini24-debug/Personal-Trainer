@@ -86,7 +86,6 @@ export async function chatAboutPlan(mesoId: string, userMessage: string, history
       role: 'assistant'
     }
   } catch (e) {
-    console.error("Plan Chat Error:", e)
     return { error: "Errore di connessione con l'AI." }
   }
 }

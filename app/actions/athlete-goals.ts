@@ -23,7 +23,6 @@ export async function updateGoalProgress(goalId: string, newValue: number) {
     revalidatePath('/plan')
     return { success: true }
   } catch (error) {
-    console.error('Error updating goal progress:', error)
     return { success: false, error: 'Errore durante l\'aggiornamento del progresso' }
   }
 }
@@ -43,7 +42,6 @@ export async function getActiveGoals() {
       }
     })
   } catch (error) {
-    console.error('Error fetching active goals:', error)
     return []
   }
 }

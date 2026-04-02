@@ -51,22 +51,18 @@ export async function analyzeAndImportPlanSmart(text: string): Promise<SmartImpo
     })
 
     const rawDetect = detection.choices[0]?.message?.content || "{}"
-    console.log("[IMPORT] detection raw:", rawDetect)
     const { containsTraining, containsNutrition } = JSON.parse(rawDetect)
-    console.log("[IMPORT] containsTraining:", containsTraining, "containsNutrition:", containsNutrition)
 
     let trainingRes = null
     let nutritionData: NutritionPlanData | null = null
 
     if (containsNutrition) {
       nutritionData = await parseNutritionPlanFromText(text)
-      console.log("[IMPORT] nutritionData parsed:", !!nutritionData)
     }
 
     if (containsTraining) {
       // Se abbiamo sia training che nutrition, passiamo nutritionData ad analyzeAndImportPlan
       trainingRes = await analyzeAndImportPlan(text, nutritionData || undefined)
-      console.log("[IMPORT] trainingRes:", JSON.stringify(trainingRes))
     } else if (containsNutrition && nutritionData) {
       // Solo nutrizione via smart import -> usiamo la action dedicata che crea NUTRITION_ONLY
       const res = await importNutritionPlanFromText(text)
@@ -87,7 +83,6 @@ export async function analyzeAndImportPlanSmart(text: string): Promise<SmartImpo
       nutritionError: (containsNutrition && !nutritionData) ? "Errore parsing nutrizione" : null
     }
   } catch (error: any) {
-    console.error("[IMPORT] Smart import error:", error)
     return { success: false, error: error.message }
   }
 }
@@ -135,7 +130,6 @@ REGOLE:
     })
 
     const planData = JSON.parse(completion.choices[0]?.message?.content || "{}")
-    console.log("[IMPORT] planData.name:", planData.name, "plan days:", planData.plan?.length)
 
     // Inizia transazione DB
     const result = await prisma.$transaction(async (tx) => {
@@ -246,7 +240,6 @@ REGOLE:
     revalidatePath("/dashboard")
     return { success: true, data: result.meso }
   } catch (error: any) {
-    console.error("Import error:", error)
     return { success: false, error: error.message }
   }
 }

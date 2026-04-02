@@ -68,7 +68,6 @@ export async function getPlanInsights(mesoId: string) {
     })
     return JSON.parse(completion.choices[0].message.content || "{}")
   } catch (e) {
-    console.error("Insights Error:", e)
     return null
   }
 }
@@ -95,7 +94,6 @@ export async function getExerciseAlternative(exerciseName: string, reason: strin
     })
     return JSON.parse(completion.choices[0].message.content || '{}')
   } catch (e) {
-    console.error('Alternative Error:', e)
     return null
   }
 }

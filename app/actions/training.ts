@@ -192,7 +192,6 @@ export async function deleteSession(id: string) {
     revalidatePath("/dashboard")
     return { success: true }
   } catch (error: any) {
-    console.error("Delete session error:", error)
     return { success: false, error: error.message }
   }
 }

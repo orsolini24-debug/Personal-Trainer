@@ -122,7 +122,6 @@ export async function generateAITripleProposal() {
     revalidatePath('/plan')
     return { success: true, draftId: draft.id, proposals: res.proposals }
   } catch (e: any) {
-    console.error('Proposal Generation Error:', e)
     return { success: false, error: e.message }
   }
 }
@@ -297,8 +296,6 @@ export async function selectProposal(mesoId: string, optionId: number) {
       weeks: 4,
     })
 
-    console.log(`selectProposal: scheduled ${scheduledCount} sessions over 4 weeks`)
-
     // Mark onboarding as completed so the JWT guard in middleware lets the user through
     await prisma.user.update({
       where: { id: meso.userId },
@@ -310,7 +307,6 @@ export async function selectProposal(mesoId: string, optionId: number) {
     revalidatePath('/dashboard')
     return { success: true, scheduledSessions: scheduledCount }
   } catch (e: any) {
-    console.error('selectProposal error:', e)
     return { error: e?.message ?? 'Database error' }
   }
 }

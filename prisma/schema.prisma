@@ -126,7 +126,6 @@ model Mesocycle {
   status      MesoStatus @default(ACTIVE)
   aiProposals  Json?      // Memorizza le 3 opzioni generate dall'AI
   chosenOption Int?       // Quale delle 3 è stata scelta
-  generatedFor Json?      // Goals snapshot used to generate this meso
   planType     String?    @default("FULL") // "FULL", "TRAINING_ONLY", "NUTRITION_ONLY"
   createdAt   DateTime @default(now())
 
@@ -260,10 +259,9 @@ model PlannedSession {
   planDay          PlanDay       @relation(fields: [planDayId], references: [id])
   scheduledDate    DateTime      @db.Date
   status           PlannedStatus @default(PENDING)
-  workoutSessionId       String?       @unique
-  workoutSession         WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
-  skipReason             String?
-  substituteForPlanDayId String?
+  workoutSessionId String?         @unique
+  workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
+  skipReason       String?
 
   // One session per plan per day per user — allows scheduling multiple plans on same day
   @@unique([userId, planId, scheduledDate])

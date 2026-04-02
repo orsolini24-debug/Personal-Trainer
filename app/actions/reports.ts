@@ -174,7 +174,6 @@ Rispondi SOLO con il testo del report, senza titoli né markdown.`
     revalidatePath('/dashboard')
     return { success: true, content }
   } catch (err: any) {
-    console.error('generateWeeklyReport error:', err)
     return { success: false, error: err.message ?? 'Errore generazione report' }
   }
 }

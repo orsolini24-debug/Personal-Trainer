@@ -53,7 +53,6 @@ export async function parseWearableText(text: string) {
     const result = JSON.parse(completion.choices[0].message.content || "{}")
     return { success: true, data: result }
   } catch (error: any) {
-    console.error("Parse Error:", error)
     return { success: false, error: error.message }
   }
 }

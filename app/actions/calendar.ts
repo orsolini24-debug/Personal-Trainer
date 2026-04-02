@@ -629,7 +629,6 @@ Note: ${finalInput.notes ?? 'nessuna'}`
     revalidatePath('/calendar')
     return { success: true, id: activity.id, parsedData: finalInput }
   } catch (err) {
-    console.error('addManualActivity error:', err)
     return { success: false, error: 'Errore nel salvataggio' }
   }
 }
@@ -713,7 +712,6 @@ Rispondi in formato JSON:
     revalidatePath('/calendar')
     return { success: true, analysisText, adherenceScore }
   } catch (err) {
-    console.error('runDailyAnalysis error:', err)
     return { success: false, error: 'Errore analisi AI' }
   }
 }

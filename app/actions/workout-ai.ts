@@ -81,7 +81,6 @@ ${context.lastWeight ? `Ultimo carico: ${context.lastWeight}kg × ${context.last
 
     return { reply: res.choices[0]?.message?.content ?? '' }
   } catch (err) {
-    console.error('WorkoutAI error:', err)
     return { reply: '', error: 'Errore AI. Riprova.' }
   }
 }
