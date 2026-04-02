@@ -128,9 +128,80 @@ export async function generateAITripleProposal() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// inferTrainingDays
+// Maps a count of available days/week → default day-of-week indices (0=Sun, 1=Mon...)
+// ─────────────────────────────────────────────────────────────────────────────
+function inferTrainingDays(availableDays: number): number[] {
+  const patterns: Record<number, number[]> = {
+    1: [1],                   // Mon
+    2: [1, 4],                // Mon, Thu
+    3: [1, 3, 5],             // Mon, Wed, Fri
+    4: [1, 2, 4, 5],          // Mon, Tue, Thu, Fri
+    5: [1, 2, 3, 4, 5],       // Mon-Fri
+    6: [1, 2, 3, 4, 5, 6],    // Mon-Sat
+    7: [0, 1, 2, 3, 4, 5, 6], // Every day
+  }
+  return patterns[Math.min(Math.max(availableDays, 1), 7)] ?? [1, 3, 5]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// autoSchedule
+// Creates PlannedSessions for `weeks` weeks starting from `startDate`.
+// Called after plan activation to populate the calendar immediately.
+// ─────────────────────────────────────────────────────────────────────────────
+async function autoSchedule(params: {
+  userId: string
+  planId: string
+  planDayIds: string[]   // ordered list of PlanDay IDs (A, B, C, ...)
+  trainingDays: number[] // day-of-week indices [1,3,5] = Mon,Wed,Fri
+  startDate: Date
+  weeks?: number
+}) {
+  const { userId, planId, planDayIds, trainingDays, startDate, weeks = 4 } = params
+
+  // Remove old PENDING sessions so we start fresh
+  await prisma.plannedSession.deleteMany({
+    where: { userId, status: 'PENDING' },
+  })
+
+  const endDate = new Date(startDate)
+  endDate.setUTCDate(endDate.getUTCDate() + weeks * 7)
+
+  let sessionIndex = 0
+  let created = 0
+  const current = new Date(startDate)
+  current.setUTCHours(0, 0, 0, 0)
+
+  while (current <= endDate) {
+    const dow = current.getUTCDay()
+    if (trainingDays.includes(dow)) {
+      const planDayId = planDayIds[sessionIndex % planDayIds.length]
+      try {
+        await prisma.plannedSession.create({
+          data: {
+            userId,
+            planId,
+            planDayId,
+            scheduledDate: new Date(current),
+          },
+        })
+        sessionIndex++
+        created++
+      } catch {
+        // unique constraint — slot already taken, skip
+      }
+    }
+    current.setUTCDate(current.getUTCDate() + 1)
+  }
+
+  return created
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // selectProposal
 // Called by: ProposalSelector.tsx (/plan page)
 // Converts a draft Mesocycle's aiProposals JSON → real WorkoutPlan + PlanDay + PlanExercise.
+// Then auto-schedules 4 weeks of PlannedSessions so the calendar is populated immediately.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function selectProposal(mesoId: string, optionId: number) {
   try {
@@ -141,7 +212,13 @@ export async function selectProposal(mesoId: string, optionId: number) {
     const selected = proposals.find((p: any) => p.id === optionId)
     if (!selected) throw new Error('Option not found')
 
-    await prisma.$transaction(async (tx) => {
+    // Read user profile to infer training days
+    const profile = await prisma.userProfile.findUnique({ where: { userId: meso.userId } })
+    const availableDays = profile?.availableDays ?? 3
+    const trainingDays = inferTrainingDays(availableDays)
+
+    // ── Main plan creation transaction ────────────────────────────────────────
+    const { workoutPlanId, planDayIds } = await prisma.$transaction(async (tx) => {
       // Archive any currently active mesocycle
       await tx.mesocycle.updateMany({
         where: { userId: meso.userId, status: MesoStatus.ACTIVE },
@@ -159,7 +236,7 @@ export async function selectProposal(mesoId: string, optionId: number) {
         }
       })
 
-      // Create the WorkoutPlan
+      // Create the WorkoutPlan — store trainingDays and daysPerWeek
       const workoutPlan = await tx.workoutPlan.create({
         data: {
           userId: meso.userId,
@@ -168,10 +245,13 @@ export async function selectProposal(mesoId: string, optionId: number) {
           goal: selected.mesocycle.objectives,
           source: 'AI_GENERATED',
           isActive: true,
+          trainingDays,
+          daysPerWeek: availableDays,
         }
       })
 
-      // Create PlanDays + PlanExercises
+      // Create PlanDays + PlanExercises, collect IDs in order
+      const createdDayIds: string[] = []
       for (let i = 0; i < selected.mesocycle.plan.length; i++) {
         const day = selected.mesocycle.plan[i]
         const pDay = await tx.planDay.create({
@@ -182,6 +262,7 @@ export async function selectProposal(mesoId: string, optionId: number) {
             orderIndex: i,
           }
         })
+        createdDayIds.push(pDay.id)
 
         if (Array.isArray(day.exercises) && day.exercises.length > 0) {
           await tx.planExercise.createMany({
@@ -199,10 +280,35 @@ export async function selectProposal(mesoId: string, optionId: number) {
           })
         }
       }
+
+      return { workoutPlanId: workoutPlan.id, planDayIds: createdDayIds }
+    })
+
+    // ── Auto-schedule 4 weeks starting from today ─────────────────────────────
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+
+    const scheduledCount = await autoSchedule({
+      userId: meso.userId,
+      planId: workoutPlanId,
+      planDayIds,
+      trainingDays,
+      startDate: today,
+      weeks: 4,
+    })
+
+    console.log(`selectProposal: scheduled ${scheduledCount} sessions over 4 weeks`)
+
+    // Mark onboarding as completed so the JWT guard in middleware lets the user through
+    await prisma.user.update({
+      where: { id: meso.userId },
+      data: { onboardingCompleted: true },
     })
 
     revalidatePath('/plan')
-    return { success: true }
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
+    return { success: true, scheduledSessions: scheduledCount }
   } catch (e: any) {
     console.error('selectProposal error:', e)
     return { error: e?.message ?? 'Database error' }

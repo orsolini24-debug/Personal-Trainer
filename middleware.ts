@@ -11,9 +11,8 @@ export default auth((req) => {
   const isApiRoute = nextUrl.pathname.startsWith("/api")
   const isPublicRoute = ["/login", "/register", "/"].includes(nextUrl.pathname)
 
-  // Routes that are part of the onboarding/plan setup flow — never redirect these
+  // /plan is the single entry point for onboarding + plan management — never redirect away from it
   const isPlanRoute = nextUrl.pathname.startsWith("/plan")
-  const isOnboardingRoute = nextUrl.pathname.startsWith("/onboarding")
 
   if (isApiRoute) return NextResponse.next()
 
@@ -22,9 +21,12 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/dashboard", nextUrl))
     }
 
-    // New-user guard: if onboarding not done, only /plan is allowed
+    // If onboarding is not yet complete, funnel the user to /plan.
+    // Note: req.auth.user.onboardingCompleted reflects the JWT value at login time.
+    // After selectProposal() sets it to true in the DB, the next login will refresh the token.
+    // In the meantime /plan/page.tsx reads fresh DB state and shows the correct view.
     const onboardingCompleted = (req.auth as any)?.user?.onboardingCompleted
-    if (!onboardingCompleted && !isPlanRoute && !isOnboardingRoute) {
+    if (!onboardingCompleted && !isPlanRoute) {
       return NextResponse.redirect(new URL("/plan", nextUrl))
     }
   } else {

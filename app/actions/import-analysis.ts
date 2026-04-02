@@ -229,8 +229,21 @@ REGOLE:
       data: { onboardingCompleted: true }
     })
 
+    // Auto-schedule 4 weeks starting from today
+    const numDays = planData.plan?.length || 3
+    const today = new Date()
+    const todayISO = today.toISOString().split('T')[0]
+    await schedulePlanForWeek(result.workoutPlan.id, todayISO)
+    // Schedule remaining 3 weeks
+    for (let w = 1; w < 4; w++) {
+      const d = new Date(today)
+      d.setUTCDate(d.getUTCDate() + w * 7)
+      await schedulePlanForWeek(result.workoutPlan.id, d.toISOString().split('T')[0])
+    }
+
     revalidatePath("/plan")
     revalidatePath("/calendar")
+    revalidatePath("/dashboard")
     return { success: true, data: result.meso }
   } catch (error: any) {
     console.error("Import error:", error)
