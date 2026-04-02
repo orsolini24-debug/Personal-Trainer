@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Check, ArrowRight, Zap, Loader2 } from 'lucide-react'
 import { selectProposal } from '@/app/actions/deep-onboarding'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface MesocycleData {
   [key: string]: unknown
@@ -28,15 +29,18 @@ export default function ProposalSelector({ mesoId, proposals }: ProposalSelector
   const [selected, setSelected] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { update } = useSession()
 
   const handleConfirm = async () => {
     if (selected === null) return
     setLoading(true)
     const res = await selectProposal(mesoId, selected)
-    setLoading(false)
     if (res.success) {
+      // Refresh the JWT so onboardingCompleted: true is reflected immediately
+      await update({ onboardingCompleted: true })
       router.refresh()
     } else {
+      setLoading(false)
       alert("Errore: " + res.error)
     }
   }

@@ -22,6 +22,8 @@
 
 // ─── RE-EXPORT TYPES FROM TITAN_DB FOR CONSUMERS ──────────────────────────────
 export type { TitanProfile, AthleteProfile, PeriodizationModel } from './titans-db'
+// ─── LOCAL IMPORTS FROM TITAN_DB (needed in function signatures & bodies) ────
+import type { AthleteProfile, CommunicationStyle } from './titans-db'
 
 // ─── CANONICAL BLOCK CATALOG (CP-024 Layer 1) ────────────────────────────────
 // titans-blocks.ts espone i blocchi canonici con la fisica dell'allenamento.
@@ -1089,32 +1091,38 @@ export interface WizardResponse {
 /**
  * Converte una WizardResponse in un readiness score aggregato (0–100).
  *
- * Formula pesata:
- *   sleep_quality   25%  (il sonno è il fattore di recupero più importante)
- *   energy_level    25%
- *   muscle_fatigue  20%
- *   motivation      15%
- *   pain_vas        15%  (con logica invertita: più dolore = meno readiness)
- *
- * Campi mancanti (null) → si usa il valore neutro 3/5.
- * Pain_vas ha effetto moltiplicatore: se ≥7 → score cappato a 20/100.
+ * Formula pesata evoluta (CP-025 v3):
+ *   Correzione psicologica basata su rpeBiasFactor, mindOverBodyRatio e dreamAlignmentScore.
  */
-export function wizardToReadinessScore(wizard: WizardResponse): number {
-  const s = (wizard.sleep_quality ?? 3) / 5
-  const e = (wizard.energy_level ?? 3) / 5
-  const m = (wizard.muscle_fatigue ?? 3) / 5
-  const mot = (wizard.motivation ?? 3) / 5
-  // Dolore: invertito (0 = ottimo, 10 = pessimo) e normalizzato in 0–1
-  const painFactor = Math.max(0, 1 - wizard.pain_vas / 10)
+export function wizardToReadinessScore(
+  wizard: WizardResponse, 
+  profile?: AthleteProfile
+): number {
+  const bias = profile?.rpeBiasFactor ?? 1.0
+  const mindOverBody = profile?.mindOverBodyRatio ?? 1.0
+  const dreamAlignment = profile?.dreamAlignmentScore ?? 5.0
+
+  // Se bias > 1.0 (atleta sottostima fatica): correggiamo i valori soggettivi
+  const s = ((wizard.sleep_quality ?? 3) / bias) / 5
+  const e = ((wizard.energy_level ?? 3) / bias) / 5
+  const m = ((wizard.muscle_fatigue ?? 3) / bias) / 5
+  const mot = (wizard.motivation ?? 3) / 5 
+
+  // Il dolore viene amplificato dal bias (realtà fisiologica nascosta dallo stoicismo)
+  // Ma viene "attenuato" dal mindOverBodyRatio se l'obiettivo è superiore (il "Sogno")
+  const correctedPain = Math.min(10, (wizard.pain_vas * bias) / (mindOverBody * 0.5 + 0.5))
+  const painFactor = Math.max(0, 1 - correctedPain / 10)
+
+  // Il Dream Alignment protegge il punteggio di readiness dalla demotivazione
+  const motContribution = (mot * 15) * (1 + (dreamAlignment / 20))
 
   let score = Math.round(
-    (s * 25) + (e * 25) + (m * 20) + (mot * 15) + (painFactor * 15)
+    (s * 25) + (e * 25) + (m * 20) + motContribution + (painFactor * 15)
   )
 
-  // Cap duro: dolore severo → readiness non può superare 20
-  if (wizard.pain_vas >= 7) score = Math.min(score, 20)
-  // Cap moderato: dolore fastidioso → readiness cappata a 55
-  else if (wizard.pain_vas >= 4) score = Math.min(score, 55)
+  // Cap basati sul dolore corretto
+  if (correctedPain >= 7) score = Math.min(score, 20)
+  else if (correctedPain >= 4) score = Math.min(score, 55)
 
   return Math.max(0, Math.min(100, score))
 }
@@ -1416,53 +1424,43 @@ export interface AllostaticLoadInput {
 /**
  * Calcola l'Allostatic Load Score (0–100).
  *
- * Formula ponderata:
- *   deficit sonno         30%  (privazione sonno è il driver principale del recovery)
- *   carico allenamento    25%  (RPE medio recente)
- *   deficit calorico      20%  (riserve energetiche)
- *   stress vita           15%  (contesto psicosociale)
- *   HRV trend             10%  (segnale sistemico oggettivo, se disponibile)
- *
- * Score:
- *   0–30  = carico allostatico basso (verde)
- *   31–60 = medio (giallo, progressioni conservative)
- *   61–80 = alto (arancio, no lavori glicolitici massimali)
- *   81–100 = critico (rosso, solo recupero attivo o Z1)
+ * CP-025 v3: Integrazione resilienza allostatica e protezione dal burnout.
  */
-export function calculateAllostaticLoad(input: AllostaticLoadInput): number {
-  // 1. SONNO — privazione sonno (adulti: target 7–9h)
+export function calculateAllostaticLoad(
+  input: AllostaticLoadInput,
+  profile?: AthleteProfile
+): number {
+  const resilience = profile?.allostaticResilience ?? 5
+  const dream = profile?.dreamAlignmentScore ?? 5
+
   const avgSleep = mean(input.sleep_hours_last3)
-  const sleepDeficit = Math.max(0, 8 - avgSleep)          // deficit rispetto a 8h ottimali
-  const sleepScore = Math.min(100, sleepDeficit * 20)      // ogni ora mancante = +20 punti stress
+  const sleepDeficit = Math.max(0, 8 - avgSleep)
+  const sleepScore = Math.min(100, sleepDeficit * 20)
 
-  // 2. CARICO ALLENAMENTO — RPE medio recente
   const avgRPE = mean(input.rpe_last3_sessions)
-  const rpeScore = ((avgRPE - 1) / 9) * 100               // normalizzato: RPE1=0, RPE10=100
+  const rpeScore = ((avgRPE - 1) / 9) * 100
 
-  // 3. DEFICIT CALORICO — bilancio energetico
   const avgBalance = mean(input.caloric_balance_last3)
-  // deficit > 300kcal/giorno inizia a stressare il sistema
   const caloricScore = avgBalance < -300
-    ? Math.min(100, Math.abs(avgBalance + 300) / 5)       // ogni 5kcal di deficit extra = +1 punto
+    ? Math.min(100, Math.abs(avgBalance + 300) / 5)
     : 0
 
-  // 4. STRESS DA VITA
-  const lifeScore = input.life_stress_score
+  const rawLifeScore = input.life_stress_score
     ? ((input.life_stress_score - 1) / 4) * 100
-    : 30  // default neutro se non risposto
+    : 30
+  
+  // La resilienza e il Sogno agiscono come buffer contro lo stress della vita
+  const resilienceFactor = Math.max(0.05, 1.6 - (resilience / 10) * 1.3 - (dream / 20))
+  const lifeScore = rawLifeScore * resilienceFactor
 
-  // 5. HRV TREND (se disponibile)
-  let hrvScore = 40  // default neutro
+  let hrvScore = 40
   if (input.hrv_zscore_last3 && input.hrv_zscore_last3.length > 0) {
     const avgHRV = mean(input.hrv_zscore_last3)
-    // Z-score < 0 = sotto baseline → stress, Z-score > 0 = sopra baseline → recupero
     hrvScore = Math.min(100, Math.max(0, 50 - avgHRV * 25))
   }
 
-  // 6. BONUS per giorni consecutivi senza riposo
   const consecutiveBonus = Math.min(30, input.consecutive_training_days * 5)
 
-  // Ponderazione finale
   const weighted = (
     sleepScore * 0.30 +
     rpeScore * 0.25 +
@@ -1537,6 +1535,14 @@ export interface DailyRecommendation {
 export interface DailyRecommenderInput {
   /** Fenotipo utente (aggiornato nel tempo) */
   phenotype: UserPhenotype
+  /** 
+   * Profili atleta attivi (Tier-2: Mentalità) 
+   * Permette la fusione di più mentalità (es. 50% Kobe, 50% Seneca)
+   */
+  active_mental_profiles?: Array<{
+    profile: AthleteProfile
+    weight: number // 0-1, la somma deve essere 1
+  }>
   /** Risposta wizard di oggi (null se non ancora compilato) */
   wizard: WizardResponse | null
   /** Stato telemetria hardware (null se nessun device) */
@@ -1571,6 +1577,76 @@ export interface DailyRecommenderInput {
  * Integra tutti i layer (telemetria, wizard, allostatic load, gate check,
  * collision matrix, graceful degradation) in una singola raccomandazione.
  */
+// ─── HELPER: Mental Profile Fusion (CP-025 v3) ────────────────────────────────
+
+/**
+ * Fonde più profili atleta in un singolo profilo composito usando media pesata.
+ * Il profilo dominante (peso maggiore) contribuisce con stile comunicativo e
+ * pattern comportamentali; i valori numerici vengono fusi proporzionalmente.
+ */
+export function fuseAthleteProfiles(
+  profiles?: Array<{ profile: AthleteProfile; weight: number }>
+): AthleteProfile | undefined {
+  if (!profiles || profiles.length === 0) return undefined
+  if (profiles.length === 1) return profiles[0].profile
+
+  const sorted = [...profiles].sort((a, b) => b.weight - a.weight)
+  const dominant = sorted[0].profile
+  const totalWeight = profiles.reduce((sum, p) => sum + p.weight, 0)
+
+  const w = (v: number) => v / totalWeight
+  const weightedNum = (getter: (p: AthleteProfile) => number) =>
+    profiles.reduce((sum, p) => sum + getter(p.profile) * w(p.weight), 0)
+
+  return {
+    ...dominant,
+    rpeBiasFactor:       weightedNum(p => p.rpeBiasFactor),
+    allostaticResilience: Math.round(weightedNum(p => p.allostaticResilience)),
+    mindOverBodyRatio:    weightedNum(p => p.mindOverBodyRatio),
+    dreamAlignmentScore:  Math.round(weightedNum(p => p.dreamAlignmentScore)),
+  }
+}
+
+// ─── HELPER: DailyRecommendation builder ────────────────────────────────────
+
+interface BuildRecommendationParams {
+  type:         SessionRecommendationType
+  tier:         OperationalTier
+  readiness:    number
+  allostatic:   number
+  volMod:       number
+  intMod:       number
+  fusionWeights: Record<string, number>
+  blockedBlocks: string[]
+  collisions:   CollisionResolver[]
+  warnings:     string[]
+  actionCode:   ActionCode
+  summary:      string
+  confidence:   number
+  gateCheck:    DailyRecommendation['gate_check']
+}
+
+function buildRecommendation(p: BuildRecommendationParams): DailyRecommendation {
+  return {
+    recommendation:        p.type,
+    confidence:            p.confidence,
+    operational_tier:      p.tier,
+    readiness_score:       p.readiness,
+    allostatic_load:       p.allostatic,
+    volume_modifier:       p.volMod,
+    intensity_modifier:    p.intMod,
+    active_fusion_weights: p.fusionWeights,
+    gate_check:            p.gateCheck,
+    blocked_blocks:        p.blockedBlocks,
+    collision_resolutions: p.collisions,
+    warnings:              p.warnings,
+    action_code:           p.actionCode,
+    ui_summary:            p.summary,
+  }
+}
+
+// ─── MAIN RECOMMENDER ────────────────────────────────────────────────────────
+
 export function recommendDailySession(
   input: DailyRecommenderInput
 ): DailyRecommendation {
@@ -1594,7 +1670,9 @@ export function recommendDailySession(
   // ── STEP 3: Readiness score ────────────────────────────────────────────────
   let readinessScore = 50 // default neutro
   if (input.wizard && wizardIsValid(input.wizard)) {
-    readinessScore = wizardToReadinessScore(input.wizard)
+    // CP-025 v3: Iniezione della fusione mentale (Mental Fusion)
+    const fusedProfile = fuseAthleteProfiles(input.active_mental_profiles)
+    readinessScore = wizardToReadinessScore(input.wizard, fusedProfile)
   }
 
   // Override con HRV se tier 1 e hardware affidabile
@@ -1609,7 +1687,12 @@ export function recommendDailySession(
   }
 
   // ── STEP 4: Carico allostatico ─────────────────────────────────────────────
-  const allostaticLoad = calculateAllostaticLoad(input.allostatic_input)
+  // CP-025 v3: Iniezione della resilienza allostatica ibrida
+  const fusedProfileForAllo = fuseAthleteProfiles(input.active_mental_profiles)
+  const allostaticLoad = calculateAllostaticLoad(
+    input.allostatic_input,
+    fusedProfileForAllo
+  )
 
   // ── STEP 5: LEGGE DEL VETO — dolore (controllo immediato) ─────────────────
   const painVAS = input.wizard?.pain_vas ?? 0
@@ -1820,57 +1903,54 @@ export function recommendDailySession(
     INSUFFICIENT_DATA: `Dati insufficienti per raccomandare con precisione. Compila il wizard per attivare il motore.`,
   }
 
+  // CP-025: Nudging adattivo basato sulla fusione degli stili (v3)
+  const baseSummary = summaryMap[recType]
+  let adaptiveSummary = baseSummary
+  
+  if (input.active_mental_profiles && input.active_mental_profiles.length > 0) {
+    // Se c'è fusione, prendiamo lo stile del profilo dominante (peso maggiore)
+    const sortedProfiles = [...input.active_mental_profiles].sort((a, b) => b.weight - a.weight)
+    const primary = sortedProfiles[0].profile
+    const secondary = sortedProfiles.length > 1 ? sortedProfiles[1].profile : null
+    
+    const tone = primary.communicationStyle
+    const name = secondary 
+      ? `${primary.name} e ${secondary.name}` 
+      : primary.name
+
+    const nudges: Record<CommunicationStyle, string> = {
+      stoic: `${name} dicono: "Il dovere chiama. ${baseSummary}"`,
+      scientific: `${name} analizzano: "I dati indicano una traiettoria ottimale. ${baseSummary}"`,
+      empathetic: `${name} consigliano: "Ascolta il tuo corpo, è il tuo strumento. ${baseSummary}"`,
+      competitive: `${name} sfidano: "Dimostra chi sei. ${baseSummary}"`,
+      visionary: `${name} ispirano: "Ogni passo ti avvicina al Sogno. ${baseSummary}"`,
+      drill_sergeant: `${name} ordinano: "Nessun compromesso oggi. ${baseSummary}"`,
+      analytical: `${name} osservano: "Pattern di eccellenza rilevati. ${baseSummary}"`,
+      philosophical: `${name} riflettono: "Il significato di ogni sessione supera il risultato. ${baseSummary}"`,
+      renegade: `${name} sfidano gli schemi: "Ignora il rumore. ${baseSummary}"`,
+      mentor: `${name} guidano: "Ogni piccolo passo costruisce il grande atleta. ${baseSummary}"`,
+      protector: `${name} difendono: "Proteggi il tuo potenziale. ${baseSummary}"`,
+      catalyst: `${name} accendono: "L'energia di oggi costruisce il domani. ${baseSummary}"`,
+    }
+
+    adaptiveSummary = nudges[tone] ?? baseSummary
+  }
+
+  // ── STEP 13: Assembla e ritorna la raccomandazione finale ──────────────────
   return buildRecommendation({
-    type: recType,
-    tier: degradationState.current_tier,
-    readiness: readinessScore,
-    allostatic: allostaticLoad,
+    type:          recType,
+    tier:          degradationState.current_tier,
+    readiness:     readinessScore,
+    allostatic:    allostaticLoad,
     volMod,
     intMod,
     fusionWeights: dynamicWeights,
     blockedBlocks,
-    collisions: collisionResolutions,
+    collisions:    collisionResolutions,
     warnings,
     actionCode,
-    summary: summaryMap[recType],
+    summary:       adaptiveSummary,
     confidence,
     gateCheck,
   })
 }
-
-/** Helper interno per costruire il DailyRecommendation object */
-function buildRecommendation(p: {
-  type: SessionRecommendationType
-  tier: OperationalTier
-  readiness: number
-  allostatic: number
-  volMod: number
-  intMod: number
-  fusionWeights: Record<string, number>
-  blockedBlocks: string[]
-  collisions: CollisionResolver[]
-  warnings: string[]
-  actionCode: ActionCode
-  summary: string
-  confidence: number
-  gateCheck: DailyRecommendation['gate_check']
-}): DailyRecommendation {
-  return {
-    recommendation: p.type,
-    confidence: p.confidence,
-    operational_tier: p.tier,
-    readiness_score: p.readiness,
-    allostatic_load: p.allostatic,
-    volume_modifier: Math.round(p.volMod * 100) / 100,
-    intensity_modifier: Math.round(p.intMod * 100) / 100,
-    active_fusion_weights: p.fusionWeights,
-    gate_check: p.gateCheck,
-    blocked_blocks: p.blockedBlocks,
-    collision_resolutions: p.collisions,
-    warnings: p.warnings,
-    action_code: p.actionCode,
-    ui_summary: p.summary,
-  }
-}
-
-    

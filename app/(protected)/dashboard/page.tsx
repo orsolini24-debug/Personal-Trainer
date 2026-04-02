@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronRight, Trophy, TrendingUp, TrendingDown, Minus, Dumbbell, Utensils, Activity } from 'lucide-react'
+import { ArrowRight, ChevronRight, Trophy, TrendingUp, TrendingDown, Minus, Dumbbell, Utensils, Activity, Loader2, Sparkles } from 'lucide-react'
 import KPITracker from '@/app/components/KPITracker'
 import { getDashboardData } from '@/app/actions/dashboard'
+import { generateWeeklyReport } from '@/app/actions/reports'
 
 type DashData = Awaited<ReturnType<typeof getDashboardData>>
 
@@ -33,10 +34,23 @@ function ProgressRing({ value, max, size = 72, stroke = 5, color = 'var(--accent
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashData | null>(null)
+  const [reportContent, setReportContent] = useState<string | null>(null)
+  const [generatingReport, startReportTransition] = useTransition()
 
   useEffect(() => {
     getDashboardData().then(setData)
   }, [])
+
+  const handleGenerateReport = () => {
+    startReportTransition(async () => {
+      const res = await generateWeeklyReport()
+      if (res.success && res.content) {
+        setReportContent(res.content)
+        // Reload full data to pick up the saved report
+        getDashboardData().then(setData)
+      }
+    })
+  }
 
   if (!data) return <DashboardSkeleton />
 
@@ -628,7 +642,7 @@ export default function DashboardPage() {
       </Link>
 
       {/* ── WEEKLY REPORT SNIPPET ── */}
-      {lastReport && (
+      {(lastReport || reportContent) ? (
         <Link href="/coach" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px', animation: 'fade-up 0.45s 200ms cubic-bezier(0.16,1,0.3,1) both' }}>
           <div className="dash-card-hover" style={{
             padding: '24px', borderRadius: '20px',
@@ -645,7 +659,7 @@ export default function DashboardPage() {
               textTransform: 'uppercase', color: 'var(--accent)',
               marginBottom: '12px', fontFamily: "'JetBrains Mono', monospace",
             }}>
-              Weekly Report · {new Date(lastReport.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })}
+              Weekly Report · {lastReport ? new Date(lastReport.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }) : 'Appena generato'}
             </p>
             <p style={{
               fontSize: '13px', lineHeight: 1.6, color: 'var(--fg-primary)',
@@ -653,7 +667,7 @@ export default function DashboardPage() {
               display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
               overflow: 'hidden'
             }}>
-              {lastReport.content.replace(/[*#]/g, '')}
+              {(reportContent ?? lastReport?.content ?? '').replace(/[*#]/g, '')}
             </p>
             <div style={{
               marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px',
@@ -663,6 +677,45 @@ export default function DashboardPage() {
             </div>
           </div>
         </Link>
+      ) : (
+        <div style={{ marginBottom: '8px', animation: 'fade-up 0.45s 200ms cubic-bezier(0.16,1,0.3,1) both' }}>
+          <div style={{
+            padding: '24px', borderRadius: '20px',
+            background: 'var(--bg-surface)',
+            border: '1px dashed var(--border-default)',
+            position: 'relative', overflow: 'hidden',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+          }}>
+            <div>
+              <p style={{
+                fontSize: '9px', fontWeight: 700, letterSpacing: '0.16em',
+                textTransform: 'uppercase', color: 'var(--fg-subtle)',
+                marginBottom: '6px', fontFamily: "'JetBrains Mono', monospace",
+              }}>Weekly Report</p>
+              <p style={{ fontSize: '13px', color: 'var(--fg-muted)', margin: 0, fontWeight: 500 }}>
+                Nessun report questa settimana. Genera un'analisi AI dei tuoi ultimi 7 giorni.
+              </p>
+            </div>
+            <button
+              onClick={handleGenerateReport}
+              disabled={generatingReport}
+              style={{
+                flexShrink: 0,
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '10px 18px', borderRadius: '14px',
+                background: 'linear-gradient(135deg, var(--accent), var(--accent2, var(--accent)))',
+                color: 'white', border: 'none', cursor: generatingReport ? 'not-allowed' : 'pointer',
+                fontSize: '12px', fontWeight: 800, opacity: generatingReport ? 0.6 : 1,
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {generatingReport
+                ? <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> Generazione...</>
+                : <><Sparkles size={13} /> Genera Report</>
+              }
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ═══════════════════════════════════════════

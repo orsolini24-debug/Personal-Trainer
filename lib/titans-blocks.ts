@@ -1217,6 +1217,2399 @@ const RTP_FIELD_REBUILD: TitanBlockCanonical = {
   completeness_score:  0.88,
 }
 
+// ─── 11. DELOAD_WEEK ──────────────────────────────────────────────────────
+
+const DELOAD_WEEK: TitanBlockCanonical = {
+  block_id:    'DELOAD_WEEK',
+  name:        'Deload / Recovery Week',
+  category:    'recovery_deload',
+  subcategory: 'planned_unloading',
+
+  mechanical_dosage: {
+    sessions_per_week: [3, 4],
+    duration_min:      [30, 50],
+    rpe_target:        [3, 5],
+    // Intensità ridotta al 40–60% rispetto alla settimana precedente
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    1,
+    joint_stress_knee:     1,
+    joint_stress_hip:      1,
+    joint_stress_shoulder: 1,
+    joint_stress_ankle:    1,
+    tendon_load_type:      'none',
+    tissue_recovery_hours: 6,
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   2,  // CNS_DRAIN_RUBRIC.ZONE2_STEADY_STATE
+  metabolic_pathway: 'aerobic_oxidative',
+
+  primary_adaptation:   'AEROBIC_CAPACITY',
+  secondary_adaptation: 'FAT_OXIDATION',
+
+  adaptation_decay: {
+    primary_quality:   'AEROBIC_CAPACITY',
+    secondary_quality: 'MAXIMAL_STRENGTH',
+    half_life_days:    28,
+  },
+
+  interference_with: [],  // il deload non interferisce con nulla
+
+  synergistic_with: [
+    'ZONE2_FOUNDATION',
+    'THRESHOLD_ENDURANCE',
+    'MAX_STRENGTH_ACCUMULATION',
+  ],
+
+  entry_gates: [],  // nessun prerequisito — è un blocco di recupero
+
+  exit_criteria: [
+    'HRV tornata entro ±1 SD dalla baseline personale',
+    'RPE sessioni Z1 < 11 (Borg 6-20) per sforzo a 70% HRmax',
+    'Senso soggettivo di freschezza ≥ 3/5 nel wizard',
+    'Minimo 5 giorni di deload completati',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        5,
+      action_on_breach: 'end_session',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'all',               priority: 'primary', note: 'Universale — ogni atleta ogni 3–4 settimane' },
+    { discipline: 'endurance_running', priority: 'primary' },
+    { discipline: 'cycling',           priority: 'primary' },
+    { discipline: 'powerlifting',      priority: 'primary' },
+    { discipline: 'football',          priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Non eseguire durante settimane pre-gara con TSB già positivo (doppio deload)',
+    'Non confondere con riposo completo: la sessione di movimento mantiene gli adattamenti',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Issurin (2008) Block Periodization vs. Traditional Training — JSCR',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Mujika & Padilla (2000) Detraining: Loss of Training Adaptations — Sports Med',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Bosquet et al. (2007) Effects of tapering on performance — Med Sci Sports',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.90,
+}
+
+// ─── 12. HYPERTROPHY_MESOCYCLE ────────────────────────────────────────────
+
+const HYPERTROPHY_MESOCYCLE: TitanBlockCanonical = {
+  block_id:    'HYPERTROPHY_MESOCYCLE',
+  name:        'Hypertrophy Mesocycle (Volume Accumulation)',
+  category:    'strength_hypertrophy',
+  subcategory: 'muscle_mass_accumulation',
+
+  mechanical_dosage: {
+    sessions_per_week: [3, 5],
+    sets_per_session:  [3, 5],
+    reps_per_set:      [8, 15],
+    intensity_pct_1rm: [65, 80],
+    rpe_target:        [7, 9],
+    rest_seconds:      [60, 120],
+    tempo:             '3-1-1-0',  // 3" eccentrico, 1" pausa, 1" concentrico, 0 pausa
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    5,   // JOINT_STRESS_RUBRIC.SPINE_SQUAT_MODERATE
+    joint_stress_knee:     5,   // JOINT_STRESS_RUBRIC.KNEE_SQUAT_MODERATE_DEPTH
+    joint_stress_hip:      3,
+    joint_stress_shoulder: 3,   // JOINT_STRESS_RUBRIC.SHOULDER_PRESS_LIGHT_MODERATE
+    joint_stress_ankle:    null,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 36,  // TISSUE_RECOVERY_HOURS.STRENGTH_MODERATE_LOWER
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   4,  // CNS_DRAIN_RUBRIC.HYPERTROPHY_MODERATE
+  metabolic_pathway: 'glycolytic_dominant',
+
+  primary_adaptation:   'HYPERTROPHY',
+  secondary_adaptation: 'MAXIMAL_STRENGTH',
+
+  adaptation_decay: {
+    primary_quality:   'HYPERTROPHY',
+    secondary_quality: 'MAXIMAL_STRENGTH',
+    half_life_days:    28,  // ADAPTATION_DECAY_HALF_LIFE_DAYS.HYPERTROPHY
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'endurance_aerobic',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'AMPK-mTOR conflict: endurance volume > 60 min attiva AMPK che inibisce mTORC1 (hypertrophy signaling)',
+      source:                   'Hickson 1980; Wilson et al. 2012 meta-analysis JSCR',
+    },
+    {
+      penalizes_block_category: 'speed_sprint',
+      severity:                 'moderate',
+      minimum_separation_hours: 24,
+      mechanism:                'peripheral fatigue da alto volume riduce output velocità nei 24h successivi',
+      source:                   'Wilson et al. 2012 meta-analysis',
+    },
+  ],
+
+  synergistic_with: ['ZONE2_FOUNDATION', 'ECCENTRIC_HAMSTRING_PREHAB'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009 BJSM',
+    },
+    {
+      metric:    'training_years_strength',
+      operator:  '>=',
+      threshold: 0.5,
+      critical:  false,
+      source:    'NSCA CSCS guidelines — adaptation window for novice',
+    },
+  ],
+
+  exit_criteria: [
+    'Set settimanali per gruppo muscolare raggiungono il MAV (18 sets) senza degradazione tecnica',
+    'RPE medio delle sessioni stabili a 7.5–8.5 per 3+ settimane consecutive',
+    'Progressione di carico stagnante per 2 settimane → transizione a forza massimale',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        9.5,
+      action_on_breach: 'end_set',
+    },
+    {
+      metric:             'velocity_drop_pct',
+      threshold:          20,
+      action_on_breach:   'reduce_load_pct',
+      reduction_pct:      10,
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'powerlifting',  priority: 'primary' },
+    { discipline: 'bodybuilding',  priority: 'primary' },
+    { discipline: 'football',      priority: 'primary', note: 'Blocco off-season primario' },
+    { discipline: 'swimming',      priority: 'secondary' },
+    { discipline: 'endurance_running', priority: 'optional', note: 'Solo off-season, volume ridotto' },
+  ],
+
+  contraindications: [
+    'Tendinopatia attiva (VAS ≥ 4) in zona sollecitata',
+    'Meno di 4 settimane a gara principale (interferisce con picco neuromuscolare)',
+    'CTL < 20 TSS/giorno (base aerobica insufficiente per recupero tra sessioni)',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Schoenfeld (2017) "Science and Development of Muscle Hypertrophy" Human Kinetics',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Schoenfeld et al. (2017) "Dose-response relationship between weekly resistance training volume and increases in muscle mass" JSCR',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Israetel et al. (2019) "Scientific Principles of Strength Training" RP Strength',
+      type:     'practitioner_manual',
+      strength: 'B',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.88,
+}
+
+// ─── 13. MAX_VELOCITY_SPRINT ──────────────────────────────────────────────
+
+const MAX_VELOCITY_SPRINT: TitanBlockCanonical = {
+  block_id:    'MAX_VELOCITY_SPRINT',
+  name:        'Maximum Velocity Sprint Training',
+  category:    'speed_sprint',
+  subcategory: 'max_velocity_development',
+
+  mechanical_dosage: {
+    sessions_per_week: [1, 2],
+    distance_per_rep_m: [20, 60],    // zone 20–60m (post-acceleration phase)
+    rpe_target:         [9, 10],
+    rest_seconds:       [180, 360],  // recupero completo CNS (3–6' per rep)
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    3,
+    joint_stress_knee:     5,
+    joint_stress_hip:      7,   // JOINT_STRESS_RUBRIC.HIP_MAX_VELOCITY_SPRINT
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    6,   // JOINT_STRESS_RUBRIC.ANKLE_REACTIVE_SPRINT
+    tendon_load_type:      'tensile',   // carico tendine prossimale hamstring in swing
+    tissue_recovery_hours: 72,  // TISSUE_RECOVERY_HOURS.MAX_VELOCITY_SPRINT
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   9,  // CNS_DRAIN_RUBRIC.MAX_VELOCITY_SPRINT
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'SPEED',
+  secondary_adaptation: 'REACTIVE_STRENGTH',
+
+  adaptation_decay: {
+    primary_quality:   'SPEED',
+    secondary_quality: 'REACTIVE_STRENGTH',
+    half_life_days:    5,   // ADAPTATION_DECAY_HALF_LIFE_DAYS.SPEED — qualità più volatile
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'critical',
+      minimum_separation_hours: 8,
+      mechanism:                'CNS fatigue neuromuscolare overlap: entrambi richiedono reclutamento massimale delle unità motorie rapide',
+      source:                   'Francis 1992 "Speed Trap"; Verkhoshansky 2009 Supertraining',
+    },
+    {
+      penalizes_block_category: 'strength_hypertrophy',
+      severity:                 'moderate',
+      minimum_separation_hours: 24,
+      mechanism:                'peripheral fatigue da volume ipertrofia riduce peak velocity output',
+      source:                   'Wilson et al. 2012 meta-analysis JSCR',
+    },
+    {
+      penalizes_block_category: 'endurance_anaerobic',
+      severity:                 'critical',
+      minimum_separation_hours: 24,
+      mechanism:                'acidosi lattica da HIIT/RSA blocca espressione forza rapida nelle 24h successive',
+      source:                   'Rampinini et al. 2011 Int J Sports Med',
+    },
+  ],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 1,
+      critical:  true,
+      source:    'Cook & Purdam 2009 — massima esigenza integrità strutturale',
+    },
+    {
+      metric:    'SPRINT_ACCELERATION_weeks_completed',
+      operator:  '>=',
+      threshold: 3,
+      critical:  false,
+      source:    'Progressione raccomandata: acceleration prima di max velocity — Francis 1992',
+    },
+    {
+      metric:    'hamstring_strength_asymmetry_pct',
+      operator:  '<=',
+      threshold: 15,
+      critical:  true,
+      source:    'Croisier et al. (2008) AJSM — asimmetria > 15% = rischio hamstring strain',
+    },
+  ],
+
+  exit_criteria: [
+    'Flying 20m ≤ −2% rispetto al PB: mantenimento qualità',
+    'RPE sessione 9–10 mantenuto senza degradazione tecnica per 3 settimane',
+    'Nessun dolore o tensione posteriore coscia durante il ciclo',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'pain_vas_ceiling',
+      threshold:        2,
+      action_on_breach: 'end_session',
+    },
+    {
+      metric:           'rpe_ceiling',
+      threshold:        10,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'athletics_sprints',  priority: 'primary' },
+    { discipline: 'football',           priority: 'primary' },
+    { discipline: 'rugby',              priority: 'primary' },
+    { discipline: 'basketball',         priority: 'secondary' },
+    { discipline: 'endurance_running',  priority: 'optional', note: 'Solo per mezzofondo — sviluppo economia di corsa' },
+  ],
+
+  contraindications: [
+    'Hamstring strain grado I–III: attesa 8–16 settimane post-lesione + clearance fisioterapica',
+    'Tendinopatia prossimale hamstring attiva (VAS ≥ 2)',
+    'In-season sport di squadra senza buffer di 72h pre-match',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Mann & Murphy (2015) "The Physics of Sprint Running" Tafnews Press',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Haugen et al. (2019) "Sprint mechanical properties in football players" EJSS',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Croisier et al. (2008) "Strength Imbalances and Prevention of Hamstring Injury in Professional Soccer Players" AJSM',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.87,
+}
+
+// ─── 14. PLYOMETRIC_FOUNDATION ────────────────────────────────────────────
+
+const PLYOMETRIC_FOUNDATION: TitanBlockCanonical = {
+  block_id:    'PLYOMETRIC_FOUNDATION',
+  name:        'Plyometric Foundation (SSC Development)',
+  category:    'power_explosive',
+  subcategory: 'stretch_shortening_cycle_intro',
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [3, 5],
+    reps_per_set:      [6, 10],
+    rpe_target:        [6, 8],
+    rest_seconds:      [60, 120],
+    // Contatti a terra: 80–150 per sessione (vol. introduttivo)
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    2,
+    joint_stress_knee:     6,   // JOINT_STRESS_RUBRIC.KNEE_COD_DECELERATION — simile
+    joint_stress_hip:      4,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    7,   // JOINT_STRESS_RUBRIC.ANKLE_PLYOMETRIC_BOUNDING
+    tendon_load_type:      'tensile_compressive_mixed',
+    tissue_recovery_hours: 36,  // TISSUE_RECOVERY_HOURS.PLYOMETRIC_MODERATE
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   6,  // CNS_DRAIN_RUBRIC.PLYOMETRIC_MODERATE
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'REACTIVE_STRENGTH',
+  secondary_adaptation: 'SPEED',
+
+  adaptation_decay: {
+    primary_quality:   'REACTIVE_STRENGTH',
+    secondary_quality: 'SPEED',
+    half_life_days:    7,   // ADAPTATION_DECAY_HALF_LIFE_DAYS.REACTIVE_STRENGTH
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'fatica neuromuscolare da pliometrica riduce capacità di reclutamento massimale nelle ore successive',
+      source:                   'Verkhoshansky & Siff (2009) Supertraining cap.5',
+    },
+    {
+      penalizes_block_category: 'endurance_anaerobic',
+      severity:                 'critical',
+      minimum_separation_hours: 24,
+      mechanism:                'DOMS da pliometrica fondazione (elevato danno eccentrico) degrada RSA e HIIT quality per 24–48h',
+      source:                   'Schoenfeld (2017) muscle damage review',
+    },
+  ],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009 BJSM',
+    },
+    {
+      metric:    'single_leg_squat_control',
+      operator:  '>=',
+      threshold: 3,
+      critical:  false,
+      source:    'Cook (2010) Movement — FMS prerequisito per landing mechanics',
+    },
+    {
+      metric:    'training_years_strength',
+      operator:  '>=',
+      threshold: 0.5,
+      critical:  true,
+      source:    'NSCA Position Stand on Plyometrics (2007): base di forza necessaria prima di pliometrica',
+    },
+  ],
+
+  exit_criteria: [
+    'Contatto a terra < 250ms in salti bilaterali (misurato da contact mat)',
+    'Nessun valgismo del ginocchio nella fase di atterraggio per 3 sessioni consecutive',
+    'Reactive Strength Index (altezza / contatto) stabile per 2 settimane → progressione a volume maggiore',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'pain_vas_ceiling',
+      threshold:        3,
+      action_on_breach: 'end_session',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'football',           priority: 'primary' },
+    { discipline: 'basketball',         priority: 'primary' },
+    { discipline: 'athletics_sprints',  priority: 'primary' },
+    { discipline: 'volleyball',         priority: 'primary' },
+    { discipline: 'endurance_running',  priority: 'secondary', note: 'Migliora economia di corsa' },
+    { discipline: 'cycling',            priority: 'optional' },
+  ],
+
+  contraindications: [
+    'Tendinopatia rotulea o achillea attiva (VAS ≥ 3)',
+    'Forza massimale squat < 1.0× BW (prerequisito strutturale non soddisfatto)',
+    'Età < 13 anni senza supervisione specializzata (sviluppo scheletrico)',
+    'Post-chirurgia ACL < 9 mesi',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Verkhoshansky & Siff (2009) "Supertraining" cap. 5 — shock method e SSC',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'NSCA (2007) Position Statement on Plyometric Training',
+      type:     'position_stand',
+      strength: 'A',
+    },
+    {
+      source:   'Suchomel et al. (2016) "The Importance of Muscular Strength in Athletic Performance" Sports Med',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.85,
+}
+
+// ─── 15. COD_REACTIVE_ADVANCED ────────────────────────────────────────────
+
+const COD_REACTIVE_ADVANCED: TitanBlockCanonical = {
+  block_id:    'COD_REACTIVE_ADVANCED',
+  name:        'Reactive Change of Direction (Agility)',
+  category:    'skill_cod',
+  subcategory: 'reactive_agility_perception_action',
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [4, 8],
+    reps_per_set:      [3, 6],
+    rpe_target:        [7, 9],
+    rest_seconds:      [60, 120],
+    // Durata stimolo: 2–5 sec per rep (cambio direzione reattivo)
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    2,
+    joint_stress_knee:     6,   // JOINT_STRESS_RUBRIC.KNEE_COD_DECELERATION
+    joint_stress_hip:      5,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    6,   // JOINT_STRESS_RUBRIC.ANKLE_REACTIVE_SPRINT
+    tendon_load_type:      'tensile_compressive_mixed',
+    tissue_recovery_hours: 36,
+    bilateral_demand:      false,  // asimmetrico per natura
+  },
+
+  cns_drain_score:   7,  // cognitivo + neuromuscolare simultanei
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'SPEED',
+  secondary_adaptation: 'REACTIVE_STRENGTH',
+
+  adaptation_decay: {
+    primary_quality:   'SPEED',
+    secondary_quality: 'REACTIVE_STRENGTH',
+    half_life_days:    5,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'endurance_anaerobic',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'fatica cognitiva da compiti reattivi riduce qualità decisionale nei drill successivi',
+      source:                   'Rampinini et al. (2011) — cognitive fatigue e sport performance',
+    },
+  ],
+
+  synergistic_with: ['COD_MECHANICS', 'SPRINT_ACCELERATION', 'PLYOMETRIC_FOUNDATION'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009 BJSM',
+    },
+    {
+      metric:    'COD_MECHANICS_weeks_completed',
+      operator:  '>=',
+      threshold: 4,
+      critical:  true,
+      source:    'Progressione raccomandata: tecnica COD prima di agility reattiva — Sheppard & Young 2006 JSCR',
+    },
+  ],
+
+  exit_criteria: [
+    'T-Test o 505 Agility migliorato ≥ 3% rispetto al baseline',
+    'Decision-making accuracy ≥ 85% in drill con stimolo imprevedibile',
+    'Nessuna differenza > 10% tra lato dominante e non-dominante nei tempi di cambio direzione',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        9,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'football',    priority: 'primary' },
+    { discipline: 'basketball',  priority: 'primary' },
+    { discipline: 'tennis',      priority: 'primary' },
+    { discipline: 'rugby',       priority: 'primary' },
+    { discipline: 'handball',    priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Tecnica di decelerazione non acquisita (COD_MECHANICS non completato)',
+    'Post-chirurgia legamentosa < 12 mesi senza clearance medica',
+    'Deficit di forza asimmetrico ≥ 20% tra gambe',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Sheppard & Young (2006) "Agility literature review: Classifications, training and testing" JSCR',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Young et al. (2015) "Resistance Training for Speed: Moving Beyond Theoretical Rationale" Strength Cond J',
+      type:     'peer_reviewed',
+      strength: 'B',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.82,
+}
+
+// ─── 16. ISOMETRIC_TENDON ─────────────────────────────────────────────────
+
+const ISOMETRIC_TENDON: TitanBlockCanonical = {
+  block_id:    'ISOMETRIC_TENDON',
+  name:        'Isometric Tendon Loading Protocol',
+  category:    'prehab_corrective',
+  subcategory: 'tendinopathy_pain_reduction',
+
+  mechanical_dosage: {
+    sessions_per_week: [4, 5],
+    sets_per_session:  [3, 5],
+    reps_per_set:      [1, 1],    // isometriche lunghe, non reps classiche
+    hold_seconds:      [30, 45],  // 30–45s per contrazione
+    intensity_pct_1rm: [60, 80],  // 60–80% MVC (massima contrazione volontaria)
+    rest_seconds:      [120, 180],
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    null,
+    joint_stress_knee:     4,   // JOINT_STRESS_RUBRIC.KNEE_NORDIC_CURL — simile tendinopatia rotulea
+    joint_stress_hip:      null,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    null,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 48,  // TISSUE_RECOVERY_HOURS.ISOMETRIC_HEAVY_TENDON
+    bilateral_demand:      false,
+  },
+
+  cns_drain_score:   2,  // CNS_DRAIN_RUBRIC.ISOMETRIC_SUBMAXIMAL
+  metabolic_pathway: 'aerobic_oxidative',  // isometriche non esauriscono ATP-PCr
+
+  primary_adaptation:   'TENDON_STIFFNESS',
+  secondary_adaptation: 'MAXIMAL_STRENGTH',
+
+  adaptation_decay: {
+    primary_quality:   'TENDON_STIFFNESS',
+    secondary_quality: 'ECCENTRIC_CAPACITY',
+    half_life_days:    30,  // ADAPTATION_DECAY_HALF_LIFE_DAYS.TENDON_STIFFNESS
+  },
+
+  interference_with: [],  // isometriche non interferiscono significativamente
+
+  synergistic_with: ['ECCENTRIC_HAMSTRING_PREHAB', 'RTP_FIELD_REBUILD'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 5,
+      critical:  false,
+      source:    'Silbernagel et al. (2007) "Continued sports activity using a pain-monitoring model" AJSM — VAS ≤ 5 durante isometrica accettabile',
+    },
+    {
+      metric:    'tendinopathy_diagnosis_confirmed',
+      operator:  '==',
+      threshold: 1,
+      critical:  false,
+      source:    'Cook & Purdam 2009 — indicato specificamente per tendinopatia reattiva/degenerativa',
+    },
+  ],
+
+  exit_criteria: [
+    'VAS durante isometrica scende a ≤ 2 su 5 reps consecutive',
+    'Progressione a esercizi isotonici tollerata senza spike di dolore nelle 24h',
+    '3–4 settimane di protocollo completate (minimo per risposta tendinea)',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'pain_vas_ceiling',
+      threshold:        5,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'all',              priority: 'primary', note: 'Protocollo universale per tendinopatia rotulea, achillea, adduttoria' },
+    { discipline: 'endurance_running', priority: 'primary' },
+    { discipline: 'football',          priority: 'primary' },
+    { discipline: 'basketball',        priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Tendinopatia acuta con VAS > 8: risposo completo necessario',
+    'Post-rottura tendinea: non iniziare prima di clearance chirurgica',
+    'Calcificazione tendinea sintomatica: valutazione medica prima del carico',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Rio et al. (2015) "Isometric exercise induces analgesia and reduces inhibition in patellar tendinopathy" BJSM',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Cook & Purdam (2009) "Is tendon pathology a continuum?" BJSM',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Malliaras et al. (2015) "Patellar tendinopathy: clinical diagnosis, load management, and advice" BJSM',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.92,
+}
+
+// ─── 17. TEMPO_STRENGTH ───────────────────────────────────────────────────
+
+const TEMPO_STRENGTH: TitanBlockCanonical = {
+  block_id:    'TEMPO_STRENGTH',
+  name:        'Tempo / Anatomical Adaptation Strength',
+  category:    'strength_endurance',
+  subcategory: 'anatomical_adaptation_foundation',
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [3, 4],
+    reps_per_set:      [15, 25],
+    intensity_pct_1rm: [40, 60],
+    rpe_target:        [5, 7],
+    rest_seconds:      [45, 90],
+    tempo:             '4-2-2-0',  // 4" eccentrico, 2" pausa, 2" concentrico
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    3,   // JOINT_STRESS_RUBRIC.SPINE_HIP_HINGE_LIGHT
+    joint_stress_knee:     3,
+    joint_stress_hip:      2,
+    joint_stress_shoulder: 3,   // JOINT_STRESS_RUBRIC.SHOULDER_PRESS_LIGHT_MODERATE
+    joint_stress_ankle:    null,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 24,  // TISSUE_RECOVERY_HOURS.STRENGTH_MODERATE_UPPER
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   3,  // CNS_DRAIN_RUBRIC.STRENGTH_60_70_PCT
+  metabolic_pathway: 'glycolytic_dominant',
+
+  primary_adaptation:   'HYPERTROPHY',
+  secondary_adaptation: 'TENDON_STIFFNESS',
+
+  adaptation_decay: {
+    primary_quality:   'HYPERTROPHY',
+    secondary_quality: 'TENDON_STIFFNESS',
+    half_life_days:    28,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'minor',
+      minimum_separation_hours: 6,
+      mechanism:                'volume accumulato con carichi moderati genera una certa fatica metabolica che riduce la qualità nel massimale nelle ore successive',
+      source:                   'Kraemer & Ratamess 2004 ACSM position stand',
+    },
+  ],
+
+  synergistic_with: ['ZONE2_FOUNDATION', 'MOBILITY_FOUNDATION'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 3,
+      critical:  true,
+      source:    'Linee guida ACSM per esercizio con dolore cronico',
+    },
+  ],
+
+  exit_criteria: [
+    '3–4 settimane completate (fase di adattamento anatomico)',
+    'Carichi progrediti del 5–10% con tecnica invariata',
+    'Progressione a HYPERTROPHY_MESOCYCLE quando 20 reps con carico stabile senza dolore',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        8,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'all',              priority: 'primary', note: 'Blocco introduttivo universale per chi inizia la forza' },
+    { discipline: 'endurance_running', priority: 'primary', note: 'AA phase prima del blocco forza specifico' },
+    { discipline: 'cycling',           priority: 'primary' },
+    { discipline: 'swimming',          priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Non usare come sostituto dell\'ipertrofia per atleti già adattati (regredisce la risposta adattativa)',
+    'Non combinare con HYPERTROPHY_MESOCYCLE nello stesso mesociclo (sovrapposizione di stimolo)',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Bompa & Haff (2009) "Periodization: Theory and Methodology of Training" 5th ed. Human Kinetics',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Kraemer & Ratamess (2004) "Fundamentals of Resistance Training" ACSM Position Stand Med Sci Sports Exerc',
+      type:     'position_stand',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.85,
+}
+
+// ─── 18. ALACTIC_POWER_REPETITION ────────────────────────────────────────
+
+const ALACTIC_POWER_REPETITION: TitanBlockCanonical = {
+  block_id:    'ALACTIC_POWER_REPETITION',
+  name:        'Alactic Power Repetition Method',
+  category:    'endurance_anaerobic',
+  subcategory: 'phosphagen_system_development',
+
+  mechanical_dosage: {
+    sessions_per_week: [1, 2],
+    sets_per_session:  [4, 6],
+    reps_per_set:      [4, 8],
+    distance_per_rep_m: [10, 30],
+    rpe_target:         [9, 10],
+    rest_seconds:       [120, 180],  // recupero completo PCr (2–3' tra reps)
+    // Pausa inter-serie: 8–10' (recupero sistemico)
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    2,
+    joint_stress_knee:     5,
+    joint_stress_hip:      6,   // JOINT_STRESS_RUBRIC.HIP_SPRINT_ACCELERATION
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    6,   // JOINT_STRESS_RUBRIC.ANKLE_REACTIVE_SPRINT
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 72,  // stesso di SPRINT_ACCELERATION — PCr-limited
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   8,  // CNS_DRAIN_RUBRIC.SPRINT_ACCELERATION
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'SPEED',
+  secondary_adaptation: 'ANAEROBIC_CAPACITY',
+
+  adaptation_decay: {
+    primary_quality:   'SPEED',
+    half_life_days:    5,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'endurance_anaerobic',
+      severity:                 'critical',
+      minimum_separation_hours: 24,
+      mechanism:                'RSA e HIIT successivi alla sessione alactacida: il PCr non è ricostituito completamente in < 4–6h, la qualità dei rep di velocità crolla',
+      source:                   'Gaitanos et al. (1993) "Human muscle metabolism during intermittent maximal exercise" J Appl Physiol',
+    },
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 8,
+      mechanism:                'CNS fatigue neuromuscolare bidirezionale',
+      source:                   'Verkhoshansky & Siff (2009) Supertraining',
+    },
+  ],
+
+  synergistic_with: ['SPRINT_ACCELERATION', 'MAX_VELOCITY_SPRINT'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 1,
+      critical:  true,
+      source:    'Cook & Purdam 2009 — massima sollecitazione strutturale',
+    },
+    {
+      metric:    'SPRINT_ACCELERATION_weeks_completed',
+      operator:  '>=',
+      threshold: 4,
+      critical:  false,
+      source:    'Progressione: base di accelerazione prima di rep method — Charlie Francis Speed Trap',
+    },
+  ],
+
+  exit_criteria: [
+    'Velocità di picco mantenuta (≤ 3% decay) tra rep 1 e rep 6 dello stesso set',
+    'Potenza alattacida (10m split) stabile su 3 sessioni consecutive',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'velocity_drop_pct',
+      threshold:        5,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'athletics_sprints', priority: 'primary' },
+    { discipline: 'football',          priority: 'primary' },
+    { discipline: 'rugby',             priority: 'secondary' },
+    { discipline: 'basketball',        priority: 'secondary' },
+  ],
+
+  contraindications: [
+    'Stessa giornata di RSA o HIIT team sport',
+    'Temperatura ambientale > 35°C senza protocollo di raffreddamento',
+    'Hamstring VAS ≥ 2 — massimo rischio strain a velocità massimale',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Francis (1992) "Speed Trap" — Rep method di Charlie Francis per sviluppo alattacido',
+      type:     'practitioner_manual',
+      strength: 'B',
+    },
+    {
+      source:   'Gaitanos et al. (1993) "Human muscle metabolism during intermittent maximal exercise" J Appl Physiol',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.82,
+}
+
+// ─── 19. VO2MAX_INTERVALS ─────────────────────────────────────────────────
+
+const VO2MAX_INTERVALS: TitanBlockCanonical = {
+  block_id:    'VO2MAX_INTERVALS',
+  name:        'VO₂max Interval Training',
+  category:    'endurance_anaerobic',
+  subcategory: 'vo2max_development',
+
+  mechanical_dosage: {
+    sessions_per_week: [1, 2],
+    sets_per_session:  [4, 6],
+    duration_min:      [4, 8],    // 4–8' per rep (Seiler et al. 2013)
+    rpe_target:        [8, 10],
+    rest_seconds:      [240, 300], // recupero ~1:1 rispetto alla durata
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    null,
+    joint_stress_knee:     3,
+    joint_stress_hip:      3,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    4,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 36,
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   6,  // CNS_DRAIN_RUBRIC.HIIT_TEAM_SPORT — simile
+  metabolic_pathway: 'aerobic_glycolytic_mixed',
+
+  primary_adaptation:   'AEROBIC_CAPACITY',
+  secondary_adaptation: 'LACTATE_THRESHOLD',
+
+  adaptation_decay: {
+    primary_quality:   'AEROBIC_CAPACITY',
+    secondary_quality: 'LACTATE_THRESHOLD',
+    half_life_days:    28,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'AMPK activation at high-intensity endurance blocks mTOR signaling for 6h post-exercise',
+      source:                   'Hickson 1980; Wilson et al. 2012',
+    },
+    {
+      penalizes_block_category: 'speed_sprint',
+      severity:                 'moderate',
+      minimum_separation_hours: 24,
+      mechanism:                'residual acidosi lattica + fatica neuromuscolare endurance degradano output velocità per 24h',
+      source:                   'Rampinini et al. 2011',
+    },
+  ],
+
+  synergistic_with: ['ZONE2_FOUNDATION', 'THRESHOLD_ENDURANCE'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+    {
+      metric:    'ZONE2_FOUNDATION_weeks_completed',
+      operator:  '>=',
+      threshold: 8,
+      critical:  false,
+      source:    'Progressione endurance: base aerobica prima di VO2max — Seiler 2010 IJSPP',
+    },
+    {
+      metric:    'ctl_tss_per_day',
+      operator:  '>=',
+      threshold: 40,
+      critical:  false,
+      source:    'CTL minima per supportare adattamenti VO2max senza overreaching — Allen & Coggan 2010',
+    },
+  ],
+
+  exit_criteria: [
+    'VO2max stimato (da test incrementale) aumentato ≥ 3% rispetto al baseline',
+    'VT2 power/pace spostato in avanti ≥ 2% in 6 settimane',
+    'RPE 8–10 mantenuto per durata target senza degradazione cardio (FC stabile)',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'hr_ceiling_pct',
+      threshold:        100,
+      action_on_breach: 'end_set',
+    },
+    {
+      metric:           'rpe_ceiling',
+      threshold:        10,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'endurance_running', priority: 'primary' },
+    { discipline: 'cycling',           priority: 'primary' },
+    { discipline: 'triathlon',         priority: 'primary' },
+    { discipline: 'rowing',            priority: 'primary' },
+    { discipline: 'football',          priority: 'secondary', note: 'Sviluppo VO2max off-season' },
+  ],
+
+  contraindications: [
+    'Senza base aerobica adeguata (CTL < 30 TSS/giorno): rischio overreaching immediato',
+    'Consecutivo con LACTATE_TOLERANCE nello stesso giorno',
+    '> 2 sessioni VO2max/settimana porta a overreaching nel 80% degli atleti (Seiler 2010)',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Seiler & Tønnessen (2009) "Intervals, Thresholds, and Long Slow Distance" Int J Sports Physiol Perf',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Helgerud et al. (2007) "Aerobic high-intensity intervals improve VO2max more than moderate training" Med Sci Sports Exerc',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Midgley et al. (2006) "Training to enhance the physiological determinants of long-distance running" Sports Med',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.90,
+}
+
+// ─── 20. LACTATE_TOLERANCE ────────────────────────────────────────────────
+
+const LACTATE_TOLERANCE: TitanBlockCanonical = {
+  block_id:    'LACTATE_TOLERANCE',
+  name:        'Lactate Tolerance / Speed Endurance',
+  category:    'endurance_anaerobic',
+  subcategory: 'glycolytic_capacity_buffer',
+
+  mechanical_dosage: {
+    sessions_per_week: [1, 2],
+    sets_per_session:  [3, 6],
+    duration_min:      [1, 3],    // 1–3' per rep ad alta intensità (> VT2)
+    rpe_target:        [9, 10],
+    rest_seconds:      [180, 360], // 3–6' tra rep
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    null,
+    joint_stress_knee:     4,
+    joint_stress_hip:      4,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    5,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 48,
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   7,
+  metabolic_pathway: 'glycolytic_alactic_mixed',
+
+  primary_adaptation:   'ANAEROBIC_CAPACITY',
+  secondary_adaptation: 'LACTATE_THRESHOLD',
+
+  adaptation_decay: {
+    primary_quality:   'ANAEROBIC_CAPACITY',
+    secondary_quality: 'LACTATE_THRESHOLD',
+    half_life_days:    18,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'critical',
+      minimum_separation_hours: 24,
+      mechanism:                'Acidosi metabolica post-lattacida inibisce la forza rapida e la qualità del reclutamento neuromuscolare per 12–24h',
+      source:                   'Bishop et al. (2011) "High-intensity exercise and skeletal muscle" Sports Med',
+    },
+    {
+      penalizes_block_category: 'speed_sprint',
+      severity:                 'critical',
+      minimum_separation_hours: 24,
+      mechanism:                'Il lattato residuo e la fatica muscolare periferica degradano la velocità di picco',
+      source:                   'Rampinini et al. 2011 Int J Sports Med',
+    },
+  ],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+    {
+      metric:    'THRESHOLD_ENDURANCE_weeks_completed',
+      operator:  '>=',
+      threshold: 6,
+      critical:  false,
+      source:    'Progressione: soglia prima di tolleranza lattica — Seiler 2009',
+    },
+  ],
+
+  exit_criteria: [
+    'Lattato a fine sessione > 10 mmol/L per 3 sessioni (conferma stimolo metabolico adeguato)',
+    'RPE di recupero scende a < 7 entro 3 minuti dalla fine del rep (migliore buffer lattato)',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        10,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'athletics_middle_distance', priority: 'primary' },
+    { discipline: 'swimming',                  priority: 'primary' },
+    { discipline: 'cycling',                   priority: 'secondary' },
+    { discipline: 'football',                  priority: 'secondary' },
+    { discipline: 'endurance_running',         priority: 'secondary', note: 'Solo per gare < 5km' },
+  ],
+
+  contraindications: [
+    'Consecutivo con RSA o VO2MAX_INTERVALS (stessa giornata)',
+    'Più di 2 sessioni/settimana aumenta significativamente il rischio overtraining',
+    'Senza base aerobica: l\'acidosi non può essere smaltita efficacemente',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Laursen & Jenkins (2002) "The scientific basis for high-intensity interval training" Sports Med',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Bishop et al. (2011) "High-intensity exercise and skeletal muscle function in Health and disease" Sports Med',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.83,
+}
+
+// ─── 21. MOBILITY_FOUNDATION ──────────────────────────────────────────────
+
+const MOBILITY_FOUNDATION: TitanBlockCanonical = {
+  block_id:    'MOBILITY_FOUNDATION',
+  name:        'Mobility & Corrective Exercise Foundation',
+  category:    'prehab_corrective',
+  subcategory: 'joint_mobility_movement_quality',
+
+  mechanical_dosage: {
+    sessions_per_week: [3, 7],  // quotidiano ideale, minimo 3×/settimana
+    duration_min:      [15, 30],
+    rpe_target:        [2, 4],
+    hold_seconds:      [20, 60], // per posizioni di stretching
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    1,   // JOINT_STRESS_RUBRIC.SPINE_SUPINE_NO_AXIAL_LOAD
+    joint_stress_knee:     1,
+    joint_stress_hip:      1,
+    joint_stress_shoulder: 1,
+    joint_stress_ankle:    1,
+    tendon_load_type:      'none',
+    tissue_recovery_hours: 6,   // TISSUE_RECOVERY_HOURS.MOBILITY_CORRECTIVE
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   2,  // CNS_DRAIN_RUBRIC.MOBILITY_CORRECTIVE
+  metabolic_pathway: 'aerobic_oxidative',
+
+  primary_adaptation:   'MOBILITY',
+  secondary_adaptation: 'TENDON_STIFFNESS',
+
+  adaptation_decay: {
+    primary_quality:   'MOBILITY',
+    secondary_quality: 'TENDON_STIFFNESS',
+    half_life_days:    7,  // ADAPTATION_DECAY_HALF_LIFE_DAYS.MOBILITY — decade velocemente
+  },
+
+  interference_with: [],  // la mobilità non interferisce con altri blocchi
+
+  synergistic_with: [
+    'TEMPO_STRENGTH',
+    'ZONE2_FOUNDATION',
+    'ISOMETRIC_TENDON',
+    'ECCENTRIC_HAMSTRING_PREHAB',
+  ],
+
+  entry_gates: [],  // nessun prerequisito
+
+  exit_criteria: [
+    'FMS composite score ≥ 14/21 (Cook 2010 Movement)',
+    'ROM obiettivo raggiunto nella valutazione iniziale (es. dorsiflexion > 15°, hip 90/90 ≥ 45°)',
+    'Dolore durante movimento correttivo ≤ 1 VAS per 2 settimane consecutive',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'pain_vas_ceiling',
+      threshold:        3,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'all',              priority: 'primary', note: 'Blocco universale — non ha uno sport target' },
+  ],
+
+  contraindications: [
+    'Stretching statico intenso immediatamente pre-gara o pre-sessione esplosiva: riduce forza acuta per 30–60 min',
+    'Dolore articolare acuto > 4 VAS: assessment medico prima di mobilizzare',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Cook (2010) "Movement: Functional Movement Systems" On Target Publications',
+      type:     'textbook',
+      strength: 'B',
+    },
+    {
+      source:   'Behm & Chaouachi (2011) "A review of the acute effects of static and dynamic stretching on performance" Eur J Appl Physiol',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.80,
+}
+
+// ─── 22. AEROBIC_POWER ────────────────────────────────────────────────────
+
+const AEROBIC_POWER: TitanBlockCanonical = {
+  block_id:    'AEROBIC_POWER',
+  name:        'Aerobic Power (Sweet Spot) Training',
+  category:    'endurance_aerobic',
+  subcategory: 'sustained_high_aerobic_output',
+
+  // Note: "Sweet Spot" = 88–93% FTP (tra LT1 e LT2), descritto da Coggan & Allen (2010)
+  // Punto di massima efficienza adattativa per atleti endurance intermedi-avanzati.
+  // Più tollerabile del threshold puro ma più adattativo del Zone 2.
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    duration_min:      [20, 40],   // durata per set
+    rpe_target:        [6, 8],     // "comfortably hard"
+    // Intensità: 88–93% FTP (da HR_ZONES — tra ZONE3_TEMPO e ZONE4_THRESHOLD)
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    null,
+    joint_stress_knee:     3,
+    joint_stress_hip:      3,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    3,   // JOINT_STRESS_RUBRIC.ANKLE_RUNNING_MODERATE
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 30,  // TISSUE_RECOVERY_HOURS.THRESHOLD_RUNNING
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   4,  // CNS_DRAIN_RUBRIC.THRESHOLD_ENDURANCE
+  metabolic_pathway: 'aerobic_glycolytic_mixed',
+
+  primary_adaptation:   'LACTATE_THRESHOLD',
+  secondary_adaptation: 'AEROBIC_CAPACITY',
+
+  adaptation_decay: {
+    primary_quality:   'LACTATE_THRESHOLD',
+    secondary_quality: 'AEROBIC_CAPACITY',
+    half_life_days:    25,  // ADAPTATION_DECAY_HALF_LIFE_DAYS.LACTATE_THRESHOLD
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'AMPK moderata attivazione a sweet spot → interferenza AMPK-mTOR rilevante ma < VO2max',
+      source:                   'Fyfe et al. 2014 Sports Med',
+    },
+  ],
+
+  synergistic_with: ['ZONE2_FOUNDATION', 'THRESHOLD_ENDURANCE', 'LONG_AEROBIC_ENDURANCE'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+    {
+      metric:    'ctl_tss_per_day',
+      operator:  '>=',
+      threshold: 35,
+      critical:  false,
+      source:    'Base aerobica minima per sweet spot produttivo — Allen & Coggan 2010',
+    },
+  ],
+
+  exit_criteria: [
+    'FTP aumentato ≥ 3% in 6–8 settimane di sweet spot sistematico',
+    'RPE a parità di potenza scende di 0.5 punti Borg in 4 settimane',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'hr_ceiling_pct',
+      threshold:        92,
+      action_on_breach: 'reduce_load_pct',
+      reduction_pct:    5,
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'cycling',           priority: 'primary' },
+    { discipline: 'endurance_running', priority: 'primary' },
+    { discipline: 'triathlon',         priority: 'primary' },
+    { discipline: 'rowing',            priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Principianti endurance (< 3 mesi di base aerobica): usare ZONE2_FOUNDATION invece',
+    'Consecutivo 2+ giorni senza Z1 di recupero intermedio',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Allen & Coggan (2010) "Training and Racing with a Power Meter" 2nd ed. VeloPress',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Seiler & Tønnessen (2009) "Intervals, Thresholds, and Long Slow Distance" IJSPP',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.85,
+}
+
+// ─── 23. TEMPO_RUNNING ────────────────────────────────────────────────────
+
+const TEMPO_RUNNING: TitanBlockCanonical = {
+  block_id:    'TEMPO_RUNNING',
+  name:        'Tempo Running (Charlie Francis Low-CNS Speed Endurance)',
+  category:    'endurance_aerobic',
+  subcategory: 'low_cns_speed_endurance',
+
+  // Note: Il "Tempo" di Charlie Francis (Speed Trap, 1992) è corsa a 65–75% Vmax,
+  // non il threshold "tempo run" del mondo endurance. Funzione opposta: sviluppa
+  // la capacità aerobica del velocista senza stressare il sistema nervoso.
+  // Durata: 100–300m per rep a ritmo "comodo" per un velocista.
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [6, 12],
+    distance_per_rep_m: [100, 300],
+    rpe_target:         [4, 6],
+    rest_seconds:       [60, 120],
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    null,
+    joint_stress_knee:     2,
+    joint_stress_hip:      2,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    3,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 14,  // TISSUE_RECOVERY_HOURS.ZONE2_RUNNING_EASY
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   2,  // intenzionalmente basso — funzione di recupero CNS
+  metabolic_pathway: 'aerobic_oxidative',
+
+  primary_adaptation:   'AEROBIC_CAPACITY',
+  secondary_adaptation: 'FAT_OXIDATION',
+
+  adaptation_decay: {
+    primary_quality:   'AEROBIC_CAPACITY',
+    secondary_quality: 'FAT_OXIDATION',
+    half_life_days:    28,
+  },
+
+  interference_with: [],  // non interferisce (basso CNS drain)
+
+  synergistic_with: ['SPRINT_ACCELERATION', 'MAX_VELOCITY_SPRINT', 'ALACTIC_POWER_REPETITION'],
+
+  entry_gates: [],  // nessun prerequisito
+
+  exit_criteria: [
+    'Volume settimanale tempo raggiunge 1500–2000m senza fatica residua il giorno dopo',
+    'FC durante tempo ≤ 75% HRmax confermata su 3 sessioni consecutive',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'hr_ceiling_pct',
+      threshold:        75,
+      action_on_breach: 'reduce_load_pct',
+      reduction_pct:    10,
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'athletics_sprints',  priority: 'primary', note: 'Base aerobica del velocista (Francis method)' },
+    { discipline: 'football',           priority: 'secondary' },
+    { discipline: 'rugby',              priority: 'secondary' },
+  ],
+
+  contraindications: [
+    'Non confondere con "tempo run" endurance (> 85% FTP) — sono protocolli diversi',
+    'Non usare come sostituto di ZONE2_FOUNDATION per atleti endurance',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Francis (1992) "Speed Trap" — Tempo running come base aerobica per velocisti',
+      type:     'practitioner_manual',
+      strength: 'B',
+    },
+    {
+      source:   'Bompa & Haff (2009) "Periodization" 5th ed. — Low-intensity volume nella periodizzazione sprint',
+      type:     'textbook',
+      strength: 'B',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.75,
+}
+
+// ─── 24. NEURAL_PEAKING ───────────────────────────────────────────────────
+
+const NEURAL_PEAKING: TitanBlockCanonical = {
+  block_id:    'NEURAL_PEAKING',
+  name:        'Neural Peaking (Pre-Competition CNS Activation)',
+  category:    'power_explosive',
+  subcategory: 'pre_competition_neural_potentiation',
+
+  // Note: La fase di "neural peaking" (Zatsiorsky 2006, Bompa 2009) usa volumi
+  // bassi e intensità massimali per attivare il sistema nervoso e dissipare la
+  // fatica accumulata. Non costruisce fitness — ESPRIME la fitness già presente.
+  // Timing: 7–14 giorni prima della gara.
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [2, 4],
+    reps_per_set:      [1, 3],
+    intensity_pct_1rm: [90, 100],
+    rpe_target:        [8, 10],
+    rest_seconds:      [180, 300],  // recupero molto completo
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    7,   // JOINT_STRESS_RUBRIC.SPINE_DEADLIFT_HEAVY
+    joint_stress_knee:     5,
+    joint_stress_hip:      5,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    null,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 48,  // TISSUE_RECOVERY_HOURS.STRENGTH_HEAVY_COMPOUND_LOWER
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   9,  // CNS_DRAIN_RUBRIC.STRENGTH_95_100_PCT
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'MAXIMAL_STRENGTH',
+  secondary_adaptation: 'SPEED',
+
+  adaptation_decay: {
+    primary_quality:   'MAXIMAL_STRENGTH',
+    secondary_quality: 'SPEED',
+    half_life_days:    18,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'endurance_aerobic',
+      severity:                 'minor',
+      minimum_separation_hours: 6,
+      mechanism:                'basso volume → interferenza AMPK trascurabile a questa fase',
+      source:                   'Fyfe et al. 2014',
+    },
+  ],
+
+  synergistic_with: ['DELOAD_WEEK'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 1,
+      critical:  true,
+      source:    'Massima esigenza integrità strutturale a carichi massimali',
+    },
+    {
+      metric:    'days_to_competition',
+      operator:  '>=',
+      threshold: 7,
+      critical:  true,
+      source:    'Mujika & Padilla 2003 — taper minimo 7 giorni prima gara per dissipare fatica',
+    },
+    {
+      metric:    'days_to_competition',
+      operator:  '<=',
+      threshold: 14,
+      critical:  true,
+      source:    'Fuori dalla finestra di peaking se > 14 giorni pre-gara',
+    },
+  ],
+
+  exit_criteria: [
+    'Gara completata',
+    'Soggettivamente "fresco e esplosivo" nelle sessioni di attivazione',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        10,
+      action_on_breach: 'end_set',
+    },
+    {
+      metric:           'velocity_drop_pct',
+      threshold:        3,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'powerlifting',      priority: 'primary' },
+    { discipline: 'athletics_sprints', priority: 'primary' },
+    { discipline: 'football',          priority: 'secondary' },
+    { discipline: 'weightlifting',     priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Al di fuori della finestra 7–14 giorni pre-gara: diventa un blocco di forza normale',
+    'Atleti con storico di infortuni acuti da carico massimale: usare 85–90% invece di 95–100%',
+    'Mai in fase di accumulation (Volume alto incompatibile con peaking neurale)',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Zatsiorsky & Kraemer (2006) "Science and Practice of Strength Training" 2nd ed.',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Bompa & Haff (2009) "Periodization" 5th ed. — Peaking e supercompensazione',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Mujika & Padilla (2003) "Scientific bases for precompetition tapering strategies" Med Sci Sports Exerc',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.88,
+}
+
+// ─── 25. UPPER_BODY_STRENGTH ──────────────────────────────────────────────
+
+const UPPER_BODY_STRENGTH: TitanBlockCanonical = {
+  block_id:    'UPPER_BODY_STRENGTH',
+  name:        'Upper Body Maximal Strength',
+  category:    'strength_maximal',
+  subcategory: 'push_pull_upper_compound',
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [3, 5],
+    reps_per_set:      [3, 6],
+    intensity_pct_1rm: [80, 92],
+    rpe_target:        [7, 9],
+    rest_seconds:      [180, 300],
+    tempo:             '2-1-1-0',
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    4,   // JOINT_STRESS_RUBRIC.SPINE_OVERHEAD_PRESS_MODERATE
+    joint_stress_knee:     null,
+    joint_stress_hip:      null,
+    joint_stress_shoulder: 6,   // JOINT_STRESS_RUBRIC.SHOULDER_PRESS_HEAVY_OVERHEAD
+    joint_stress_ankle:    null,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 36,  // TISSUE_RECOVERY_HOURS.STRENGTH_HEAVY_COMPOUND_UPPER
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   6,  // CNS_DRAIN_RUBRIC.STRENGTH_75_85_PCT
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'MAXIMAL_STRENGTH',
+  secondary_adaptation: 'HYPERTROPHY',
+
+  adaptation_decay: {
+    primary_quality:   'MAXIMAL_STRENGTH',
+    secondary_quality: 'HYPERTROPHY',
+    half_life_days:    18,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'endurance_aerobic',
+      severity:                 'minor',
+      minimum_separation_hours: 0,
+      mechanism:                'Upper body strength ha interferenza AMPK-mTOR trascurabile con endurance lower body (sistemi muscolari separati)',
+      source:                   'Fyfe et al. 2014 Sports Med — interferenza ridotta con body part separation',
+    },
+  ],
+
+  synergistic_with: ['ECCENTRIC_HAMSTRING_PREHAB', 'TEMPO_STRENGTH'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+    {
+      metric:    'shoulder_overhead_mobility_deg',
+      operator:  '>=',
+      threshold: 160,
+      critical:  false,
+      source:    'FMS overhead squat screen — mobilità spalla prerequisito per press overhead sicuro',
+    },
+  ],
+
+  exit_criteria: [
+    'Bench press o overhead press 1RM aumentato ≥ 5% in 6 settimane',
+    'Velocità di sollevamento (VBT) stabile a 0.3–0.5 m/s per i carichi target',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:             'velocity_drop_pct',
+      threshold:          20,
+      action_on_breach:   'reduce_load_pct',
+      reduction_pct:      5,
+    },
+    {
+      metric:           'rpe_ceiling',
+      threshold:        9.5,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'powerlifting',    priority: 'primary' },
+    { discipline: 'weightlifting',   priority: 'primary' },
+    { discipline: 'swimming',        priority: 'primary', note: 'Fondamentale per trazione e spinta in acqua' },
+    { discipline: 'football',        priority: 'secondary' },
+    { discipline: 'rugby',           priority: 'primary' },
+    { discipline: 'basketball',      priority: 'secondary' },
+  ],
+
+  contraindications: [
+    'Sindrome da conflitto subacromiale attivo (VAS ≥ 3) — ridurre ROM o sostituire con variante neutro',
+    'Frattura clavicola o acromion < 12 settimane',
+    'Stessa sessione di MAX_VELOCITY_SPRINT (CNS drain cumulativo)',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Zatsiorsky & Kraemer (2006) "Science and Practice of Strength Training" 2nd ed.',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Schoenfeld et al. (2017) "Strength and Hypertrophy Adaptations Between Low- vs. High-Load Resistance Training" JSCR',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.86,
+}
+
+// ─── 26. LOWER_BODY_HYPERTROPHY ───────────────────────────────────────────
+
+const LOWER_BODY_HYPERTROPHY: TitanBlockCanonical = {
+  block_id:    'LOWER_BODY_HYPERTROPHY',
+  name:        'Lower Body Hypertrophy (Quad / Posterior Chain)',
+  category:    'strength_hypertrophy',
+  subcategory: 'lower_body_volume_accumulation',
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [4, 6],
+    reps_per_set:      [8, 15],
+    intensity_pct_1rm: [65, 80],
+    rpe_target:        [7, 9],
+    rest_seconds:      [90, 180],
+    tempo:             '3-1-2-0',
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    6,   // JOINT_STRESS_RUBRIC.SPINE_SQUAT_MODERATE — carico assiale frequente
+    joint_stress_knee:     6,   // JOINT_STRESS_RUBRIC.KNEE_SQUAT_MODERATE_DEPTH
+    joint_stress_hip:      5,   // JOINT_STRESS_RUBRIC.HIP_THRUST_HEAVY
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    null,
+    tendon_load_type:      'tensile_compressive_mixed',
+    tissue_recovery_hours: 48,  // TISSUE_RECOVERY_HOURS.STRENGTH_HEAVY_COMPOUND_LOWER
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   4,  // CNS_DRAIN_RUBRIC.HYPERTROPHY_MODERATE
+  metabolic_pathway: 'glycolytic_dominant',
+
+  primary_adaptation:   'HYPERTROPHY',
+  secondary_adaptation: 'MAXIMAL_STRENGTH',
+
+  adaptation_decay: {
+    primary_quality:   'HYPERTROPHY',
+    secondary_quality: 'MAXIMAL_STRENGTH',
+    half_life_days:    28,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'endurance_aerobic',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'AMPK-mTOR conflict: alto volume lower body ipertrofia attiva AMPK che interferisce con adattamenti endurance (e viceversa)',
+      source:                   'Hickson 1980; Wilson et al. 2012',
+    },
+    {
+      penalizes_block_category: 'speed_sprint',
+      severity:                 'critical',
+      minimum_separation_hours: 48,
+      mechanism:                'DOMS da ipertrofia lower body degrada output velocità per 48h (peripheral fatigue + danno eccentrico)',
+      source:                   'Schoenfeld 2017; Wilson et al. 2012',
+    },
+    {
+      penalizes_block_category: 'power_explosive',
+      severity:                 'moderate',
+      minimum_separation_hours: 24,
+      mechanism:                'Fatica muscolare periferica lower body riduce espressione di potenza nei salti e sprint',
+      source:                   'Verkhoshansky & Siff 2009',
+    },
+  ],
+
+  synergistic_with: ['ECCENTRIC_HAMSTRING_PREHAB', 'MOBILITY_FOUNDATION', 'ISOMETRIC_TENDON'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+    {
+      metric:    'dorsiflexion_deg',
+      operator:  '>=',
+      threshold: 15,
+      critical:  false,
+      source:    'Necessario per squat profondo sicuro — Starrett & Cordoza 2013',
+    },
+  ],
+
+  exit_criteria: [
+    'Sets settimanali per quad + posteriore coscia raggiungono MAV (18 sets) senza RIR < 1',
+    'Progressione di carico stagnante per 2 settimane → transizione a MAX_STRENGTH_ACCUMULATION',
+    'Rapporto quad/hamstring (isokinetic) stabile (non peggiora durante il mesociclo)',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:             'velocity_drop_pct',
+      threshold:          20,
+      action_on_breach:   'reduce_load_pct',
+      reduction_pct:      10,
+    },
+    {
+      metric:           'rpe_ceiling',
+      threshold:        9.5,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'powerlifting',      priority: 'primary' },
+    { discipline: 'football',          priority: 'primary', note: 'Off-season foundation' },
+    { discipline: 'athletics_sprints', priority: 'secondary' },
+    { discipline: 'cycling',           priority: 'secondary' },
+    { discipline: 'endurance_running', priority: 'optional', note: 'Solo off-season, volume ridotto' },
+  ],
+
+  contraindications: [
+    'Tendinopatia rotulea o achillea attiva: sostituire con varianti hip-dominant (leg press, hip thrust)',
+    'Consecutivo con MAX_VELOCITY_SPRINT o PLYOMETRIC_FOUNDATION nello stesso giorno',
+    'Meno di 6 settimane a gara principale',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Schoenfeld (2017) "Science and Development of Muscle Hypertrophy" Human Kinetics',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Israetel et al. (2019) "Scientific Principles of Strength Training" RP Strength',
+      type:     'practitioner_manual',
+      strength: 'B',
+    },
+    {
+      source:   'VOLUME_WEEKLY_THRESHOLDS: MEV=10, MAV=18, MRV=25 sets/muscle group (Schoenfeld 2017)',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.88,
+}
+
+// ─── 27. REACTIVE_PLYOMETRIC ──────────────────────────────────────────────
+
+const REACTIVE_PLYOMETRIC: TitanBlockCanonical = {
+  block_id:    'REACTIVE_PLYOMETRIC',
+  name:        'Reactive Plyometrics (Depth Drops / Shock Method)',
+  category:    'power_explosive',
+  subcategory: 'shock_method_verkhoshansky',
+
+  // Note: "Shock method" di Verkhoshansky (1966, Supertraining cap.5).
+  // Contatti a terra brevi (< 200ms), forze di impatto 3–8× BW.
+  // Richiede PLYOMETRIC_FOUNDATION completata come prerequisito assoluto.
+
+  mechanical_dosage: {
+    sessions_per_week: [1, 2],
+    sets_per_session:  [3, 6],
+    reps_per_set:      [4, 8],
+    rpe_target:        [8, 10],
+    rest_seconds:      [120, 180],
+    // Altezza box: 40–75cm (progressione da 40 a 75cm)
+    // Contatti target per sessione: 40–80 (avanzati fino a 120)
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    3,
+    joint_stress_knee:     8,   // JOINT_STRESS_RUBRIC.KNEE_DEPTH_DROP_REACTIVE
+    joint_stress_hip:      5,
+    joint_stress_shoulder: null,
+    joint_stress_ankle:    7,   // JOINT_STRESS_RUBRIC.ANKLE_PLYOMETRIC_BOUNDING
+    tendon_load_type:      'tensile_compressive_mixed',
+    tissue_recovery_hours: 48,  // TISSUE_RECOVERY_HOURS.DEPTH_DROP_REACTIVE
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   8,  // CNS_DRAIN_RUBRIC.DEPTH_DROP_REACTIVE
+  metabolic_pathway: 'alactic_phosphagen',
+
+  primary_adaptation:   'REACTIVE_STRENGTH',
+  secondary_adaptation: 'SPEED',
+
+  adaptation_decay: {
+    primary_quality:   'REACTIVE_STRENGTH',
+    secondary_quality: 'SPEED',
+    half_life_days:    7,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_hypertrophy',
+      severity:                 'critical',
+      minimum_separation_hours: 48,
+      mechanism:                'DOMS da reactive plyometrics (danno eccentrico estremo da impatto) inibisce la qualità di output di forza per 48h',
+      source:                   'TISSUE_RECOVERY_HOURS.DEPTH_DROP_REACTIVE: 48h (Schoenfeld 2017)',
+    },
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 8,
+      mechanism:                'CNS drain alto (score 8) sovrapponibile al massimale — riduce qualità reclutamento',
+      source:                   'Verkhoshansky & Siff 2009',
+    },
+    {
+      penalizes_block_category: 'endurance_anaerobic',
+      severity:                 'critical',
+      minimum_separation_hours: 24,
+      mechanism:                'Danno muscolare acuto da shock method compromette la qualità della RSA e degli HIIT nei 24h successivi',
+      source:                   'Schoenfeld 2017 muscle damage review',
+    },
+  ],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 1,
+      critical:  true,
+      source:    'Cook & Purdam 2009 — massima integrità strutturale per impatti > 3× BW',
+    },
+    {
+      metric:    'PLYOMETRIC_FOUNDATION_weeks_completed',
+      operator:  '>=',
+      threshold: 6,
+      critical:  true,
+      source:    'NSCA Position Stand 2007 — prerequisito assoluto: base pliometrica prima dello shock method',
+    },
+    {
+      metric:    'squat_1rm_bw_ratio',
+      operator:  '>=',
+      threshold: 1.5,
+      critical:  true,
+      source:    'Verkhoshansky & Siff 2009 — forza minima 1.5× BW per gestire le forze di impatto reactive',
+    },
+    {
+      metric:    'RSI_reactive_strength_index',
+      operator:  '>=',
+      threshold: 1.5,
+      critical:  false,
+      source:    'Soglia RSI per ingresso shock method — Young 1995',
+    },
+  ],
+
+  exit_criteria: [
+    'Contatto a terra < 180ms in drop jump (da 60cm) misurato da contact mat',
+    'RSI (Reactive Strength Index = altezza / tempo contatto) ≥ 2.0',
+    'Nessun dolore ginocchio/caviglia durante o nelle 24h post-sessione per 4 settimane',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'pain_vas_ceiling',
+      threshold:        2,
+      action_on_breach: 'end_session',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'athletics_sprints', priority: 'primary' },
+    { discipline: 'basketball',        priority: 'primary' },
+    { discipline: 'volleyball',        priority: 'primary' },
+    { discipline: 'football',          priority: 'secondary', note: 'Off-season con adeguata base' },
+    { discipline: 'gymnastics',        priority: 'primary' },
+  ],
+
+  contraindications: [
+    'PLYOMETRIC_FOUNDATION non completata (6+ settimane)',
+    'Squat 1RM < 1.5× BW — rischio infortuni articolari acuti',
+    'Post-chirurgia ACL < 18 mesi',
+    'Tendinopatia rotulea o achillea attiva (carico di impatto incompatibile)',
+    'Atleti obesi (BMI > 30) senza base strutturale adeguata',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Verkhoshansky & Siff (2009) "Supertraining" cap. 5 — shock method origine e progressione',
+      type:     'textbook',
+      strength: 'A',
+    },
+    {
+      source:   'Flanagan & Comyns (2008) "The Use of Contact Time and the Reactive Strength Index to Optimize Fast Stretch-Shortening Cycle Training" Strength Cond J',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'NSCA (2007) Position Statement on Plyometric Training',
+      type:     'position_stand',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.90,
+}
+
+// ─── 28. STRENGTH_ENDURANCE_CIRCUIT ───────────────────────────────────────
+
+const STRENGTH_ENDURANCE_CIRCUIT: TitanBlockCanonical = {
+  block_id:    'STRENGTH_ENDURANCE_CIRCUIT',
+  name:        'Strength Endurance Circuit Training',
+  category:    'strength_endurance',
+  subcategory: 'metabolic_conditioning_circuit',
+
+  mechanical_dosage: {
+    sessions_per_week: [2, 3],
+    sets_per_session:  [3, 5],   // rounds
+    reps_per_set:      [10, 20],
+    intensity_pct_1rm: [40, 60],
+    rpe_target:        [6, 8],
+    rest_seconds:      [30, 60], // riposo minimo tra esercizi (formato circuit)
+    // Struttura: 4–8 esercizi in circuito, 30–60" per stazione
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    4,
+    joint_stress_knee:     4,
+    joint_stress_hip:      3,
+    joint_stress_shoulder: 3,
+    joint_stress_ankle:    3,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 24,
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   4,  // CNS_DRAIN_RUBRIC.HYPERTROPHY_MODERATE
+  metabolic_pathway: 'glycolytic_dominant',
+
+  primary_adaptation:   'ANAEROBIC_CAPACITY',
+  secondary_adaptation: 'HYPERTROPHY',
+
+  adaptation_decay: {
+    primary_quality:   'ANAEROBIC_CAPACITY',
+    secondary_quality: 'HYPERTROPHY',
+    half_life_days:    18,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'Fatica metabolica da circuit training riduce qualità reclutamento nelle sessioni di forza massimale successive',
+      source:                   'Kraemer & Ratamess 2004 ACSM',
+    },
+  ],
+
+  synergistic_with: ['ZONE2_FOUNDATION', 'MOBILITY_FOUNDATION'],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 3,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+  ],
+
+  exit_criteria: [
+    'Completamento di tutti i round senza degradazione tecnica per 3 sessioni consecutive',
+    'FC di recupero tra round < 130bpm in 30" di pausa (miglioramento fitness metabolica)',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'hr_ceiling_pct',
+      threshold:        95,
+      action_on_breach: 'end_set',
+    },
+    {
+      metric:           'rpe_ceiling',
+      threshold:        9,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'crossfit',          priority: 'primary' },
+    { discipline: 'football',          priority: 'secondary' },
+    { discipline: 'military',          priority: 'primary' },
+    { discipline: 'endurance_running', priority: 'optional', note: 'Solo off-season per forza generale' },
+    { discipline: 'all',               priority: 'secondary', note: 'General fitness transition block' },
+  ],
+
+  contraindications: [
+    'Obiettivo primario è forza massimale o velocità: i circuit training diluiscono lo stimolo specifico',
+    'Combinato nello stesso giorno con LACTATE_TOLERANCE o RSA',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Kraemer & Ratamess (2004) "Fundamentals of Resistance Training: Progression and Exercise Prescription" Med Sci Sports Exerc',
+      type:     'position_stand',
+      strength: 'A',
+    },
+    {
+      source:   'Rhea et al. (2003) "A Meta-Analysis to Determine the Dose Response for Strength Development" Med Sci Sports Exerc',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.80,
+}
+
+// ─── 29. COMPETITION_PREPARATION ─────────────────────────────────────────
+
+const COMPETITION_PREPARATION: TitanBlockCanonical = {
+  block_id:    'COMPETITION_PREPARATION',
+  name:        'Competition Week Protocol (T−7 to T−0)',
+  category:    'recovery_deload',
+  subcategory: 'pre_competition_taper_activation',
+
+  // Note: Protocollo integrato per la settimana di gara.
+  // Combina elementi di DELOAD_WEEK (riduzione volume) con
+  // attivazioni neuromuscolari brevi (mantenimento intensità).
+  // Bosquet et al. (2007): volume −41–60%, intensità 100%, durata 8–14gg ottimale.
+
+  mechanical_dosage: {
+    sessions_per_week: [3, 4],
+    duration_min:      [20, 45],
+    rpe_target:        [5, 8],   // mix: Z1 + brevi strides ad alta intensità
+    // Attivazioni: 3–5 reps @ 90–95% nelle sessioni di mantenimento
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    2,
+    joint_stress_knee:     2,
+    joint_stress_hip:      2,
+    joint_stress_shoulder: 2,
+    joint_stress_ankle:    2,
+    tendon_load_type:      'tensile',
+    tissue_recovery_hours: 14,
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   3,
+  metabolic_pathway: 'aerobic_oxidative',
+
+  primary_adaptation:   'SPEED',       // mantenimento con strides brevi
+  secondary_adaptation: 'AEROBIC_CAPACITY',
+
+  adaptation_decay: {
+    primary_quality:   'SPEED',
+    secondary_quality: 'AEROBIC_CAPACITY',
+    half_life_days:    5,
+  },
+
+  interference_with: [],
+
+  synergistic_with: ['DELOAD_WEEK', 'NEURAL_PEAKING'],
+
+  entry_gates: [
+    {
+      metric:    'days_to_competition',
+      operator:  '<=',
+      threshold: 7,
+      critical:  true,
+      source:    'Bosquet et al. 2007 — finestra ottimale taper',
+    },
+  ],
+
+  exit_criteria: [
+    'TSB (Training Stress Balance) ≥ +15 al giorno gara (Coggan & Allen 2010)',
+    'Sensazione soggettiva di freschezza ≥ 4/5 nella mattina della gara',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        8,
+      action_on_breach: 'end_set',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'all',               priority: 'primary', note: 'Universale pre-gara' },
+    { discipline: 'endurance_running', priority: 'primary' },
+    { discipline: 'cycling',           priority: 'primary' },
+    { discipline: 'powerlifting',      priority: 'primary' },
+    { discipline: 'athletics_sprints', priority: 'primary' },
+  ],
+
+  contraindications: [
+    'Aumentare il volume pensando di "guadagnare forma" nell\'ultima settimana (errore classico)',
+    'Ridurre anche l\'intensità: va ridotto SOLO il volume, non l\'intensità (Mujika & Padilla 2003)',
+    'Dormire troppo poco per ansia da gara: gestire con sleep banking nei 5 giorni precedenti',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Bosquet et al. (2007) "Effects of Tapering on Performance: A Meta-Analysis" Med Sci Sports Exerc',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Mujika & Padilla (2003) "Scientific bases for precompetition tapering strategies" Med Sci Sports Exerc',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.88,
+}
+
+// ─── 30. CONCURRENT_STRENGTH_ENDURANCE ────────────────────────────────────
+
+const CONCURRENT_STRENGTH_ENDURANCE: TitanBlockCanonical = {
+  block_id:    'CONCURRENT_STRENGTH_ENDURANCE',
+  name:        'Concurrent Strength + Endurance (Interference Management)',
+  category:    'strength_endurance',
+  subcategory: 'concurrent_training_optimized',
+
+  // Note: Blocco "meta" per atleti che devono sviluppare CONTEMPORANEAMENTE
+  // forza e resistenza (triatleti, calciatori, rugby, atleti militari).
+  // Non è un blocco di "tutto insieme" — è un framework di SEQUENZA e SEPARAZIONE
+  // per minimizzare l'interferenza AMPK-mTOR (Fyfe et al. 2014).
+  //
+  // Regola fondamentale: Strength BEFORE Endurance nella stessa giornata
+  // (Wilson et al. 2012: forza prima riduce interferenza del 30% rispetto al contrario).
+
+  mechanical_dosage: {
+    sessions_per_week: [3, 5],
+    duration_min:      [45, 90],  // durata totale sessione (forza + endurance)
+    rpe_target:        [6, 8],
+    rest_seconds:      [360, 480], // separazione minima forza→endurance nella stessa sessione
+  },
+
+  tissue_load_matrix: {
+    joint_stress_spine:    5,
+    joint_stress_knee:     5,
+    joint_stress_hip:      4,
+    joint_stress_shoulder: 3,
+    joint_stress_ankle:    4,
+    tendon_load_type:      'tensile_compressive_mixed',
+    tissue_recovery_hours: 36,
+    bilateral_demand:      true,
+  },
+
+  cns_drain_score:   5,
+  metabolic_pathway: 'aerobic_glycolytic_mixed',
+
+  primary_adaptation:   'AEROBIC_CAPACITY',
+  secondary_adaptation: 'MAXIMAL_STRENGTH',
+
+  adaptation_decay: {
+    primary_quality:   'AEROBIC_CAPACITY',
+    secondary_quality: 'MAXIMAL_STRENGTH',
+    half_life_days:    25,
+  },
+
+  interference_with: [
+    {
+      penalizes_block_category: 'strength_maximal',
+      severity:                 'moderate',
+      minimum_separation_hours: 6,
+      mechanism:                'Se endurance precede forza massimale nella stessa giornata: AMPK attiva riduce qualità reclutamento neuromuscolare. Soluzione: forza PRIMA, poi endurance.',
+      source:                   'Wilson et al. (2012) "Concurrent Training: a Meta-Analysis Examining Interference of Aerobic and Resistance Exercises" JSCR',
+    },
+  ],
+
+  synergistic_with: [
+    'ZONE2_FOUNDATION',
+    'TEMPO_STRENGTH',
+    'THRESHOLD_ENDURANCE',
+    'LOWER_BODY_HYPERTROPHY',
+  ],
+
+  entry_gates: [
+    {
+      metric:    'pain_vas',
+      operator:  '<=',
+      threshold: 2,
+      critical:  true,
+      source:    'Cook & Purdam 2009',
+    },
+    {
+      metric:    'training_years_combined',
+      operator:  '>=',
+      threshold: 1,
+      critical:  false,
+      source:    'Stöggl & Sperlich (2014) — principianti beneficiano di concurrent training, ma la sequenza è critica da subito',
+    },
+  ],
+
+  exit_criteria: [
+    'Nessuna regressione di FTP o 1RM dopo 8 settimane di concurrent (minimizzazione interferenza raggiunta)',
+    'Atleta capace di distinguere soggettivamente la fatica neuromuscolare da quella metabolica',
+  ],
+
+  autoregulation_caps: [
+    {
+      metric:           'rpe_ceiling',
+      threshold:        9,
+      action_on_breach: 'end_session',
+    },
+  ],
+
+  sport_compatibility: [
+    { discipline: 'triathlon',         priority: 'primary', note: 'Definisce il training model del triatleta' },
+    { discipline: 'football',          priority: 'primary' },
+    { discipline: 'rugby',             priority: 'primary' },
+    { discipline: 'rowing',            priority: 'primary' },
+    { discipline: 'military',          priority: 'primary' },
+    { discipline: 'endurance_running', priority: 'secondary', note: 'Off-season con strength aggiunto' },
+    { discipline: 'cycling',           priority: 'secondary' },
+  ],
+
+  contraindications: [
+    'Non mettere endurance PRIMA di forza nella stessa sessione (interferenza aumenta del 30%)',
+    'Non programmare forza massimale e VO2max intervals nello stesso giorno (CNS drain cumulativo > 14)',
+    'Non usare durante settimane di picco/gara: troppa fatica accumulata',
+  ],
+
+  evidence_basis: [
+    {
+      source:   'Wilson et al. (2012) "Concurrent Training: a Meta-Analysis" JSCR',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Fyfe et al. (2014) "Concurrent Training: a Meta-Analysis Examining Interference of Aerobic and Resistance Exercises" Sports Med',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+    {
+      source:   'Stöggl & Sperlich (2014) "Polarized training has greater impact on key endurance variables" Front Physiol',
+      type:     'peer_reviewed',
+      strength: 'A',
+    },
+  ],
+
+  calibration_version:  CALIBRATION_VERSION,
+  completeness_score:   0.87,
+}
+
 // ─── CATALOG REGISTRY ─────────────────────────────────────────────────────
 
 export const TITAN_BLOCK_CATALOG: Record<string, TitanBlockCanonical> = {
@@ -1230,6 +3623,29 @@ export const TITAN_BLOCK_CATALOG: Record<string, TitanBlockCanonical> = {
   ECCENTRIC_HAMSTRING_PREHAB,
   COD_MECHANICS,
   RTP_FIELD_REBUILD,
+  // ── v1.1 additions (blocks 11–17) ──
+  DELOAD_WEEK,
+  HYPERTROPHY_MESOCYCLE,
+  MAX_VELOCITY_SPRINT,
+  PLYOMETRIC_FOUNDATION,
+  COD_REACTIVE_ADVANCED,
+  ISOMETRIC_TENDON,
+  TEMPO_STRENGTH,
+  // ── v1.2 additions (blocks 18–24) ──
+  ALACTIC_POWER_REPETITION,
+  VO2MAX_INTERVALS,
+  LACTATE_TOLERANCE,
+  MOBILITY_FOUNDATION,
+  AEROBIC_POWER,
+  TEMPO_RUNNING,
+  NEURAL_PEAKING,
+  // ── v1.3 additions (blocks 25–30) ──
+  UPPER_BODY_STRENGTH,
+  LOWER_BODY_HYPERTROPHY,
+  REACTIVE_PLYOMETRIC,
+  STRENGTH_ENDURANCE_CIRCUIT,
+  COMPETITION_PREPARATION,
+  CONCURRENT_STRENGTH_ENDURANCE,
 }
 
 // ─── UTILITY FUNCTIONS ────────────────────────────────────────────────────

@@ -83,7 +83,6 @@ export async function saveBasicProfile(data: BasicProfileData) {
           experienceLevel,
           trainingYears,
           availableDays: data.gymSessionsPerWeek,
-          onboardingCompleted: false, // will be set true on final submit
         },
         update: {
           biologicalSex: data.biologicalSex,
@@ -155,7 +154,6 @@ export async function completeWithExistingPlan(
           isFollowingPlan: true,
           currentPlanText: plan.planDescription,
           strengthRefs: Object.keys(strengthRefs).length ? strengthRefs : undefined,
-          onboardingCompleted: true,
         },
         update: {
           biologicalSex: profile.biologicalSex,
@@ -169,7 +167,6 @@ export async function completeWithExistingPlan(
           isFollowingPlan: true,
           currentPlanText: plan.planDescription,
           strengthRefs: Object.keys(strengthRefs).length ? strengthRefs : undefined,
-          onboardingCompleted: true,
         }
       })
 
@@ -215,17 +212,13 @@ export async function completeWithGeneratedPlan(
   try {
     const experienceLevel = scoreToExperienceLevel(profile.experienceScore)
 
-    // Save profile + mark onboarding complete
+    // Save profile only — onboardingCompleted is set by generatePlanFromWizard
+    // after the plan is actually created, making the flow atomic.
     await prisma.$transaction(async (tx) => {
       if (profile.name?.trim()) {
         await tx.user.update({
           where: { id: userId },
-          data: { name: profile.name.trim(), onboardingCompleted: true }
-        })
-      } else {
-        await tx.user.update({
-          where: { id: userId },
-          data: { onboardingCompleted: true }
+          data: { name: profile.name.trim() }
         })
       }
 
@@ -244,7 +237,6 @@ export async function completeWithGeneratedPlan(
           sessionDuration: genData.sessionDurationMin,
           primaryGoal: genData.primaryGoal,
           injuriesList: genData.injuries ? [genData.injuries] : [],
-          onboardingCompleted: true,
         },
         update: {
           biologicalSex: profile.biologicalSex,
@@ -258,7 +250,6 @@ export async function completeWithGeneratedPlan(
           sessionDuration: genData.sessionDurationMin,
           primaryGoal: genData.primaryGoal,
           injuriesList: genData.injuries ? [genData.injuries] : [],
-          onboardingCompleted: true,
         }
       })
     })

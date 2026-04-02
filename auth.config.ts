@@ -23,10 +23,14 @@ export const authConfig = {
       }
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.onboardingCompleted = user.onboardingCompleted
+      }
+      // When client calls update({ onboardingCompleted: true }), refresh the token field
+      if (trigger === 'update' && session?.onboardingCompleted !== undefined) {
+        token.onboardingCompleted = session.onboardingCompleted
       }
       return token
     },

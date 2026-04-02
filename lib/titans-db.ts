@@ -115,6 +115,30 @@ export interface TitanProfile {
   resilientRedFlags?: ResilientRedFlag[]
 }
 
+/** 
+ * TIER-2: ATHLETE MENTAL ARCHETYPE 
+ * Versione 3.0 — Triangolazione Massiccia
+ */
+export type CommunicationStyle = 
+  | 'stoic'         // Focus su dovere, disciplina silenziosa (es. Aurelio)
+  | 'scientific'    // Focus su dati, logica, efficienza (es. Blummenfelt)
+  | 'empathetic'    // Focus su ascolto del corpo, longevità (es. Biles)
+  | 'competitive'   // Focus su sfida, confronto, vittoria (es. Jordan)
+  | 'visionary'     // Focus sul "Sogno", ispirazione epica (es. Ali)
+  | 'drill_sergeant' // Focus su obbedienza, standard assoluti, rigore (es. Goggins)
+  | 'analytical'    // Focus su pattern, ottimizzazione continua (es. Honnold)
+  | 'philosophical' // Focus sul "Perché", significato profondo (es. Musashi)
+  | 'renegade'      // Focus su rottura degli schemi, anticonformismo (es. Tyson)
+  | 'mentor'        // Focus su crescita, saggezza trasmessa (es. Coach K)
+  | 'protector'     // Focus su difesa del team/integrità (es. Ramos)
+  | 'catalyst'      // Focus su energia, attivazione immediata, scintilla (es. Bolt)
+
+export type FailureResponse = 
+  | 'AGGRESSIVE_REBOUND' // Fallimento = rabbia costruttiva, intensità doppia domani
+  | 'LOGICAL_ANALYSIS'   // Fallimento = ricerca del bug nel sistema
+  | 'EMOTIONAL_WITHDRAWAL' // Fallimento = perdita temporanea di fiducia
+  | 'STOIC_ACCEPTANCE'   // Fallimento = è solo un dato, si prosegue
+
 /** Tier-2: Athlete mental/motivational profile */
 export interface AthleteProfile {
   id: string
@@ -123,11 +147,65 @@ export interface AthleteProfile {
   era: string
   nationality: string
   gritArchetype: GritArchetype
+  
+  // ─── TRIANGOLAZIONE PSICOLOGICA ATTIVA (v3) ─────────────────────────────
+  /** Bias RPE: corregge la percezione (Mamba Mentality correction) */
+  rpeBiasFactor: number
+  /** Capacità di isolarsi dallo stress extra-sportivo (1-10) */
+  allostaticResilience: number
+  /** Rapporto Mente/Corpo: quanto può spingersi oltre il limite fisiologico (0.5 - 2.0) */
+  mindOverBodyRatio: number
+  /** Allineamento al "Sogno": quanto la motivazione a lungo termine protegge dal burnout (1-10) */
+  dreamAlignmentScore: number
+  /** Reazione al fallimento di una sessione o gate */
+  failureResponsePattern: FailureResponse
+  /** Stile di comunicazione dominante per il Nudging AI */
+  communicationStyle: CommunicationStyle
+  /** Preferenza di correzione del carico in caso di fatica */
+  recoveryPreference: 'volume_reduction' | 'intensity_reduction' | 'complete_rest'
+
   mentalPrinciples: string[]
   trainingPhilosophy: string
   compatibleGritScore: [number, number] // user grit score range [min, max] that matches
   uiPills: TitanPill[]
   quote: string
+}
+
+/**
+ * BASELINE ZERO - Mappatura iniziale dell'utente
+ */
+export interface UserBaseline {
+  userId: string
+  startingPoint: {
+    fitnessLevel: 'novice' | 'intermediate' | 'advanced' | 'elite'
+    historyYears: number
+    injuriesHistory: string[]
+    /** Esperienza Alpinistica: Quota, D+, Tecnica */
+    mountaineeringExperience: {
+      maxAltitudeReached: number
+      avgWeeklyVerticalGain: number
+      hasGlacierExperience: boolean
+      technicalCompetence: 'low' | 'medium' | 'high'
+      equipmentOwnership: string[] 
+    }
+  }
+  currentPlanStatus?: {
+    planId: string
+    durationWeeks: number
+    alignment: 'under_target' | 'on_target' | 'over_target'
+    consistencyPercent: number
+  }
+  externalDataSources: {
+    hasSleepData: boolean
+    hasHRVData: boolean
+    hasPowerData: boolean
+    last30DaysDensity: number // 0-1
+  }
+  mentalBaseline: {
+    gritScore: number // 0-100
+    primaryMotivation: 'dream' | 'competition' | 'health' | 'fear_of_failure'
+    resilienceInitial: number
+  }
 }
 
 // ─── TIER-1: COACH PROFILES ───────────────────────────────────────────────────
@@ -812,6 +890,93 @@ export const titanProfiles: TitanProfile[] = [
       recommendedPercent: 40,
       bestPairedWith: ['P12', 'P37', 'P05', 'P09'],
     },
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'SPRINT_ACCELERATION',
+      'ALACTIC_POWER_REPETITION',
+      'MAX_VELOCITY_SPRINT',
+      'PLYOMETRIC_FOUNDATION',
+      'ECCENTRIC_HAMSTRING_PREHAB',
+      'TEMPO_STRENGTH',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'SPRINT_ACCELERATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'FIRMA VITTORI: 10–30m acceleration sprints con recupero pieno (5–10min). Qualita prima di quantita. Stop immediato al primo calo tecnico.',
+      },
+      {
+        block_id:             'ALACTIC_POWER_REPETITION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  -10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Vittori enfatizza il sistema alattacido come fondamento. Aggiungere reps prima di ridurre recupero. Mai lavorare in fatica acuta.',
+      },
+      {
+        block_id:             'MAX_VELOCITY_SPRINT',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -10,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Flying 20–30m con recupero completo. Feedback SL/SR dopo ogni rep. Sessione termina se il tempo peggiora >2%.',
+      },
+      {
+        block_id:             'PLYOMETRIC_FOUNDATION',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Forza specifica (bounding, A/B skip, plyometrics progressivi) come ponte tra palestra e pista. Gate: tecnica OK prima di aumentare i contatti.',
+      },
+      {
+        block_id:             'ECCENTRIC_HAMSTRING_PREHAB',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'Nordic + progressioni eccentriche obbligatorie in tutti i piani sprint. Monitoraggio dolore ischio-crurali e Achille costante.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Triade sprint italiana: capacita alattacida + forza specifica + equilibrio SL/SR. Test = training: i battery test sono stimoli oltre che misure.',
+      preferred_progression:  'intensity_first',
+      block_selection_logic:  'ALACTIC_ACCELERATION (4–6 sett) → PLYOMETRIC_FOUNDATION in parallelo → MAX_VELOCITY transfer → ECCENTRIC_PREHAB sempre attivo.',
+      assessment_bias:        ['30m time (acceleration)', 'flying 20m time (maxV)', 'repeat decrement %', 'technical quality score coach', 'pain VAS ischio-crurali'],
+      signature_constraints:  ['Mai sprint attraverso il dolore localizzato', 'Recupero pieno (48–72h) tra sessioni di alta intensita', 'Stop sessione al primo calo di meccanica', 'Alactic volume prima del lavoro lattacido'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'pain_vas',
+        fallback_1_source:    'mechanical_performance',
+        condition:            'Dolore ischio-crurali o Achille durante sprint',
+        threshold:            2,
+        fallback_1_threshold: 5,
+        action_code:          'FULL_STOP',
+        confidence_penalty:   0.5,
+        ui_explanation:       'Stop immediato sessione. Zero sprint attraverso dolore. Valutazione strutturata prima di riprendere.',
+      },
+      {
+        primary_source:       'mechanical_performance',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Calo prestativo >5% tra i rep nonostante intenzione massimale',
+        threshold:            5,
+        fallback_1_threshold: -1.5,
+        action_code:          'FULL_STOP',
+        confidence_penalty:   0.3,
+        ui_explanation:       'Qualita sprint compromessa: stop sessione, riposo 48h, rientro da fase di forza base.',
+      },
+    ],
   },
 
   // ── P13 ── Renato Canova — Marathon / Endurance Coach (Evidence B) ───────────
@@ -900,6 +1065,99 @@ export const titanProfiles: TitanProfile[] = [
       recommendedPercent: 35,
       bestPairedWith: ['P16', 'P14', 'P05', 'P49'],
     },
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'LONG_AEROBIC_ENDURANCE',
+      'THRESHOLD_ENDURANCE',
+      'TEMPO_RUNNING',
+      'VO2MAX_INTERVALS',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Base aerobica obbligatoria: volume facile prima di qualsiasi blocco specifico. Canova usa i long run facili come fondamenta per i blocchi speciali.',
+      },
+      {
+        block_id:             'LONG_AEROBIC_ENDURANCE',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  15,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Long run progressivi a ritmo base → specifico. Canova esprime sempre il ritmo come % del ritmo gara (MP). Base lunga critica per la tolleranza ai blocchi speciali.',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Lavoro a soglia come ponte tra base e blocchi speciali. 90–95% MP. Inserito nella fase di transizione prima dei blocchi.',
+      },
+      {
+        block_id:             'TEMPO_RUNNING',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'FIRMA CANOVA: blocchi speciali AM+PM con sessioni al 90–102% MP. Max 1–2 per mese. Prerequisito: 3+ giorni facili prima. Post-blocco: 2–3 giorni easy obbligatori.',
+        additional_red_flags: [
+          {
+            condition: 'RPE ≥8 persistente 2+ giorni dopo blocco speciale',
+            action:    'Cancellare prossimo blocco; 5+ giorni facili; LT retest prima di riprendere',
+            priority:  'high',
+          },
+        ],
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  3,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Interval al 103–107% RP per la specificita delle distanze medie. Recuperi lunghi. Qualita obbligatoria: stop se i split peggiorano >3%.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Modulazione giorno per giorno con blocchi speciali AM+PM ogni 3–4 settimane. Tutto espresso come % del ritmo gara. Specificita progressiva: generale → speciale → specifico.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'ZONE2 + LONG_RUN (4–8 sett base) → THRESHOLD transition → SPECIAL BLOCKS (AM+PM, mensili max) → COMPETITION taper.',
+      assessment_bias:        ['pace/HR decoupling (aerobic drift)', 'split consistency %MP', 'RPE trend post-blocco (≤6 giorno 3)', 'sleep quality score', 'DOMS recovery days'],
+      signature_constraints:  ['Blocchi speciali AM+PM: max 1–2/mese', 'Post-blocco: 2–3 giorni easy OBBLIGATORI', 'Prerequisito blocco: HRV/sleep baseline OK + 3 giorni facili', 'Dolore tendine = stop protocollo blocco immediato'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'wizard',
+        fallback_1_source:    'hrv_zscore',
+        fallback_2_source:    'mechanical_performance',
+        condition:            'RPE elevato (≥8) persistente 2+ giorni post-blocco speciale',
+        threshold:            8,
+        fallback_1_threshold: -1.5,
+        fallback_2_threshold: 5,
+        action_code:          'FULL_REST',
+        confidence_penalty:   0.4,
+        ui_explanation:       'Blocco speciale ha generato recupero insufficiente. Cancella prossimo blocco, 5+ giorni facili prima di riprendere.',
+      },
+      {
+        primary_source:       'pain_vas',
+        condition:            'Dolore tendine (Achille/patellare) post-blocco',
+        threshold:            3,
+        action_code:          'BLOCKED_PAIN',
+        confidence_penalty:   0.5,
+        ui_explanation:       'Dolore tendineo: stop protocollo blocco. Passare a gestione del carico tendinea (P49/P50).',
+      },
+    ],
   },
 
   // ── P14 ── Jack Daniels — Running/VDOT (Evidence A) ──────────────────────────
@@ -976,6 +1234,93 @@ export const titanProfiles: TitanProfile[] = [
       recommendedPercent: 25,
       bestPairedWith: ['P13', 'P16', 'P17', 'P05'],
     },
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'LONG_AEROBIC_ENDURANCE',
+      'THRESHOLD_ENDURANCE',
+      'VO2MAX_INTERVALS',
+      'ALACTIC_POWER_REPETITION',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  20,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'FIRMA DANIELS: Phase I = 100% easy running + strides. +1 mile/week per anno di esperienza. Nessun lavoro qualitativo fino a 4–8 settimane di base.',
+      },
+      {
+        block_id:             'LONG_AEROBIC_ENDURANCE',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Long run a E-pace. Non deve superare il 25–30% del volume settimanale. Daniels usa il long run come fondamento, non come stressor principale.',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Phase II: T-pace 20–40min continuato o cruise intervals (5×1mile T, 1min rest). Max 10% del volume settimanale a T-pace.',
+        override_dosage:      { duration_min: [20, 40], intensity_pct_1rm: undefined, rpe_target: [7, 8] },
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  -10,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Phase III: I-pace 5×1000m (rest = rep time). Max 8% del volume settimanale a I-pace. Mai ridurre il recupero nella fase interval.',
+      },
+      {
+        block_id:             'ALACTIC_POWER_REPETITION',
+        activation_priority:  3,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -20,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'R-pace (repetition): più veloce del ritmo gara; breve, recupero lungo. Economia + velocita. Non confondere con I-pace.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'VDOT: una metrica unica predice le andature ottimali su 5 zone (E, M, T, I, R). Volume 80% a E-pace; T-pace max 10%, I-pace max 8% del volume settimanale.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'Phase I: ZONE2 + LONG_RUN (4–8 sett) → Phase II: THRESHOLD (4–6 sett) → Phase III: VO2MAX_INTERVALS (4–6 sett) → competition.',
+      assessment_bias:        ['VDOT score (race-derived)', 'weekly mileage', 'T-pace HR stabilization', 'E-pace effort (nasal breathing check)'],
+      signature_constraints:  ['Volume progressione: +1 mile/week per anno esperienza', 'T-pace: MAX 10% del volume settimanale', 'I-pace: MAX 8% del volume settimanale', 'Recupero interval: mai ridurre nella fase III', 'Phase I OBBLIGATORIA prima di qualsiasi lavoro qualitativo'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'mechanical_performance',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Impossibile mantenere E-pace senza HR/sforzo elevato',
+        threshold:            8,
+        fallback_1_threshold: -1.5,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.25,
+        ui_explanation:       'Base aerobica insufficiente per le fasi qualitative. Ridurre andatura E-pace, rimanere in Phase I.',
+      },
+      {
+        primary_source:       'wizard',
+        fallback_1_source:    'mechanical_performance',
+        condition:            'T-pace sembra sforzo R-pace: RPE ≥9 a T-pace',
+        threshold:            9,
+        fallback_1_threshold: 5,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.3,
+        ui_explanation:       'Ricalcolare VDOT. Possibile overtraining o base insufficiente. Tornare a Phase II con andature ricalibrate.',
+      },
+    ],
   },
 
   // ── P16 ── Stephen Seiler — Polarized Training (Evidence A) ──────────────────
@@ -1048,6 +1393,98 @@ export const titanProfiles: TitanProfile[] = [
       recommendedPercent: 20,
       bestPairedWith: ['P14', 'P13', 'P24', 'P05'],
     },
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'LONG_AEROBIC_ENDURANCE',
+      'VO2MAX_INTERVALS',
+      'AEROBIC_POWER',
+      'THRESHOLD_ENDURANCE',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  25,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'FIRMA SEILER: 80% del volume totale a intensita bassa (<VT1). Respirazione nasale possibile; HR <75% max; conversazione sostenibile. La maggior parte degli atleti corre troppo forte nei giorni facili.',
+      },
+      {
+        block_id:             'LONG_AEROBIC_ENDURANCE',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  20,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Long run sempre in zona bassa (<VT1). Il driver primario dell\'adattamento aerobico e il volume a bassa intensita, non l\'intensita moderata.',
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'FIRMA SEILER: 20% ad alta intensita (>VT2). 4×4min al 95% FCmax con 3min recupero. 2–3 sessioni/sett max con recupero pieno tra di esse.',
+        override_dosage:      { sessions_per_week: [2, 3], sets_per_session: [4, 5], duration_min: [4, 5], rpe_target: [9, 10] },
+      },
+      {
+        block_id:             'AEROBIC_POWER',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Variante HIT: 30–60s a intensita supra-massimale per stimolo neuromuscolare senza costo metabolico eccessivo.',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  4,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  -40,
+        preferred_phase:      'any',
+        coach_specific_notes: 'ZONA GRIGIA: Seiler raccomanda di EVITARE la zona moderata (75–90% FCmax). Metabolicamente costosa senza adattamenti superiori. Usare solo se assolutamente necessario.',
+        additional_red_flags: [
+          {
+            condition: 'Sessione facile che deriva in zona grigia (75–90% FCmax)',
+            action:    'Ridurre ritmo/potenza; imporre la polarizzazione corretta',
+            priority:  'high',
+          },
+        ],
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Distribuzione polarizzata: 80% volume basso (<VT1) + 20% alta intensita (>VT2). Eliminare la zona grigia. Gli atleti elite convergono naturalmente su 80/20 nel lungo periodo.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'Costruire prima volume ZONE2 + LONG_RUN → Aggiungere VO2MAX_INTERVALS 2–3x/sett → mai aumentare contemporaneamente volume e densita HIT.',
+      assessment_bias:        ['distribuzione intensita sessioni (%Z1/Z2/Z3)', 'miglioramento VT1 power/pace a stagione', 'VO2max (test periodico)', 'tempo in zona grigia (target: zero)'],
+      signature_constraints:  ['MAI aumentare densita HIT e volume contemporaneamente', 'Zona grigia (75–90% FCmax): EVITARE sistematicamente', 'HIT solo con recupero pieno tra sessioni', 'VT1 e il tetto dei lavori facili: se si supera, rallentare'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'hrv_zscore',
+        fallback_1_source:    'wizard',
+        condition:            'Sessioni HIT non raggiungono intensita target (>VT2)',
+        threshold:            -1.5,
+        fallback_1_threshold: 6,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.2,
+        ui_explanation:       'L\'HIT richiede recupero pieno. Se non si raggiunge l\'intensita target, aggiungere giorni easy prima della prossima sessione HIT.',
+      },
+      {
+        primary_source:       'mechanical_performance',
+        condition:            'Sessioni facili sistematicamente in zona grigia nonostante intenzione di andare piano',
+        threshold:            10,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.15,
+        ui_explanation:       'Andatura troppo elevata nei giorni facili. Ridurre ritmo/potenza. La polarizzazione richiede disciplina assoluta nelle uscite facili.',
+      },
+    ],
   },
 
   // ── P27 ── Mark Rippetoe — Starting Strength (Evidence B) ────────────────────
@@ -1186,6 +1623,99 @@ export const titanProfiles: TitanProfile[] = [
       recommendedPercent: 20,
       bestPairedWith: ['P35', 'P36', 'P27', 'P05'],
     },
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'MAX_STRENGTH_ACCUMULATION',
+      'HYPERTROPHY_MESOCYCLE',
+      'DELOAD_WEEK',
+      'NEURAL_PEAKING',
+      'COMPETITION_PREPARATION',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'GPP di Bompa include preparazione fisica generale: base aerobica + sviluppo multilaterale. Alto volume, bassa intensita. Precede assolutamente l\'SPP.',
+      },
+      {
+        block_id:             'HYPERTROPHY_MESOCYCLE',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'FIRMA BOMPA: ipertrofia nella fase GPP come fondamento per la forza massimale. Alto volume, bassa-media intensita. Base strutturale prima dell\'intensificazione.',
+      },
+      {
+        block_id:             'MAX_STRENGTH_ACCUMULATION',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Fase SPP: volume si riduce, intensita aumenta. Forza massimale come ponte verso le qualita specifiche di potenza e velocita.',
+      },
+      {
+        block_id:             'DELOAD_WEEK',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'BOMPA: mesociclo classico 4 settimane = 3 carico + 1 deload. Fase di transizione 2–4 sett dopo la stagione agonistica. Reset mentale + fisico.',
+      },
+      {
+        block_id:             'NEURAL_PEAKING',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -20,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Peaking sistematico: ridurre volume mantenendo intensita pre-gara. Max 2–3 picchi per anno. Bompa e il padre del concetto di taper strutturato.',
+      },
+      {
+        block_id:             'COMPETITION_PREPARATION',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -30,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Fase agonistica: mantenere intensita, ridurre volume. Peak target: 2–3 volte/anno max. Piano dalla gara all\'indietro.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Macrociclo → mesociclo → microciclo: pianificare dalla gara all\'indietro. GPP (alto volume, bassa intensita) → SPP (volume ridotto, alta intensita) → Competition → Transizione.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'GPP: ZONE2 + HYPERTROPHY (6–12 sett) → SPP: MAX_STRENGTH + specifico (6–12 sett) → COMPETITION: NEURAL_PEAKING + taper (4–16 sett) → TRANSITION: DELOAD (2–4 sett).',
+      assessment_bias:        ['volume load (serie × rip × carico)', 'intensita % 1RM', 'traiettoria prestativa in gara', 'numero di picchi pianificati per anno'],
+      signature_constraints:  ['MAX 2–3 picchi agonistici per anno', 'Fase transizione OBBLIGATORIA dopo la stagione', 'Mesociclo classico: 3 settimane carico + 1 deload', 'GPP DEVE precedere SPP: mai saltare la base'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'allostatic_load',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Piu di 3 picchi agonistici tentati in un anno',
+        threshold:            70,
+        fallback_1_threshold: -2.0,
+        action_code:          'REDUCE_LOAD',
+        confidence_penalty:   0.35,
+        ui_explanation:       'Ristrutturare il macrociclo. Troppi picchi portano a overtraining. Bompa: mai piu di 2–3 picchi/anno.',
+      },
+      {
+        primary_source:       'wizard',
+        condition:            'Nessuna fase di transizione pianificata dopo la stagione',
+        threshold:            6,
+        action_code:          'FULL_REST',
+        confidence_penalty:   0.2,
+        ui_explanation:       'Inserire 2–4 settimane di recupero attivo. Senza transizione si accumula fatica residua che compromette la stagione successiva.',
+      },
+    ],
   },
 
   // ── P47 ── Stacy Sims — Female Physiology (Evidence B) ───────────────────────
@@ -1739,6 +2269,102 @@ export const titanProfiles: TitanProfile[] = [
     },
     periodizationModel: ['concurrent'],
     assessmentScreening: ['VO2max test', 'vVO2max incremental test', 'lactate threshold test', 'HRV monitoring'],
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'THRESHOLD_ENDURANCE',
+      'VO2MAX_INTERVALS',
+      'HIIT_TEAM_SPORT',
+      'ALACTIC_POWER_REPETITION',
+      'AEROBIC_POWER',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  15,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'LAURSEN: minimo 40h di base aerobica prima di introdurre HIIT in atleti non allenati. La base aerobica deve essere solida prima di qualsiasi lavoro ad alta intensita.',
+      },
+      {
+        block_id:             'HIIT_TEAM_SPORT',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'FIRMA LAURSEN: prescrivi HIIT su vVO2max/pVO2max, non solo su % FC. Frequenza HIIT ≤2–3 sessioni/sett. Ridurre se si accumula monotonia (TSB/ATL senza decadimento).',
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'HIIT aerobico: 4–8 × 3–4min al 90–100% vVO2max; recupero 3–4min. Aggiungere 1 interval/sessione per settimana prima di aumentare l\'intensita.',
+        override_dosage:      { sessions_per_week: [2, 3], sets_per_session: [4, 8], duration_min: [3, 4], rpe_target: [9, 10] },
+      },
+      {
+        block_id:             'ALACTIC_POWER_REPETITION',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'SIT (Sprint Interval Training): 6–10 × 30s al 130–170% vVO2max; recupero 4–5min. Stimolo neuromuscolare senza costo metabolico eccessivo. Aumentare reps prima di ridurre recupero.',
+      },
+      {
+        block_id:             'AEROBIC_POWER',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Intervalli supra-massimali (120–130% vVO2max, 15–30s): stimolo neuromuscolare con cost metabolico controllato. Utile per sport di squadra con pattern intermittenti.',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  3,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Lavoro a soglia come ponte tra base aerobica e HIIT. Laursen lo usa come fase intermedia, non come metodo principale.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Prescrivi HIIT su vVO2max/pVO2max: volume determina il carico totale, intensita determina il tipo di adattamento. Mai conflare i due. Frequenza HIIT ≤2–3x/sett.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'ZONE2 (40h+ base) → THRESHOLD transition → HIIT introduction (2x/sett) → SIT/aerobic power → retest VO2max ogni 6–8 sett.',
+      assessment_bias:        ['VO2max / vVO2max test', 'velocita soglia lattato', 'sRPE session load', 'HRV mattutino', 'distribuzione tempo-in-zona (80/20 check)'],
+      signature_constraints:  ['HIIT: MAX 2–3 sessioni/sett', 'Base aerobica (40h) OBBLIGATORIA prima di HIIT in non allenati', 'Ritest VO2max ogni 6–8 settimane per ricalibrazione zone', 'Ridurre HIIT se monotonia (TSB/ATL) si accumula senza decadimento'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'hrv_zscore',
+        fallback_1_source:    'wizard',
+        condition:            'RPE >9 per ≥3 sessioni/sett o trend HRV in calo >5 giorni',
+        threshold:            -1.5,
+        fallback_1_threshold: 9,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.3,
+        ui_explanation:       'Rimuovere 1 sessione HIIT, aggiungere 1 sessione easy. Rivalutare dopo 1 settimana.',
+      },
+      {
+        primary_source:       'mechanical_performance',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Prestazione VO2max piatta o in calo nonostante allenamento',
+        threshold:            5,
+        fallback_1_threshold: -1.0,
+        action_code:          'REDUCE_LOAD',
+        confidence_penalty:   0.25,
+        ui_explanation:       'Verificare accuratezza delle zone di intensita. Possibile overreach: inserire 1 settimana di deload.',
+      },
+    ],
   },
 
   // ── P35 ── Vladimir Issurin — Block Periodization (Evidence A) ────────────────
@@ -1823,6 +2449,108 @@ export const titanProfiles: TitanProfile[] = [
     },
     periodizationModel: ['block'],
     assessmentScreening: ['competition calendar mapping', 'residual quality tracking', 'performance test battery'],
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'MAX_STRENGTH_ACCUMULATION',
+      'THRESHOLD_ENDURANCE',
+      'VO2MAX_INTERVALS',
+      'NEURAL_PEAKING',
+      'COMPETITION_PREPARATION',
+      'DELOAD_WEEK',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'ISSURIN: blocco di Accumulation — base aerobica ad alto volume (100% baseline), intensita 60–75%. Qualita con lunga residualita (30+ giorni): da costruire PRIMA.',
+      },
+      {
+        block_id:             'MAX_STRENGTH_ACCUMULATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'ISSURIN Accumulation: forza a volume elevato, intensita moderata (60–75%). Blocco concentrato: UNICA qualita dominante. Non combinare con lavori di potenza nella stessa settimana.',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -10,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'ISSURIN Transmutation: volume 75%, intensita 80–90%. Qualita sport-specifiche in primo piano. Ponte tra accumulation e realization.',
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -15,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'ISSURIN Transmutation sport-specific: intensita sale verso 85–95%. Qualita con residualita breve (5–10 giorni per velocita-forza): inserire TARDI nel macrociclo.',
+      },
+      {
+        block_id:             'NEURAL_PEAKING',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -30,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'ISSURIN Realization: volume 50–60%, intensita 90–100%. MAI aggiungere nuove qualita pesanti. Solo affinamento degli adattamenti esistenti. 2–3 settimane prima della gara.',
+      },
+      {
+        block_id:             'COMPETITION_PREPARATION',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -40,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Realization → Competition: picco programmato. La sequenza Accumulation → Transmutation → Realization e ottimale per atleti avanzati (3+ anni). Per novizi: periodizzazione lineare.',
+      },
+      {
+        block_id:             'DELOAD_WEEK',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'Deload tra i blocchi (3–5 giorni): obbligatorio tra Accumulation e Transmutation se l\'atleta riporta fatica cronica post-accumulation.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Blocchi da 3–4 settimane: una qualita dominante per volta (Accumulation → Transmutation → Realization). Effetti residui guidano la sequenza: qualita a lunga residualita si costruiscono prima.',
+      preferred_progression:  'intensity_first',
+      block_selection_logic:  'Accumulation (100% vol, 60–75% int) → Transmutation (75% vol, 80–90% int) → Realization (50% vol, 90–100% int) → Competition. Solo atleti avanzati (3+ anni).',
+      assessment_bias:        ['residual performance retention per qualita (%baseline)', 'competition readiness score', 'volume load per blocco vs ciclo precedente', 'calendario agonistico'],
+      signature_constraints:  ['Solo atleti avanzati (≥3 anni training): novizi usano lineare', 'Una qualita dominante per blocco: no concurrent per atleti elite', 'MAI aggiungere carichi pesanti nel blocco di Realization', 'Sequenza temporale: qualita a lunga residualita PRIMA, velocita ULTIMA'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'wizard',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Fatica cronica dopo blocco di Accumulation: RPE elevato senza rimbalzo',
+        threshold:            8,
+        fallback_1_threshold: -1.5,
+        action_code:          'REDUCE_LOAD',
+        confidence_penalty:   0.3,
+        ui_explanation:       'Accorciare l\'Accumulation di 1 settimana. Inserire 3 giorni di deload prima del Transmutation.',
+      },
+      {
+        primary_source:       'mechanical_performance',
+        condition:            'Calo prestativo nel blocco di Realization',
+        threshold:            5,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.25,
+        ui_explanation:       'Verifica se l\'intensita del Transmutation era troppo elevata. Aggiungere 2–3 giorni extra facili prima della gara.',
+      },
+    ],
   },
 
   // ── P36 ── Vladimir Zatsiorsky — Science and Practice of Strength (Evidence A) ─
@@ -2674,6 +3402,101 @@ export const titanProfiles: TitanProfile[] = [
     },
     periodizationModel: ['linear', 'block', 'undulating'],
     assessmentScreening: ['Weekly sets-per-muscle tracking', 'RIR self-assessment', 'Progressive overload log'],
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'HYPERTROPHY_MESOCYCLE',
+      'LOWER_BODY_HYPERTROPHY',
+      'UPPER_BODY_STRENGTH',
+      'MAX_STRENGTH_ACCUMULATION',
+      'DELOAD_WEEK',
+      'TEMPO_STRENGTH',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'HYPERTROPHY_MESOCYCLE',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  10,
+        preferred_phase:      'any',
+        coach_specific_notes: 'FIRMA SCHOENFELD: 12–20 serie/muscolo/sett; 8–15 rep; RIR 1–3. Aggiungere 1–2 serie/muscolo/sett per mesociclo. Aumentare carico quando il range superiore di rep viene eseguito pulitamente.',
+      },
+      {
+        block_id:             'LOWER_BODY_HYPERTROPHY',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'Lower body ipertrofia: quad + hamstring + glute separati. MEV ~10 serie/muscolo. 2 sessioni/sett minimo per stimolo ottimale.',
+      },
+      {
+        block_id:             'UPPER_BODY_STRENGTH',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'Upper body: petto + schiena + spalle + braccia. MAV 15–20 serie/muscolo/sett. Mai aumentare contemporaneamente volume E intensita nella stessa settimana.',
+      },
+      {
+        block_id:             'MAX_STRENGTH_ACCUMULATION',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -20,
+        preferred_phase:      'any',
+        coach_specific_notes: 'Blocco di intensificazione (ogni 4–8 sett): 8–12 serie/muscolo/sett; 4–8 rep; RIR 0–2. Aumentare carico 2.5–5% quando si raggiungono 8 rep. Ridurre volume 20–30%.',
+      },
+      {
+        block_id:             'DELOAD_WEEK',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'SCHOENFELD: deload ogni 4–6 sett OBBLIGATORIO. 50% riduzione volume; stessi esercizi; RIR 4–5; focus qualita del movimento. Senza deload l\'adattamento si plateau in 4–8 sett.',
+      },
+      {
+        block_id:             'TEMPO_STRENGTH',
+        activation_priority:  3,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'Tempo controllato per massimizzare tensione meccanica: 3–1–1–0 o 4–0–2–0. Scofield usa il tempo per aumentare il TUT (time under tension) specialmente nella fase eccentrica.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Tre meccanismi ipertrofia: tensione meccanica + stress metabolico + danno muscolare. Volume e il driver primario; frequenza e carico sono modulatori. MEV→MAV→MRV per ogni gruppo muscolare.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'Mesociclo 4–8 sett di accumulo ipertrofico (MEV→MAV) → 3–4 sett intensificazione (MAV→MRV) → 1 sett deload → nuovo ciclo. 2x/sett minimo per muscolo.',
+      assessment_bias:        ['serie settimanali per gruppo muscolare', 'RIR per serie', 'indicatore di overload progressivo (carico × rep trend)', 'presenza DOMS per distretto'],
+      signature_constraints:  ['MAI aumentare volume E intensita contemporaneamente', '2x/sett minimo per ogni gruppo muscolare', 'Deload ogni 4–6 sett OBBLIGATORIO', 'Prossimita al cedimento (RIR 0–4): rispettare sempre', 'Stop al primo dolore articolare su movimenti composti'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'mechanical_performance',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Nessuna progressione di forza per 3+ settimane consecutive sul lift principale',
+        threshold:            3,
+        fallback_1_threshold: -1.5,
+        action_code:          'REDUCE_LOAD',
+        confidence_penalty:   0.25,
+        ui_explanation:       'Controllare recupero/sonno/nutrizione. Deload. Rivalutare la programmazione prima di aumentare il volume.',
+      },
+      {
+        primary_source:       'pain_vas',
+        fallback_1_source:    'wizard',
+        condition:            'Dolore articolare durante movimenti composti',
+        threshold:            3,
+        fallback_1_threshold: 7,
+        action_code:          'BLOCKED_PAIN',
+        confidence_penalty:   0.4,
+        ui_explanation:       'Stop compound caricato. Valutare meccanica. Sostituire con variante unilaterale o macchina fino a risoluzione.',
+      },
+    ],
   },
 
   // ── P10 ── Mike Israetel — RPE Programming / Volume Landmarks (Evidence B) ───
@@ -3054,6 +3877,91 @@ export const titanProfiles: TitanProfile[] = [
     },
     periodizationModel: ['linear', 'concurrent'],
     assessmentScreening: ['Lactate threshold test (LT1/LT2)', 'HR at fixed power test', 'Talk test calibration'],
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'LONG_AEROBIC_ENDURANCE',
+      'THRESHOLD_ENDURANCE',
+      'VO2MAX_INTERVALS',
+      'AEROBIC_POWER',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  30,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'FIRMA SAN MILLAN: Zona 2 = LT1 (lattato 1.7–2.0 mmol/L o "talk test"). Minimo 3×45–60 min/sett. Ottimale 3–4h/sett. VIETATO driftare in Zona 3 durante le sessioni di Zona 2.',
+        override_dosage:      { sessions_per_week: [3, 4], duration_min: [45, 90], rpe_target: [5, 6] },
+      },
+      {
+        block_id:             'LONG_AEROBIC_ENDURANCE',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  20,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'Long aerobic session in Zona 2 pura: massimizzare biogenesi mitocondriale e ossidazione lipidica. Aumentare durata per sessione; monitorare FC a potenza/ritmo fisso (deve diminuire nel tempo).',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  3,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  -20,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Zona 3–4 (threshold): MAX 2 sessioni/sett. Aggiungere solo DOPO base Zona 2 solida. Mantenere il ratio 80% Zona 2. San Millan evita la "zona grigia" come Seiler.',
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  -10,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Zona 4–5 HIIT: max 2x/sett. Costruiti SOPRA la base di Zona 2 consolidata. Senza Zona 2 adeguata, l\'alta intensita porta diminishing returns.',
+      },
+      {
+        block_id:             'AEROBIC_POWER',
+        activation_priority:  3,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -20,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Potenza aerobica: opzionale per atleti con base Zona 2 consolidata. San Millan lo usa come strato superiore, mai come sostituto della Zona 2.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Zona 2 (LT1) come fondamento della performance e della salute metabolica. 3–4h/sett minimo per adattamento mitocondriale. L\'alta intensita si costruisce SOPRA la Zona 2, non senza di essa.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'ZONE2 (8–16 sett, 3–4h/sett) → introdurre THRESHOLD (2x/sett max) mantenendo 80% Zona 2 → VO2MAX_INTERVALS solo con base solida.',
+      assessment_bias:        ['potenza/ritmo a HR di Zona 2 (trend mesi)', 'FC a potenza/ritmo Zona 2 fisso (deve diminuire)', 'tasso ossidazione lipidica (g/min a Zona 2)', 'lattato a riposo e a Zona 2', 'VLamax (capacita glicolitica)'],
+      signature_constraints:  ['VIETATO HR drift in Zona 3 durante sessioni Zona 2', 'Minimo 3h/sett Zona 2 per adattamento mitocondriale', 'Alta intensita MAX 2x/sett', 'Ratio 80% Zona 2 OBBLIGATORIO anche con competizioni in corso'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'hrv_zscore',
+        fallback_1_source:    'wizard',
+        condition:            'HR di Zona 2 in drift >5 bpm sopra target nei primi 30 min',
+        threshold:            -1.5,
+        fallback_1_threshold: 7,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.2,
+        ui_explanation:       'Possibile fatica, malattia, o recupero insufficiente. Ridurre intensita, rimanere in Zona 2 vera.',
+      },
+      {
+        primary_source:       'mechanical_performance',
+        condition:            'Nessun miglioramento aerobico dopo 8+ settimane di Zona 2 consistente',
+        threshold:            0,
+        action_code:          'MONITOR_CLOSELY',
+        confidence_penalty:   0.15,
+        ui_explanation:       'Verificare vera intensita Zona 2 (talk test / lattato). Controllare nutrizione (carboidrati adeguati + grassi). Valutare qualita del sonno.',
+      },
+    ],
   },
 
   // ── P19 ── Iñigo Mujika — Tapering Science (Evidence A) ─────────────────────
@@ -3130,6 +4038,101 @@ export const titanProfiles: TitanProfile[] = [
     },
     periodizationModel: ['block'],
     assessmentScreening: ['Hooper Index (well-being questionnaire)', 'Volume tracking vs taper plan'],
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'THRESHOLD_ENDURANCE',
+      'VO2MAX_INTERVALS',
+      'DELOAD_WEEK',
+      'NEURAL_PEAKING',
+      'COMPETITION_PREPARATION',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'MUJIKA: mantenimento aerobico durante il taper. Volume ridotto MA intensita mantenuta. Frequenza ≥80% del livello pre-taper. La capacita aerobica si mantiene 10–28 giorni se l\'intensita e preservata.',
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -40,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Taper threshold: ridurre volume del 40–60%, mantenere intensita. Modello esponenziale progressivo: nessun taglio brusco. Mujika documenta miglioramenti prestazionali del 2–3% post-taper.',
+      },
+      {
+        block_id:             'VO2MAX_INTERVALS',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -50,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'FIRMA MUJIKA: sessioni ad alta intensita MANTENUTE durante taper (ridotto volume). MAI eliminare completamente l\'intensita nel taper. 2 sessioni HIT/sett anche nell\'ultima settimana.',
+        override_dosage:      { sessions_per_week: [1, 2], rpe_target: [9, 10] },
+      },
+      {
+        block_id:             'DELOAD_WEEK',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  -20,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Taper 1 settimana (eventi brevi): volume 50–60% del picco; 2 sessioni di intensita; riposo completo 2 giorni prima della gara. Non scendere sotto 80% della frequenza normale.',
+      },
+      {
+        block_id:             'NEURAL_PEAKING',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -45,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Peaking neuromuscolare durante taper: riduzione volume 40–60%, intensita mantenuta o leggermente aumentata. Il "taper madness" (ansia da taper) e normale: sessioni brevi ma qualitative la gestiscono.',
+      },
+      {
+        block_id:             'COMPETITION_PREPARATION',
+        activation_priority:  1,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  -60,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Taper 2–3 settimane (endurance): Sett 1: −30% vol; Sett 2: −50% vol; Sett 3: −60% vol. Intensita mantenuta in tutta la sequenza. Mujika: il taper e scienza, non riposo passivo.',
+        override_dosage:      { sessions_per_week: [4, 6], rpe_target: [8, 10] },
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'Taper ottimale: ridurre volume 40–60% in 1–3 sett MANTENENDO intensita e frequenza (≥80% pre-taper). Modello esponenziale progressivo. Il taper produce miglioramenti prestazionali del 2–3%.',
+      preferred_progression:  'intensity_first',
+      block_selection_logic:  'Pre-competition: avviare TAPER 1–3 sett prima della gara target. 1 sett = eventi brevi; 2–3 sett = endurance (marathon, triathlon). Mantenere HIT durante tutto il taper.',
+      assessment_bias:        ['volume allenamento vs piano taper (%)', 'sessioni ad alta intensita mantenute per sett', 'Hooper Index (benessere percepito)', 'prestazione gara vs baseline'],
+      signature_constraints:  ['MAI ridurre l\'intensita durante il taper: solo il volume si riduce', 'Frequenza ≥80% del livello pre-taper', 'Taper completo (>3 giorni riposo totale) = perdita fitness: evitare', 'Taper madness (ansia): normale, gestire con sessioni brevi di qualita'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'wizard',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'Riposo completo >3 giorni consecutivi durante taper (detrain risk)',
+        threshold:            8,
+        fallback_1_threshold: -1.0,
+        action_code:          'REDUCE_LOAD',
+        confidence_penalty:   0.2,
+        ui_explanation:       'Riprendere sessioni brevi ma intensive. Il riposo passivo prolungato causa perdita fitness. Taper = volume basso + intensita mantenuta.',
+      },
+      {
+        primary_source:       'wizard',
+        condition:            'Spike di ansia durante taper ("taper madness")',
+        threshold:            7,
+        action_code:          'MONITOR_CLOSELY',
+        confidence_penalty:   0.1,
+        ui_explanation:       'Il taper madness e normale: il CNS si adatta. Mantenere sessioni brevi di qualita. Rassicurare attraverso il processo: la performance migliorera in gara.',
+      },
+    ],
   },
 
   // ── P20 ── Gray Cook — FMS / Movement Screening (Evidence B) ─────────────────
@@ -4727,71 +5730,213 @@ export const titanProfiles: TitanProfile[] = [
     methodology: {
       observablePrinciples: [
         'Energy System Hierarchy: Aerobic capacity is the engine that recovers the anaerobic systems',
-        'HRV-guided training: adjust intensity based on Daily Readiness Score (Heart Rate Variability)',
-        'Three methods of aerobic development: Cardiac Output, Cardiac Power, Threshold work',
-        'Alactic-Aerobic intervals: high power reps with short rest to build repeat-sprint ability without lactic acid accumulation',
+        'HRV-guided training: adjust intensity based on daily HRV readiness score (BioForce protocol)',
+        'Combat sports demand all three energy systems: phosphagen (explosions) + glycolytic (rounds) + aerobic (recovery between)',
+        'Aerobic base built via slow-tempo Cardiac Output method (HR 130–150bpm, 30–60min) before any HI work',
+        'Energy leaks: inefficient technique wastes anaerobic capacity — fix technique before conditioning',
       ],
     },
     load: {
       rules: [
-        'Use HRV daily readiness score to gate training intensity',
-        'Never train hard 2 days in a row without HRV confirmation',
-        'Aerobic base work can be done at low intensity on any day',
+        'HRV: Green = proceed as planned; Yellow = reduce intensity 20%; Red = active recovery or rest',
+        'Cardiac Output method: 3–4x/week at HR 130–150bpm builds aerobic base non-fatiguing',
+        'High-Intensity Continuous (HIC): lactate threshold work at 150–165bpm, 20–40min',
+        'Explosive Repeat (ER): max effort repeated efforts (10–20s) with full recovery — alactic',
+        'Threshold intervals (HIIT): 30–90s work at max sustainable pace; 1:1 to 1:2 work:rest',
       ],
     },
     blocks: [
-      { name: 'Aerobic Base', durationWeeks: [3, 4], dosage: '4x/week 45-60 min low intensity', progression: 'Increase duration 10% per week' },
-      { name: 'Alactic Power', durationWeeks: [2, 3], dosage: '3x/week 10x6s max effort', progression: 'Add 1 rep per week' },
-      { name: 'Lactic Capacity', durationWeeks: [2, 3], dosage: '2x/week intervals 30-60s', progression: 'Decrease rest ratio weekly' },
+      {
+        name: 'Aerobic Base Block (Cardiac Output)',
+        durationWeeks: [4, 8],
+        dosage: '3–4×/week; 30–60min at HR 130–150bpm; nasal breathing preferred',
+        progression: 'Increase duration; HR at fixed pace should decrease',
+      },
+      {
+        name: 'Threshold / HIC Block',
+        durationWeeks: [4, 6],
+        dosage: '2×/week; 20–40min at HR 150–165bpm or tempo intervals; after CO base established',
+        progression: 'Increase duration or pace; monitor HRV for accumulation',
+      },
+      {
+        name: 'Explosive Repeat Block',
+        durationWeeks: [3, 6],
+        dosage: '1–2×/week; 8–12 × 10–20s max effort; 2–3min full recovery between reps',
+        progression: 'Add reps; never reduce rest in ER phase',
+      },
     ],
     kpis: [
-      { name: 'Resting HRV', type: 'systemic' },
-      { name: 'Cardiac Output (L/min)', type: 'performance' },
-      { name: 'Repeat Sprint Ability', type: 'performance' },
+      { name: 'Daily HRV (BioForce score)', type: 'systemic' },
+      { name: 'HR at fixed aerobic work (Cardiac Output trend)', type: 'performance' },
+      { name: 'Rounds sustained at fight pace (specific test)', type: 'performance' },
+      { name: 'Recovery rate post-round (HR drop in 1min)', type: 'systemic' },
     ],
     redFlags: [
-      { trigger: 'HRV drop >20% baseline', action: 'Switch to aerobic recovery only' },
-      { trigger: 'Resting HR elevated >10bpm', action: 'Full rest day' },
+      { trigger: 'HRV Red day 2+ consecutive days', action: 'Full rest or Cardiac Output only; no HI work until Green returns' },
+      { trigger: 'Athlete unable to recover HR to <130bpm between rounds', action: 'Aerobic base insufficient; return to Cardiac Output block 4+ weeks' },
     ],
     mapping: {
-      userArchetypes: ['combat athlete', 'team sport athlete', 'endurance athlete'],
-      compatibleObjectives: ['endurance', 'conditioning', 'combat sports', 'HRV', 'aerobic capacity', 'performance'],
-      incompatibleObjectives: ['maximal strength only', 'powerlifting'],
+      userArchetypes: ['MMA/combat athlete', 'team sport player wanting energy system development', 'HRV-driven training seeker'],
+      compatibleObjectives: ['fight conditioning', 'energy system development', 'HRV-guided periodization', 'aerobic base for intermittent sports'],
+      incompatibleObjectives: ['pure hypertrophy', 'powerlifting peak'],
     },
     uiPills: [
-      { text: 'HRV-guided', sourceId: 'P53' },
-      { text: 'Energy Systems', sourceId: 'P53' },
-      { text: 'Combat Conditioning', sourceId: 'P53' },
+      { text: 'HRV Verde = vai. Giallo = riduci. Rosso = recupera. Il corpo parla ogni mattina', sourceId: 'Jamieson BioForce HRV Guide' },
+      { text: 'La capacita aerobica e il motore che ricarica i sistemi anaerobici. Costruiscila prima', sourceId: 'Ultimate MMA Conditioning 2009' },
     ],
     fusionWeight: {
-      recommendedPercent: 25,
-      bestPairedWith: ['P01', 'P05', 'P34'],
+      recommendedPercent: 20,
+      bestPairedWith: ['P03', 'P05', 'P16', 'P18'],
     },
+    periodizationModel: ['block', 'concurrent'],
+    assessmentScreening: ['BioForce HRV daily readiness', 'Cardiac Output HR trend test', 'Explosive repeat performance', 'Fight pace round test'],
+
+    // ─── v2 migration ─────────────────────────────────────────────────────────
+    schemaVersion:       '2.0',
+    deepProfileComplete: true,
+
+    blockCatalogIds: [
+      'ZONE2_FOUNDATION',
+      'HIIT_TEAM_SPORT',
+      'ALACTIC_POWER_REPETITION',
+      'THRESHOLD_ENDURANCE',
+      'RSA',
+      'DELOAD_WEEK',
+    ],
+
+    profileModifiers: [
+      {
+        block_id:             'ZONE2_FOUNDATION',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  20,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'FIRMA JAMIESON: Cardiac Output method = 3–4x/sett a HR 130–150bpm. La base aerobica e il motore di recupero dei sistemi anaerobici. Obbligatoria prima di qualsiasi lavoro HI.',
+        override_dosage:      { sessions_per_week: [3, 4], duration_min: [30, 60], rpe_target: [5, 6] },
+      },
+      {
+        block_id:             'THRESHOLD_ENDURANCE',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'preseason',
+        coach_specific_notes: 'High-Intensity Continuous (HIC): 150–165bpm per 20–40min. Inserito solo dopo base CO solida (4+ sett). Metabolic Threshold training per combat sports.',
+      },
+      {
+        block_id:             'HIIT_TEAM_SPORT',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Threshold intervals (30–90s al massimo sostenibile; work:rest 1:1 a 1:2). Specifico per la durata dei round di gara. Dosare in base al segnale HRV giornaliero.',
+      },
+      {
+        block_id:             'ALACTIC_POWER_REPETITION',
+        activation_priority:  2,
+        progression_bias:     'intensity_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'Explosive Repeat (ER): 8–12 × 10–20s massimo sforzo; 2–3min recupero pieno. Sistema fosfageno per le esplosioni in gara. Solo con HRV verde.',
+      },
+      {
+        block_id:             'RSA',
+        activation_priority:  2,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'in_season',
+        coach_specific_notes: 'RSA specifica per combat: simulazione round fight pace con recovery parziale tra round. Test: atleta non capace di recuperare FC <130bpm tra i round = base aerobica insufficiente.',
+      },
+      {
+        block_id:             'DELOAD_WEEK',
+        activation_priority:  1,
+        progression_bias:     'volume_first',
+        volume_modifier_pct:  0,
+        preferred_phase:      'any',
+        coach_specific_notes: 'HRV Red day 2+ consecutivi = Cardiac Output ONLY o riposo completo. Jamieson usa l\'HRV come deload trigger automatico: il sistema decide, non il calendario.',
+      },
+    ],
+
+    methodologyV2: {
+      load_philosophy:        'HRV-guided periodization: Verde = eseguire come pianificato, Giallo = ridurre intensita 20%, Rosso = solo Cardiac Output o riposo. La base aerobica e il motore di recupero anaerobico.',
+      preferred_progression:  'volume_first',
+      block_selection_logic:  'CO Base (4–8 sett) → HIC/Threshold (4–6 sett) → Explosive Repeat + RSA (3–6 sett) → Competition. HRV guida ogni singola sessione.',
+      assessment_bias:        ['HRV giornaliero (BioForce score)', 'HR a lavoro aerobico fisso (trend CO)', 'round sostenuti a fight pace', 'recupero HR post-round (drop in 1min)'],
+      signature_constraints:  ['HRV Red: NO lavoro ad alta intensita', 'CO obbligatorio PRIMA di qualsiasi HI work', 'Recupero tra ER (alactic): PIENO (2–3min)', 'Tecnica precede il condizionamento: fix energy leaks prima'],
+    },
+
+    resilientRedFlags: [
+      {
+        primary_source:       'hrv_zscore',
+        fallback_1_source:    'wizard',
+        condition:            'HRV Red 2+ giorni consecutivi',
+        threshold:            -2.0,
+        fallback_1_threshold: 8,
+        action_code:          'SUBSTITUTE_LOWER_INTENSITY',
+        confidence_penalty:   0.3,
+        ui_explanation:       'HRV rosso: solo Cardiac Output (HR 130–150bpm) o riposo attivo. Nessun lavoro HI finche HRV non torna verde.',
+      },
+      {
+        primary_source:       'mechanical_performance',
+        fallback_1_source:    'hrv_zscore',
+        condition:            'FC non scende sotto 130bpm tra i round durante RSA test',
+        threshold:            5,
+        fallback_1_threshold: -1.5,
+        action_code:          'REDUCE_INTENSITY',
+        confidence_penalty:   0.25,
+        ui_explanation:       'Base aerobica insufficiente. Tornare a Cardiac Output block 4+ settimane prima di riprendere il lavoro HI specifico.',
+      },
+    ],
   },
+
 ]
 
-// ─── Athlete profiles (stub — to be populated) ────────────────────────────────
-export const athleteProfiles: AthleteProfile[] = []
+// ─── TIER-1 HELPER FUNCTIONS ─────────────────────────────────────────────────
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+/**
+ * Trova un profilo Titan per ID.
+ * @returns Il profilo oppure undefined se non trovato.
+ */
 export function getTitanById(id: string): TitanProfile | undefined {
   return titanProfiles.find(p => p.id === id)
 }
 
+/**
+ * Filtra i profili Titan compatibili con un obiettivo dato.
+ * Usa compatibleObjectives per la corrispondenza (partial match, case-insensitive).
+ */
 export function getTitansForObjective(objective: string): TitanProfile[] {
-  const lower = (objective || '').toLowerCase()
-  const keywords = lower.split(/[\s,|]+/).filter(Boolean)
-  const scored = titanProfiles.map(t => {
-    const haystack = (t.discipline + ' ' + t.role + ' ' + (t.mapping?.compatibleObjectives ?? []).join(' ')).toLowerCase()
-    const hits = keywords.filter(k => haystack.includes(k)).length
-    return { t, hits }
-  })
-  const matched = scored.filter(s => s.hits > 0).sort((a, b) => b.hits - a.hits).map(s => s.t)
-  return matched.length > 0 ? matched : titanProfiles.slice(0, 8)
+  const lower = objective.toLowerCase()
+  return titanProfiles.filter(p =>
+    p.mapping.compatibleObjectives.some(o => o.toLowerCase().includes(lower))
+  )
 }
 
+/**
+ * Costruisce i pesi di fusione normalizzati per un set di ID Titan.
+ * Parte dai fusionWeight.recommendedPercent di ogni profilo e normalizza a 1.0.
+ */
 export function buildFusionWeights(titanIds: string[]): Record<string, number> {
-  if (titanIds.length === 0) return {}
-  const w = Math.round((100 / titanIds.length) * 10) / 10
-  return Object.fromEntries(titanIds.map(id => [id, w]))
+  const profiles = titanIds.map(id => getTitanById(id)).filter(Boolean) as TitanProfile[]
+  if (profiles.length === 0) return {}
+
+  const rawWeights = profiles.map(p => p.fusionWeight.recommendedPercent)
+  const total = rawWeights.reduce((sum, w) => sum + w, 0)
+
+  return Object.fromEntries(
+    profiles.map((p, i) => [p.id, total > 0 ? rawWeights[i] / total : 1 / profiles.length])
+  )
 }
+
+// ─── TIER-2: ATHLETE MENTAL PROFILES ─────────────────────────────────────────
+//
+// I profili mentali atleta in formato V4 (scientificamente validato) vivono
+// in titans-athletes-v4.ts. Per backward-compatibility con il layer app che
+// usa il tipo legacy AthleteProfile, esportiamo qui un array vuoto come
+// placeholder fino alla migrazione completa del layer app a AthleteProfileV4.
+//
+// MIGRATION PATH: sostituire atletheProfiles con athleteProfilesV4 da
+// titans-athletes-v4.ts una volta aggiornati app/actions/plan-wizard.ts e
+// app/api/chat/route.ts.
+
+/** @deprecated Usare athleteProfilesV4 da titans-athletes-v4.ts */
+export const athleteProfiles: AthleteProfile[] = []
