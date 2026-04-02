@@ -35,7 +35,8 @@ export async function skipPlannedSession(planDayId: string, date: string, reason
 
 async function getPlanIdForDay(planDayId: string): Promise<string> {
   const day = await prisma.planDay.findUnique({ where: { id: planDayId }, select: { planId: true } })
-  return day?.planId ?? ''
+  if (!day) throw new Error(`PlanDay non trovato: ${planDayId}`)
+  return day.planId
 }
 
 /**

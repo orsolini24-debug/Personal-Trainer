@@ -109,7 +109,7 @@ export async function generateAITripleProposal() {
       temperature: 0.3,
     })
 
-    const res = JSON.parse(completion.choices[0].message.content || '{}')
+    const res = JSON.parse(completion.choices[0]?.message?.content || '{}')
     const draft = await prisma.mesocycle.create({
       data: {
         userId,
@@ -159,9 +159,10 @@ async function autoSchedule(params: {
 }) {
   const { userId, planId, planDayIds, trainingDays, startDate, weeks = 4 } = params
 
-  // Remove old PENDING sessions so we start fresh
+  // Remove old PENDING sessions for THIS plan so we start fresh
+  // NOTE: scoped to planId — do NOT delete sessions from other plans
   await prisma.plannedSession.deleteMany({
-    where: { userId, status: 'PENDING' },
+    where: { userId, planId, status: 'PENDING' },
   })
 
   const endDate = new Date(startDate)

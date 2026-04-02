@@ -82,7 +82,7 @@ export async function chatAboutPlan(mesoId: string, userMessage: string, history
     })
 
     return { 
-      content: completion.choices[0].message.content || "Non sono riuscito a elaborare una risposta.",
+      content: completion.choices[0]?.message?.content || "Non sono riuscito a elaborare una risposta.",
       role: 'assistant'
     }
   } catch (e) {

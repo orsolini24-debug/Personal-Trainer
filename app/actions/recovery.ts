@@ -50,7 +50,7 @@ export async function parseWearableText(text: string) {
       response_format: { type: "json_object" }
     })
 
-    const result = JSON.parse(completion.choices[0].message.content || "{}")
+    const result = JSON.parse(completion.choices[0]?.message?.content || "{}")
     return { success: true, data: result }
   } catch (error: any) {
     return { success: false, error: error.message }
