@@ -13,7 +13,7 @@ export async function getDashboardData() {
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)
 
-  const [recovery, nutrition, workout, biometric, profile, goals, lastReport] = await Promise.all([
+  const [recovery, nutrition, workout, biometric, profile, goals, lastReport, recentSetLogs] = await Promise.all([
     prisma.recoveryLog.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
     prisma.nutritionDay.findUnique({ where: { userId_date: { userId, date: today } } }),
     prisma.workoutSession.findFirst({ where: { userId, date: { gte: today } }, orderBy: { date: 'asc' } }),
@@ -23,6 +23,26 @@ export async function getDashboardData() {
     prisma.aIReport.findFirst({
       where: { userId, type: 'WEEKLY' },
       orderBy: { date: 'desc' }
+    }),
+    prisma.exercise.findMany({
+      where: {
+        session: {
+          userId,
+          date: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+        },
+        setLogs: { some: { isWarmup: false, weightKg: { not: null } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        name: true,
+        setLogs: {
+          where: { isWarmup: false, weightKg: { not: null } },
+          orderBy: { weightKg: 'desc' },
+          take: 1,
+          select: { weightKg: true, repsActual: true },
+        },
+      },
     })
   ])
 
@@ -49,15 +69,6 @@ export async function getDashboardData() {
   const proteinTarget = profile?.weightKg ? Math.round(profile.weightKg * 2.0) : 160
   const fatTarget = profile?.weightKg ? Math.round(profile.weightKg * 0.8) : 70
   const carbsTarget = Math.round((kcalTarget - proteinTarget * 4 - fatTarget * 9) / 4)
-
-  // Coach
-  const coachMsg = score > 66
-    ? `Recovery ${score}% — puoi spingere${workout?.type ? ` sulla sessione ${workout.type.replace(/_/g,' ')}` : ''} oggi.`
-    : score > 33
-    ? `Recovery ${score}% — allena con attenzione ai segnali del corpo.`
-    : score > 0
-    ? `Recovery ${score}% — valuta recupero attivo o intensità ridotta.`
-    : 'Sincronizza i dati di recupero per ricevere consigli personalizzati.'
 
   // Athlete
   const sportLevelMap = (profile?.sportLevels ?? {}) as Record<string, string>
@@ -97,11 +108,44 @@ export async function getDashboardData() {
       select: { date: true, weightKg: true },
     }),
   ])
-  const recentPRs: { exerciseName: string; weightKg: number | null; repsActual: number | null }[] = []
+
+  // Prendi il record più pesante per ogni esercizio (ultimi 30 giorni)
+  const prMap = new Map<string, { exerciseName: string; weightKg: number | null; repsActual: number | null }>()
+  for (const ex of recentSetLogs) {
+    const topSet = ex.setLogs[0]
+    if (!topSet) continue
+    const existing = prMap.get(ex.name)
+    if (!existing || (topSet.weightKg ?? 0) > (existing.weightKg ?? 0)) {
+      prMap.set(ex.name, { exerciseName: ex.name, weightKg: topSet.weightKg, repsActual: topSet.repsActual })
+    }
+  }
+  const recentPRs = Array.from(prMap.values()).slice(0, 5)
 
   const sessionsTarget = activePlan?.daysPerWeek ?? 5
   const streakValue = String(completedSessions)
   const streakUnit = `/ ${sessionsTarget} sessioni`
+
+  // Coach — messaggio contestuale multi-segnale
+  let coachMsg: string
+  const sessionLabel = workout?.type ? ` (sessione ${workout.type.replace(/_/g,' ')})` : ''
+  const nutritionOk = kcalPct >= 80
+  const weekOnTrack = completedSessions >= Math.ceil(sessionsTarget * (new Date().getUTCDay() / 7))
+
+  if (score === 0) {
+    coachMsg = 'Sincronizza i dati di recupero per ricevere consigli personalizzati.'
+  } else if (score > 66 && nutritionOk && weekOnTrack) {
+    coachMsg = `Recovery ${score}%, nutrizione in linea, settimana rispettata — puoi spingere${sessionLabel} oggi.`
+  } else if (score > 66 && !nutritionOk) {
+    coachMsg = `Recovery ottimo (${score}%) ma carboidrati/kcal bassi — rifornisci prima${sessionLabel}.`
+  } else if (score > 66) {
+    coachMsg = `Recovery ${score}% — allena con intensità${sessionLabel}.`
+  } else if (score > 33 && !weekOnTrack) {
+    coachMsg = `Recovery moderato (${score}%) e settimana indietro — sessione${sessionLabel} prioritaria oggi.`
+  } else if (score > 33) {
+    coachMsg = `Recovery ${score}% — allena con attenzione ai segnali del corpo${sessionLabel}.`
+  } else {
+    coachMsg = `Recovery basso (${score}%) — valuta recupero attivo o sessione leggera${sessionLabel}.`
+  }
 
   // Weight delta vs 7 days ago
   const currentWeight = weightHistory[0]?.weightKg ?? null

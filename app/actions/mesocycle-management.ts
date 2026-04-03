@@ -14,7 +14,7 @@ export async function activateMesocycle(id: string) {
     await prisma.$transaction(async (tx) => {
       // 1. Archivia l'attuale attivo (Meso e Plan)
       await tx.mesocycle.updateMany({
-        where: { userId, status: MesoStatus.ACTIVE },
+        where: { userId, status: MesoStatus.ACTIVE, planType: { not: 'NUTRITION_ONLY' } },
         data: { status: MesoStatus.ARCHIVED }
       })
 

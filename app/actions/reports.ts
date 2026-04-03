@@ -38,6 +38,7 @@ export async function generateWeeklyReport(): Promise<{
       dailyAnalyses,
       biometric,
       activeMeso,
+      districtStressLogs,
     ] = await Promise.all([
       prisma.userProfile.findUnique({ where: { userId } }),
       prisma.workoutSession.findMany({
@@ -65,6 +66,12 @@ export async function generateWeeklyReport(): Promise<{
       prisma.mesocycle.findFirst({
         where: { userId, status: 'ACTIVE' },
         include: { workoutPlans: true },
+      }),
+      prisma.districtStress.findMany({
+        where: {
+          session: { userId, date: { gte: weekAgo, lte: today } }
+        },
+        select: { district: true, intensity: true },
       }),
     ])
 
@@ -124,6 +131,19 @@ export async function generateWeeklyReport(): Promise<{
       for (const n of nutritionDays) {
         const dateStr = n.date.toISOString().split('T')[0]
         lines.push(`  - ${dateStr}: ${n.kcalActual ?? '?'} kcal, P:${Math.round(n.proteinG ?? 0)}g C:${Math.round(n.carbsG ?? 0)}g F:${Math.round(n.fatG ?? 0)}g`)
+      }
+    }
+
+    if (districtStressLogs.length > 0) {
+      lines.push(`\n## Fatica Muscolare per Distretto`)
+      const districtTotals: Record<string, number> = {}
+      for (const ds of districtStressLogs) {
+        districtTotals[ds.district] = (districtTotals[ds.district] ?? 0) + ds.intensity
+      }
+      const sorted = Object.entries(districtTotals).sort((a, b) => b[1] - a[1])
+      for (const [district, total] of sorted) {
+        const avg = (total / districtStressLogs.filter(d => d.district === district).length).toFixed(1)
+        lines.push(`- ${district}: stress totale ${total}, media sessione ${avg}/3`)
       }
     }
 

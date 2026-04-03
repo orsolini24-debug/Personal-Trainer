@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/auth'
 
 /**
  * POST /api/food-vision
@@ -21,6 +22,11 @@ Regole:
 - Solo JSON, niente altro`
 
 export async function POST(req: NextRequest) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
+  }
+
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return NextResponse.json(

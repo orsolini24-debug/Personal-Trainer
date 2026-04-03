@@ -20,30 +20,35 @@ export async function GET(request: Request) {
     });
 
     for (const user of users) {
-      const context = await getUserContext(user.id);
-      
-      const prompt = `Sei un AI Coach sportivo. Scrivi un report settimanale di 3 paragrafi per l'atleta analizzando il seguente contesto:
-      ${JSON.stringify(context)}
-      Includi:
-      1. Riepilogo Allenamenti e Carico (TL)
-      2. Feedback sul Recupero e Nutrizione
-      3. Focus per la prossima settimana`
+      try {
+        const context = await getUserContext(user.id);
 
-      const completion = await groq.chat.completions.create({
-        messages: [{ role: "system", content: prompt }],
-        model: "llama-3.3-70b-versatile",
-      })
+        const prompt = `Sei un AI Coach sportivo. Scrivi un report settimanale di 3 paragrafi per l'atleta analizzando il seguente contesto:
+        ${JSON.stringify(context)}
+        Includi:
+        1. Riepilogo Allenamenti e Carico (TL)
+        2. Feedback sul Recupero e Nutrizione
+        3. Focus per la prossima settimana`
 
-      const content = completion.choices[0]?.message?.content || "Nessun report generato."
+        const completion = await groq.chat.completions.create({
+          messages: [{ role: "system", content: prompt }],
+          model: "llama-3.3-70b-versatile",
+        })
 
-      await prisma.aIReport.create({
-        data: {
-          userId: user.id,
-          type: 'WEEKLY',
-          date: new Date(),
-          content: content
-        }
-      })
+        const content = completion.choices[0]?.message?.content || "Nessun report generato."
+
+        await prisma.aIReport.create({
+          data: {
+            userId: user.id,
+            type: 'WEEKLY',
+            date: new Date(),
+            content: content
+          }
+        })
+      } catch (userError: any) {
+        console.error(`[cron] Report fallito per utente ${user.id}:`, userError.message)
+        // Continua con gli altri utenti
+      }
     }
 
     return NextResponse.json({ success: true, message: "Weekly reports generated" });

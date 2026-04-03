@@ -216,7 +216,13 @@ export async function selectProposal(mesoId: string, optionId: number) {
     // Read user profile to infer training days
     const profile = await prisma.userProfile.findUnique({ where: { userId: meso.userId } })
     const availableDays = profile?.availableDays ?? 3
-    const trainingDays = inferTrainingDays(availableDays)
+
+    // Preferisci i giorni suggeriti dall'AI nella proposta, fallback a inferenza
+    const trainingDays = (
+      Array.isArray(selected.trainingDays) && selected.trainingDays.length > 0
+    )
+      ? selected.trainingDays as number[]
+      : inferTrainingDays(availableDays)
 
     // ── Pre-match exercise names → ExerciseDefinition IDs (before transaction) ─
     const allExerciseNames: string[] = (selected.mesocycle.plan ?? [])
@@ -228,9 +234,26 @@ export async function selectProposal(mesoId: string, optionId: number) {
     const { workoutPlanId, planDayIds } = await prisma.$transaction(async (tx) => {
       // Archive any currently active mesocycle
       await tx.mesocycle.updateMany({
-        where: { userId: meso.userId, status: MesoStatus.ACTIVE },
+        where: { userId: meso.userId, status: MesoStatus.ACTIVE, planType: { not: 'NUTRITION_ONLY' } },
         data: { status: MesoStatus.ARCHIVED }
       })
+
+      const weightKg = profile?.weightKg ?? 75
+
+      // Converti nutritionPlan da per-kg → grammi assoluti, se presente
+      const nutritionKpi = selected.nutritionPlan ? {
+        kcalTarget: selected.nutritionPlan.kcalTarget ?? null,
+        proteinG: selected.nutritionPlan.proteinGPerKg
+          ? Math.round(weightKg * selected.nutritionPlan.proteinGPerKg)
+          : (selected.nutritionPlan.proteinG ?? null),
+        carbsG: selected.nutritionPlan.carbsGPerKg
+          ? Math.round(weightKg * selected.nutritionPlan.carbsGPerKg)
+          : (selected.nutritionPlan.carbsG ?? null),
+        fatG: selected.nutritionPlan.fatGPerKg
+          ? Math.round(weightKg * selected.nutritionPlan.fatGPerKg)
+          : (selected.nutritionPlan.fatG ?? null),
+        strategy: selected.nutritionPlan.strategy ?? null,
+      } : null
 
       // Activate the chosen draft
       await tx.mesocycle.update({
@@ -240,6 +263,8 @@ export async function selectProposal(mesoId: string, optionId: number) {
           objectives: selected.mesocycle.objectives,
           status: MesoStatus.ACTIVE,
           chosenOption: optionId,
+          planType: nutritionKpi ? 'FULL' : 'TRAINING_ONLY',
+          kpi: nutritionKpi ?? undefined,
         }
       })
 

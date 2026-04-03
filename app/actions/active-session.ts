@@ -41,6 +41,20 @@ export async function startSession(planDayId: string, plannedSessionId?: string)
     },
   })
 
+  // Carica l'ultimo carico per ogni esercizio del piano (tramite Exercise model)
+  const exerciseNames = planDay.planExercises.map(pe => pe.name)
+  const lastExercises = await prisma.exercise.findMany({
+    where: {
+      name: { in: exerciseNames },
+      session: { userId },
+      loadKg: { not: null },
+    },
+    orderBy: { createdAt: 'desc' },
+    distinct: ['name'],
+    select: { name: true, loadKg: true },
+  })
+  const loadMap = new Map(lastExercises.map(e => [e.name, e.loadKg]))
+
   // Crea Exercise records dal PlanExercise
   await prisma.exercise.createMany({
     data: planDay.planExercises.map(pe => ({
@@ -54,6 +68,7 @@ export async function startSession(planDayId: string, plannedSessionId?: string)
       repsMin: pe.repsMin,
       repsMax: pe.repsMax,
       planNotes: pe.notes,
+      loadKg: loadMap.get(pe.name) ?? null,
     })),
   })
 
@@ -236,32 +251,28 @@ export async function finishSession(params: {
   })
 
   // ── DistrictStress: calcolato dai SetLog reali + ExerciseDefinition ──────────
-  // Logica: conta i set di lavoro per esercizio → distribuisce stress ai gruppi
-  // muscolari (primari peso 1.0, secondari peso 0.5) → scala 0-3.
-  const exerciseNames = active.workoutSession.exercises.map(e => e.name)
-  const defs = exerciseNames.length > 0
+  const exerciseNames2 = active.workoutSession.exercises.map(e => e.name)
+  const defs = exerciseNames2.length > 0
     ? await prisma.exerciseDefinition.findMany({
         where: {
           OR: [
-            { name: { in: exerciseNames } },
-            { nameIt: { in: exerciseNames } },
+            { name: { in: exerciseNames2 } },
+            { nameIt: { in: exerciseNames2 } },
           ],
         },
         select: { name: true, nameIt: true, primaryMuscles: true, secondaryMuscles: true },
       })
     : []
 
-  // Indice rapido: nome normalizzato → muscoli
   const defByName = new Map<string, { primaryMuscles: District[]; secondaryMuscles: District[] }>()
   for (const d of defs) {
     defByName.set(d.name.toLowerCase(), d)
     if (d.nameIt) defByName.set(d.nameIt.toLowerCase(), d)
   }
 
-  // Accumula set pesati per distretto
   const districtSets: Partial<Record<District, number>> = {}
   for (const ex of active.workoutSession.exercises) {
-    const workingSets = ex.setLogs.length // setLogs già filtrati isWarmup: false nella query
+    const workingSets = ex.setLogs.length
     if (workingSets === 0) continue
     const def = defByName.get(ex.name.toLowerCase())
     if (!def) continue
@@ -269,7 +280,6 @@ export async function finishSession(params: {
     for (const d of def.secondaryMuscles) districtSets[d] = (districtSets[d] ?? 0) + workingSets * 0.5
   }
 
-  // Mappa a scala 0-3: 0=nessuno, 1=lieve (1-2 set), 2=moderato (3-5), 3=intenso (6+)
   const toIntensity = (s: number) => s <= 0 ? 0 : s <= 2 ? 1 : s <= 5 ? 2 : 3
 
   const stressEntries = (Object.entries(districtSets) as [District, number][])
@@ -312,7 +322,6 @@ export async function abandonSession(activeSessionId: string) {
   if (!active) return { error: 'Sessione non trovata' }
 
   // Elimina ActiveSession prima di WorkoutSession — evita FK constraint
-  // (WorkoutSession.activeSession non ha onDelete:Cascade in questa direzione)
   await prisma.activeSession.delete({ where: { id: activeSessionId } })
   await prisma.workoutSession.delete({ where: { id: active.workoutSessionId } })
   return { success: true }

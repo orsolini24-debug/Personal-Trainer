@@ -19,7 +19,7 @@ export async function getOrCreateNutritionDay(date: Date) {
 
     // Check for active nutrition plan
     const activePlan = await prisma.mesocycle.findFirst({
-      where: { userId, status: "ACTIVE", planType: "NUTRITION_ONLY" },
+      where: { userId, status: "ACTIVE", planType: { in: ["NUTRITION_ONLY", "FULL"] } },
       orderBy: { startDate: 'desc' }
     })
 
@@ -77,7 +77,22 @@ export async function getOrCreateNutritionDay(date: Date) {
         bmr += 5;
       }
 
-      const tdee = Math.round(bmr * 1.55);
+      // Moltiplicatore attività basato su routine quotidiana e giorni di allenamento
+      const routine = (user.profile.dailyRoutine ?? '').toLowerCase()
+      const trainingDaysCount = user.profile.availableDays ?? 3
+      let activityMultiplier: number
+      if (/sedentari|ufficio|scrivania|pc|computer|lavoro.*ore/.test(routine)) {
+        // Sedentario: 1.2 base + un po' per i giorni di allenamento
+        activityMultiplier = trainingDaysCount >= 5 ? 1.375 : 1.2
+      } else if (/piedi|movimento|commessa|operaio|fisico|lavoro.*attiv/.test(routine)) {
+        // Lavoro fisico attivo
+        activityMultiplier = trainingDaysCount >= 5 ? 1.725 : 1.55
+      } else {
+        // Default: lightly to moderately active in base ai giorni
+        activityMultiplier = trainingDaysCount <= 2 ? 1.375 :
+                             trainingDaysCount <= 4 ? 1.55 : 1.725
+      }
+      const tdee = Math.round(bmr * activityMultiplier);
       if (user.profile?.primaryGoal === "WEIGHT_LOSS") baseKcal = tdee - 500;
       else if (user.profile?.primaryGoal === "HYPERTROPHY") baseKcal = tdee + 300;
       else baseKcal = tdee;
@@ -142,7 +157,7 @@ export async function getOrCreateNutritionDay(date: Date) {
         where: { id: newDay.id },
         include: { meals: { include: { foodItems: true } } }
       })
-    } else if (day.isTrainingDay !== isTrainingDay || (!planKpi && day.kcalTarget !== targetKcal)) {
+    } else if (day.isTrainingDay !== isTrainingDay) {
       // Update targets if training day status changed (and no fixed plan target)
       day = await prisma.nutritionDay.update({
         where: { id: day.id },
@@ -164,7 +179,10 @@ export async function getOrCreateNutritionDay(date: Date) {
 
 export async function addMeal(nutritionDayId: string, type: MealType) {
   try {
-    await getUserId()
+    const userId = await getUserId()
+    // Verifica ownership
+    const day = await prisma.nutritionDay.findUnique({ where: { id: nutritionDayId, userId } })
+    if (!day) throw new Error("Giorno nutrizionale non trovato")
     const meal = await prisma.meal.create({
       data: { nutritionDayId, type }
     })
@@ -229,9 +247,12 @@ export async function addFoodItem(mealId: string, data: { name: string, quantity
 
 export async function deleteFoodItem(id: string) {
   try {
-    await getUserId()
-    const item = await prisma.foodItem.findUnique({ where: { id } })
-    if (item) {
+    const userId = await getUserId()
+    const item = await prisma.foodItem.findUnique({
+      where: { id },
+      include: { meal: { include: { nutritionDay: { select: { userId: true } } } } }
+    })
+    if (item && item.meal.nutritionDay.userId === userId) {
       await prisma.foodItem.delete({ where: { id } })
       await updateDayTotals(item.mealId)
       revalidatePath("/nutrition")
@@ -244,9 +265,9 @@ export async function deleteFoodItem(id: string) {
 
 export async function updateNutritionTargets(nutritionDayId: string, data: { kcalTarget?: number, proteinG?: number, carbsG?: number, fatG?: number }) {
   try {
-    await getUserId()
+    const userId = await getUserId()
     const day = await prisma.nutritionDay.update({
-      where: { id: nutritionDayId },
+      where: { id: nutritionDayId, userId },
       data
     })
     revalidatePath("/nutrition")
@@ -258,9 +279,9 @@ export async function updateNutritionTargets(nutritionDayId: string, data: { kca
 
 export async function updateWater(nutritionDayId: string, waterL: number) {
   try {
-    await getUserId()
+    const userId = await getUserId()
     const day = await prisma.nutritionDay.update({
-      where: { id: nutritionDayId },
+      where: { id: nutritionDayId, userId },
       data: { waterL }
     })
     revalidatePath("/nutrition")
