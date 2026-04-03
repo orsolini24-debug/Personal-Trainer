@@ -105,6 +105,29 @@ export async function getOrCreateNutritionDay(date: Date) {
     const targetKcal = isTrainingDay ? baseKcal + (planKpi ? 0 : 400) : baseKcal;
     const targetCarbs = isTrainingDay ? baseCarbs + (planKpi ? 0 : 100) : baseCarbs;
 
+    // Shared meal-name → MealType mapping (used for both new and existing days)
+    const MEAL_MAP: Record<string, MealType> = {
+      'colazione': MealType.BREAKFAST,
+      'breakfast': MealType.BREAKFAST,
+      'pranzo': MealType.LUNCH,
+      'lunch': MealType.LUNCH,
+      'cena': MealType.DINNER,
+      'dinner': MealType.DINNER,
+      'spuntino': MealType.SNACK,
+      'merenda': MealType.SNACK,
+      'snack': MealType.SNACK,
+      'pre-workout': MealType.PRE_WORKOUT,
+      'pre workout': MealType.PRE_WORKOUT,
+      'pre-allenamento': MealType.PRE_WORKOUT,
+      'pre allenamento': MealType.PRE_WORKOUT,
+      'preworkout': MealType.PRE_WORKOUT,
+      'post-workout': MealType.POST_WORKOUT,
+      'post workout': MealType.POST_WORKOUT,
+      'post-allenamento': MealType.POST_WORKOUT,
+      'post allenamento': MealType.POST_WORKOUT,
+      'postworkout': MealType.POST_WORKOUT,
+    }
+
     if (!day) {
       const newDay = await prisma.nutritionDay.create({
         data: {
@@ -115,17 +138,6 @@ export async function getOrCreateNutritionDay(date: Date) {
         },
         include: { meals: { include: { foodItems: true } } }
       })
-      
-      // Map and create meals from plan if available
-      const MEAL_MAP: Record<string, MealType> = {
-        'colazione': MealType.BREAKFAST,
-        'pranzo': MealType.LUNCH,
-        'cena': MealType.DINNER,
-        'spuntino': MealType.SNACK,
-        'merenda': MealType.SNACK,
-        'pre-workout': MealType.PRE_WORKOUT,
-        'post-workout': MealType.POST_WORKOUT,
-      }
 
       const mealsToCreate = []
       if (planKpi?.meals) {
@@ -170,6 +182,27 @@ export async function getOrCreateNutritionDay(date: Date) {
     }
 
     if (!day) throw new Error("Errore nella creazione del giorno nutrizionale")
+
+    // ── Sync plan meals to existing days that were created before the plan ────
+    // If the day already existed but has no meals yet, and a plan with meals is
+    // active, create those meals now so the user can track against the plan.
+    const planMeals = planKpi?.meals as Array<{ name: string; foods?: string[] }> | undefined
+    if (day.meals?.length === 0 && planMeals && planMeals.length > 0) {
+      const mealsToSync = planMeals.map((m) => {
+        const lowerName = (m.name ?? '').toLowerCase()
+        let mealType: MealType = MealType.SNACK
+        for (const [key, val] of Object.entries(MEAL_MAP)) {
+          if (lowerName.includes(key)) { mealType = val; break; }
+        }
+        return { nutritionDayId: day!.id, type: mealType, suggestedFoods: m.foods ?? [] }
+      })
+      await prisma.meal.createMany({ data: mealsToSync })
+      day = await prisma.nutritionDay.findUnique({
+        where: { id: day.id },
+        include: { meals: { include: { foodItems: true } } }
+      })
+      if (!day) throw new Error("Errore nel recupero del giorno dopo sincronizzazione pasti")
+    }
 
     return { success: true, data: { ...day, targetCarbs, targetProtein: baseProtein, targetFat: baseFat } }
   } catch (error: any) {

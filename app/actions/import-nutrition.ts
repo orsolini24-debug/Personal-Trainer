@@ -25,7 +25,7 @@ export interface NutritionPlanData {
   rawText: string
 }
 
-const EXTRACT_PROMPT = `Sei un nutrizionista esperto. Analizza questo piano alimentare e restituisci SOLO JSON (nient'altro):
+const EXTRACT_PROMPT = `Sei un nutrizionista esperto. Analizza questo piano alimentare e restituisci SOLO JSON valido (nessun markdown, nessun testo aggiuntivo):
 {
   "name": "Nome del piano o 'Piano Alimentare Personalizzato'",
   "kcalTarget": 2400,
@@ -43,25 +43,49 @@ const EXTRACT_PROMPT = `Sei un nutrizionista esperto. Analizza questo piano alim
     }
   ],
   "guidelines": ["Linea guida 1", "Linea guida 2"],
-  "rawText": "testo originale estratto"
+  "rawText": "sintesi del piano (max 300 caratteri)"
 }`
+
+function safeJsonParse(raw: string): NutritionPlanData | null {
+  try {
+    // Strip markdown code fences if model added them despite instructions
+    const cleaned = raw
+      .replace(/^```(?:json)?\s*/m, '')
+      .replace(/\s*```$/m, '')
+      .trim()
+    const parsed = JSON.parse(cleaned)
+    // Validate required numeric fields
+    if (typeof parsed.kcalTarget !== 'number' || !Array.isArray(parsed.meals)) {
+      console.error('[import-nutrition] Invalid structure — missing kcalTarget or meals:', Object.keys(parsed))
+      return null
+    }
+    // Truncate rawText to prevent DB bloat
+    if (typeof parsed.rawText === 'string' && parsed.rawText.length > 500) {
+      parsed.rawText = parsed.rawText.slice(0, 500) + '…'
+    }
+    return parsed as NutritionPlanData
+  } catch (e) {
+    console.error('[import-nutrition] JSON parse error:', e, '\nRaw:', raw.slice(0, 200))
+    return null
+  }
+}
 
 export async function parseNutritionPlanFromText(text: string): Promise<NutritionPlanData | null> {
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: EXTRACT_PROMPT },
-        { role: 'user', content: text }
+        { role: 'user', content: text.slice(0, 8000) } // cap input to avoid token overflow
       ],
       temperature: 0.1,
-      max_tokens: 2000,
+      max_tokens: 4000,
       response_format: { type: 'json_object' }
     })
     const raw = response.choices[0]?.message?.content ?? ''
-    return JSON.parse(raw) as NutritionPlanData
+    return safeJsonParse(raw)
   } catch (error) {
-    console.error("parseNutritionPlanFromText error:", error)
+    console.error('[import-nutrition] parseNutritionPlanFromText error:', error)
     return null
   }
 }
@@ -80,13 +104,13 @@ async function parseImageWithAI(base64: string, mimeType: string): Promise<Nutri
         }
       ],
       temperature: 0.1,
-      max_tokens: 2000,
+      max_tokens: 4000,
       response_format: { type: 'json_object' }
     })
     const raw = response.choices[0]?.message?.content ?? ''
-    return JSON.parse(raw) as NutritionPlanData
+    return safeJsonParse(raw)
   } catch (error) {
-    console.error("parseImageWithAI error:", error)
+    console.error('[import-nutrition] parseImageWithAI error:', error)
     return null
   }
 }
@@ -99,10 +123,15 @@ export async function importNutritionPlanFromText(text: string) {
   const data = await parseNutritionPlanFromText(text)
   if (!data) return { error: 'Impossibile analizzare il piano alimentare. Controlla il testo e riprova.' }
 
-  await saveNutritionPlan(userId, data)
-  await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } })
-  revalidatePath('/plan')
-  return { success: true, data }
+  try {
+    await saveNutritionPlan(userId, data)
+    await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } })
+    revalidatePath('/plan')
+    return { success: true, data }
+  } catch (e: any) {
+    console.error('[import-nutrition] save error (text):', e)
+    return { error: 'Errore nel salvataggio del piano. Riprova.' }
+  }
 }
 
 export async function importNutritionPlanFromImage(base64: string, mimeType: string) {
@@ -111,44 +140,51 @@ export async function importNutritionPlanFromImage(base64: string, mimeType: str
   const userId = session.user.id
 
   const data = await parseImageWithAI(base64, mimeType)
-  if (!data) return { error: 'Impossibile leggere il piano dall\'immagine. Prova con un\'immagine più nitida.' }
+  if (!data) return { error: "Impossibile leggere il piano dall'immagine. Prova con un'immagine più nitida." }
 
-  await saveNutritionPlan(userId, data)
-  await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } })
-  revalidatePath('/plan')
-  return { success: true, data }
+  try {
+    await saveNutritionPlan(userId, data)
+    await prisma.user.update({ where: { id: userId }, data: { onboardingCompleted: true } })
+    revalidatePath('/plan')
+    return { success: true, data }
+  } catch (e: any) {
+    console.error('[import-nutrition] save error (image):', e)
+    return { error: 'Errore nel salvataggio del piano. Riprova.' }
+  }
 }
 
 async function saveNutritionPlan(userId: string, data: NutritionPlanData) {
-  // Deactivate existing nutrition plan
-  await prisma.mesocycle.updateMany({
-    where: { userId, planType: 'NUTRITION_ONLY', status: 'ACTIVE' },
-    data: { status: 'ARCHIVED' }
-  })
-
   const today = new Date()
   const endDate = new Date(today)
-  endDate.setDate(today.getDate() + 30)
+  endDate.setDate(today.getDate() + 90) // 90-day mesocycle (standard cycle duration)
 
-  await prisma.mesocycle.create({
-    data: {
-      userId,
-      name: data.name,
-      startDate: today,
-      endDate,
-      status: 'ACTIVE',
-      planType: 'NUTRITION_ONLY',
-      objectives: data.strategy,
-      kpi: {
-        kcalTarget: data.kcalTarget,
-        proteinG: data.proteinG,
-        carbsG: data.carbsG,
-        fatG: data.fatG,
-        meals: data.meals,
-        guidelines: data.guidelines,
-        rawText: data.rawText,
-      },
-    }
+  // Wrap in a transaction so archiving + creation are atomic
+  await prisma.$transaction(async (tx) => {
+    await tx.mesocycle.updateMany({
+      where: { userId, planType: 'NUTRITION_ONLY', status: 'ACTIVE' },
+      data: { status: 'ARCHIVED' }
+    })
+
+    await tx.mesocycle.create({
+      data: {
+        userId,
+        name: data.name,
+        startDate: today,
+        endDate,
+        status: 'ACTIVE',
+        planType: 'NUTRITION_ONLY',
+        objectives: data.strategy,
+        kpi: {
+          kcalTarget: data.kcalTarget,
+          proteinG: data.proteinG,
+          carbsG: data.carbsG,
+          fatG: data.fatG,
+          meals: data.meals,
+          guidelines: data.guidelines,
+          rawText: data.rawText,
+        },
+      }
+    })
   })
 }
 

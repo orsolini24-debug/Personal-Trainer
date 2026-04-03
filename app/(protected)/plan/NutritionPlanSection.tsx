@@ -75,6 +75,13 @@ export default function NutritionPlanSection({ activeNutritionMeso }: Props) {
     setError(null)
 
     if (file.type === 'application/pdf') {
+      // @ts-ignore
+      if (!window.pdfjsLib) {
+        setError('PDF.js non ancora caricato. Attendi qualche secondo e riprova.')
+        setLoading(false)
+        if (fileRef.current) fileRef.current.value = ''
+        return
+      }
       const reader = new FileReader()
       reader.onload = async (event) => {
         try {
